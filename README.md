@@ -1,2 +1,2 @@
-# ensai-it-project-2a-team30
-Projet informatique 2A - VeloScope
+# Projet informatique 2A - VeloScope (Groupe 30)
+Martin DUBOS--DANIELLI, Minh Quang KIEU, Nathan LAIMANT, Victor NEMBRINI, Antonin PRADEL
