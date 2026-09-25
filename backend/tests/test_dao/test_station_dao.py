@@ -1,7 +1,6 @@
 import os
 from unittest.mock import patch
 
-import psycopg2
 import pytest
 from utils.reset_database import ResetDatabase
 
