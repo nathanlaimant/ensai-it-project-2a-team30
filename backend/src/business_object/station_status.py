@@ -4,7 +4,45 @@ from pydantic import BaseModel
 
 
 class StationStatus(BaseModel):
-    """Describe the historical station status."""
+    """
+    Décrit l'état dynamique et actuel d'une station.
+ 
+    Parameters
+    ----------
+    station_status_id : int
+        Identifiant unique de l'enregistrement de statut.
+    station_id : str
+        Identifiant de la station concernée.
+    num_bikes_available : int
+        Nombre de vélos actuellement disponibles à la location.
+    num_bikes_disabled : int
+        Nombre de vélos présents mais hors service.
+    num_docks_available : int
+        Nombre de bornes actuellement libres.
+    num_docks_disabled : int
+        Nombre de bornes hors service.
+    operational_capacity : int
+        Capacité opérationnelle actuelle de la station.
+    is_installed : bool
+        True si la station est physiquement installée.
+    is_renting : bool
+        True si la station permet actuellement la location de véhicules.
+    is_returning : bool
+        True si la station permet actuellement le retour de véhicules.
+    last_reported : datetime
+        Date et heure du dernier rapport d'état reçu.
+    vehicle_types_available : list
+        Liste du nombre de véhicules disponibles par type de véhicule.
+    vehicle_docks_available : list
+        Liste du nombre de bornes disponibles par type de véhicule.
+    station_state : str
+        État global de la station (ex: "active", "maintenance", "closed").
+ 
+    Returns
+    -------
+    StationStatus
+        Instance représentant l'état de la station.
+    """
 
     station_status_id: int
     station_id: str
