@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+import uvicorn
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -16,8 +17,7 @@ initialize_logs()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    settings = get_settings()
-    app.state.db = DbConnection(settings)
+    app.state.db = DbConnection(get_settings())
     yield
     app.state.db.close()
 
@@ -62,14 +62,12 @@ async def hello_name(name: str):
 
 # Run the FastAPI application
 if __name__ == "__main__":
-    import os
-
-    import uvicorn
+    settings = get_settings()
 
     uvicorn.run(
         app,
-        host=os.getenv("UVICORN_HOST", "127.0.0.1"),
-        port=int(os.getenv("UVICORN_PORT", "5000")),
+        host=settings.uvicorn_host,
+        port=settings.uvicorn_port,
     )
 
     logger.info("VeloScope webservice stopped")

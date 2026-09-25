@@ -1,1 +1,28 @@
-"""Ce n'est pas necessaire de mettre du code ici."""
+"""
+Regroupe l'ensemble des modèles de données (Pydantic) du système de
+gestion de stations : informations système, types de véhicules,
+stations, capacités, statuts (temps réel et horaire), utilisateurs et
+leurs stations favorites.
+"""
+
+from .station_information import StationInformation
+from .station_physical_capacity import StationPhysicalCapacity
+from .station_status import StationStatus
+from .station_status_hourly import StationStatusHourly
+from .station_virtual_capacity import StationVirtualCapacity
+from .system_information import SystemInformation
+from .user import User
+from .user_favorite_station import UserFavoriteStation
+from .vehicle_type import VehicleType
+
+__all__ = [
+    "StationInformation",
+    "StationPhysicalCapacity",
+    "StationStatus",
+    "StationStatusHourly",
+    "StationVirtualCapacity",
+    "SystemInformation",
+    "User",
+    "UserFavoriteStation",
+    "VehicleType",
+]

@@ -1,4 +1,4 @@
-"""Handle administration requests."""
+"""Gère les requêtes des administrateurs."""
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -18,7 +18,23 @@ async def list_users(
     user_service: UserService = Depends(get_user_service),
     admin_id: int = Depends(get_current_user),
 ) -> list[User]:
-    """List users."""
+    """
+    Liste les utilisateurs selon des critères de recherche.
+
+    Parameters
+    ----------
+    payload : dict
+        Critères de filtrage et/ou de pagination.
+    user_service : UserService
+        Service pour gérer les utilisateurs.
+    admin_id : int
+        Identifiant de l'administrateur effectuant la requête.
+
+    Returns
+    -------
+    list of User
+        Liste des utilisateurs correspondant aux critères.
+    """
     raise NotImplementedError
 
 
@@ -28,7 +44,23 @@ def activate_user(
     user_service: UserService = Depends(get_user_service),
     admin_id: int = Depends(get_current_user),
 ) -> str:
-    """Activate an user."""
+    """
+    Active le compte d'un utilisateur.
+
+    Parameters
+    ----------
+    user_id : int
+        Identifiant de l'utilisateur concerné.
+    user_service : UserService
+        Service pour gérer les utilisateurs.
+    admin_id : int
+        Identifiant de l'administrateur effectuant la requête.
+
+    Returns
+    -------
+    str
+        Message de confirmation de la mise à jour du statut.
+    """
     raise NotImplementedError
 
 
@@ -38,5 +70,21 @@ def deactivate_user(
     user_service: UserService = Depends(get_user_service),
     admin_id: int = Depends(get_current_user),
 ) -> str:
-    """Deactivate an user."""
+    """
+    Désactive le compte d'un utilisateur.
+
+    Parameters
+    ----------
+    user_id : int
+        Identifiant de l'utilisateur concerné.
+    user_service : UserService
+        Service pour gérer les utilisateurs.
+    admin_id : int
+        Identifiant de l'administrateur effectuant la requête.
+
+    Returns
+    -------
+    str
+        Message de confirmation de la mise à jour du statut.
+    """
     raise NotImplementedError
