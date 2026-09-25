@@ -1,8 +1,12 @@
-from ..business_object.station_information import StationInformation
+from business_object.station_information import StationInformation
+from utils.db_connection import DbConnection
 
 
 class StationDAO:
     """Access station information."""
+
+    def __init__(self, db_connection: DbConnection):
+        self._db_connection = db_connection
 
     def upsert_station_info(self, station: StationInformation) -> bool:
         """Insert or update station information."""

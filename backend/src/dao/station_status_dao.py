@@ -1,10 +1,14 @@
 from datetime import datetime
 
-from ..business_object.station_status import StationStatus
+from business_object.station_status import StationStatus
+from utils.db_connection import DbConnection
 
 
 class StationStatusDAO:
     """Access station status records."""
+
+    def __init__(self, db_connection: DbConnection):
+        self._db_connection = db_connection
 
     def bulk_insert_status(self, records: list[StationStatus]) -> int:
         """Insert status records and return the count."""

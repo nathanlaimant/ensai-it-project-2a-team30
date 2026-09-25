@@ -1,8 +1,12 @@
-from ..business_object.station_information import StationInformation
+from business_object.station_information import StationInformation
+from utils.db_connection import DbConnection
 
 
 class FavoriteStationDAO:
     """Access favorite station records."""
+
+    def __init__(self, db_connection: DbConnection):
+        self._db_connection = db_connection
 
     def add_favorite(self, user_id: int, station_id: str) -> bool:
         """Add a station to a user's favorites."""
