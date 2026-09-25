@@ -1,4 +1,4 @@
-"""Handle authentication and user requests."""
+"""Gère les requètes d'authentification et de modifications de comptes utilisateurs."""
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -10,18 +10,6 @@ from utils.log_utils import get_logger
 router = APIRouter()
 
 logger = get_logger(__name__)
-
-
-class AuthAndUserController:
-    """
-    Gère les requètes d'authentification et de modifications de comptes utilisateurs.
-    
-    Parameters
-    ----------
-    user_service : Any
-        Service applicatif gérant la logique métier liée
-        aux comptes des utilisateurs (inscription, connexion, mise à jour du profil).
-    """
 
 
 @router.post("/login", tags=["Authentication"])
