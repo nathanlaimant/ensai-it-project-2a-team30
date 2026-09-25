@@ -44,7 +44,8 @@ def activate_user(
     user_service: UserService = Depends(get_user_service),
     admin_id: int = Depends(get_current_user),
 ) -> str:
-    """Active le compte d'un utilisateur.
+    """
+    Active le compte d'un utilisateur.
 
     Parameters
     ----------
@@ -58,7 +59,8 @@ def activate_user(
     Returns
     -------
     str
-        Message de confirmation de la mise à jour du statut."""
+        Message de confirmation de la mise à jour du statut.
+    """
     raise NotImplementedError
 
 
@@ -68,7 +70,8 @@ def deactivate_user(
     user_service: UserService = Depends(get_user_service),
     admin_id: int = Depends(get_current_user),
 ) -> str:
-    """Désactive le compte d'un utilisateur.
+    """
+    Désactive le compte d'un utilisateur.
 
     Parameters
     ----------
@@ -82,5 +85,6 @@ def deactivate_user(
     Returns
     -------
     str
-        Message de confirmation de la mise à jour du statut."""
+        Message de confirmation de la mise à jour du statut.
+    """
     raise NotImplementedError
