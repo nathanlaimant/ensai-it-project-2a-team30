@@ -1,4 +1,4 @@
-from ..business_object import StationInformation
+from ..business_object.station_information import StationInformation
 
 
 class FavoriteStationDAO:

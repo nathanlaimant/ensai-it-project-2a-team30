@@ -1,5 +1,5 @@
-from ..business_object import StationInformation
-from ..service import FavoriteStationService
+from ..business_object.station_information import StationInformation
+from ..service.favorite_station_service import FavoriteStationService
 
 
 class FavoriteStationController:

@@ -1,4 +1,4 @@
-from ..service import RecommendationService
+from ..service.recommendation_service import RecommendationService
 
 
 class RecommendationController:
