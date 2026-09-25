@@ -1,16 +1,33 @@
-from ..business_object import User
+from business_object.user import User
+from utils.db_connection import DbConnection
 
 
 class UserDAO:
     """Access users in persistent storage."""
 
+    def __init__(self, db_connection: DbConnection):
+        self._db_connection = db_connection
+
     def create_user(self, user: User) -> bool:
         """Create a user."""
         raise NotImplementedError
 
-    def get_by_id(self, user_id: int) -> User:
+    def get_by_id(self, user_id: int) -> User | None:
         """Find a user by identifier."""
-        raise NotImplementedError
+        player = None
+        try:
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT * FROM users WHERE id = %(user_id)s",
+                        {"user_id": user_id},
+                    )
+                    result = cursor.fetchone()
+                    if result:
+                        player = User(**result)
+        except Exception as e:
+            raise
+        return player
 
     def get_by_username(self, username: str) -> User:
         """Find a user by username."""

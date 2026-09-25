@@ -1,5 +1,5 @@
-from ..business_object import StationInformation
-from ..service import StationService
+from ..business_object.station_information import StationInformation
+from ..service.station_service import StationService
 
 
 class StationController:

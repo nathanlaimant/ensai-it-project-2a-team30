@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from ..business_object import StationStatus
+from ..business_object.station_status import StationStatus
 
 
 class StationStatusDAO:
@@ -14,6 +14,8 @@ class StationStatusDAO:
         """Find the latest status for a station."""
         raise NotImplementedError
 
-    def get_status_history(self, station_id: str, start_time: datetime, end_time: datetime) -> list[StationStatus]:
+    def get_status_history(
+        self, station_id: str, start_time: datetime, end_time: datetime
+    ) -> list[StationStatus]:
         """Find status records in a time range."""
         raise NotImplementedError

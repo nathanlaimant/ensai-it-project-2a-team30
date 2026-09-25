@@ -1,5 +1,15 @@
-from ..business_object import User
-from ..service import UserService
+"""Handle administration requests."""
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from business_object.user import User
+from dependencies import get_current_user, get_user_service
+from service.user_service import UserService
+from utils.log_utils import get_logger
+
+router = APIRouter(prefix="/admin", tags=["Administration"])
+
+logger = get_logger(__name__)
 
 
 class AdminController:
@@ -13,8 +23,6 @@ class AdminController:
         aux utilisateurs.
     """
 
-    def __init__(self, user_service: UserService):
-        self.user_service = user_service
 
     def list_users(self, payload: dict) -> list[User]:
         """
