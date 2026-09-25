@@ -3,7 +3,15 @@ from ..service import FavoriteStationService
 
 
 class FavoriteStationController:
-    """Handle favorite station requests."""
+    """
+    Gère les requètes sur les stations favorites.
+    
+    Parameters
+    ----------
+    favorite_service : Any
+        Service applicatif gérant la logique
+        métier liée aux stations favorites.
+    """
 
     def __init__(self, favorite_service: FavoriteStationService):
         self.favorite_service = favorite_service

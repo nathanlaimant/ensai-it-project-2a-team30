@@ -3,7 +3,15 @@ from ..service import UserService
 
 
 class AuthAndUserController:
-    """Handle authentication and user requests."""
+    """
+    Gère les requètes d'authentification et de modifications de comptes utilisateurs.
+    
+    Parameters
+    ----------
+    user_service : Any
+        Service applicatif gérant la logique métier liée
+        aux comptes des utilisateurs (inscription, connexion, mise à jour du profil).
+    """
 
     def __init__(self, user_service: UserService):
         self.user_service = user_service

@@ -3,7 +3,6 @@ Regroupe l'ensemble des modèles de données (Pydantic) du système de
 gestion de stations : informations système, types de véhicules,
 stations, capacités, statuts (temps réel et horaire), utilisateurs et
 leurs stations favorites.
-
 """
 
 from .station_information import StationInformation

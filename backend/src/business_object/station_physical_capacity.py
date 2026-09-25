@@ -16,7 +16,8 @@ class StationPhysicalCapacity(BaseModel):
     
     Returns
     -------
-    
+    StationPhysicalCapacity
+        Instance représentant la capacité physique.
     """
 
     station_id: str

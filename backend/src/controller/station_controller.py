@@ -3,7 +3,15 @@ from ..service import StationService
 
 
 class StationController:
-    """Handle station requests."""
+    """
+    Gère les consultations de stations.
+    
+    Parameters
+    ----------
+    station_service : Any
+        Service applicatif gérant la logique métier
+        liée aux stations.
+    """
 
     def __init__(self, station_service: StationService):
         self.station_service = station_service
