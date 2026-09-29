@@ -2,48 +2,60 @@ from threading import Lock
 
 
 class InMemTokenCache:
-    """A simple in-memory cache for storing tokens."""
+    """Cache en mémoire simple pour stocker des jetons d'authentification."""
 
     def __init__(self) -> None:
         self.__cache: dict[str, int] = {}
         self.__lock = Lock()
 
     def set(self, token: str, user_id: int) -> None:
-        """Set a token in the cache with the associated user ID.
-
+        """
+        Enregistre un jeton dans le cache, associé à un identifiant utilisateur.
+ 
         Parameters
         ----------
         token : str
-            The token to be stored in the cache.
+            Jeton à stocker dans le cache.
         user_id : int
-            The user ID associated with the token.
+            Identifiant de l'utilisateur associé au jeton.
+ 
+        Returns
+        -------
+        None
         """
         with self.__lock:
             self.__cache[token] = user_id
 
     def get(self, token: str) -> int | None:
-        """Get the associated user ID for a given token from the cache.
-
+        """
+        Récupère l'identifiant utilisateur associé à un jeton donné.
+ 
         Parameters
         ----------
         token : str
-            The token for which the associated user ID is to be retrieved.
-
+            Jeton dont on souhaite récupérer l'identifiant utilisateur associé.
+ 
         Returns
         -------
         int | None
-            The associated user ID if the token exists in the cache, otherwise None.
+            L'identifiant utilisateur associé si le jeton existe dans le
+            cache, sinon None.
         """
         with self.__lock:
             return self.__cache.get(token)
 
     def delete(self, token: str) -> None:
-        """Delete a token from the cache.
-
+        """
+        Supprime un jeton du cache.
+ 
         Parameters
         ----------
         token : str
-            The token to be deleted from the cache.
+            Jeton à supprimer du cache.
+ 
+        Returns
+        -------
+        None
         """
         with self.__lock:
             self.__cache.pop(token, None)

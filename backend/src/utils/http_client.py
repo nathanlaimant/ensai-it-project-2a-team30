@@ -2,8 +2,20 @@
 
 
 class HttpClient:
-    """Represent the application's HTTP client dependency."""
+    """Représente la dépendance HTTP client de l'application."""
 
     def get(self, url: str) -> dict:
-        """Fetch a JSON payload from a URL."""
+        """
+        Récupère un contenu JSON à partir d'une URL.
+ 
+        Parameters
+        ----------
+        url : str
+            URL à interroger.
+ 
+        Returns
+        -------
+        dict
+            Contenu JSON de la réponse.
+        """
         raise NotImplementedError

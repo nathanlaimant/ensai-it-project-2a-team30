@@ -2,13 +2,21 @@ import hashlib
 
 
 def hash_password(password: str, salt: str = "") -> str:
-    """Hashes a password using the SHA-256 algorithm.
-    Args:
-        password (str): The plain text password to be hashed.
-        salt (str, optional): A string added to the password before hashing
-            to protect against rainbow table attacks.
-    Returns:
-        str: The resulting hexadecimal hash string.
+    """
+    Hache un mot de passe avec l'algorithme SHA-256.
+ 
+    Parameters
+    ----------
+    password : str
+        Mot de passe en clair à hacher.
+    salt : str, optional
+        Chaîne ajoutée au mot de passe avant le hachage, pour se
+        protéger des attaques par rainbow table.
+ 
+    Returns
+    -------
+    str
+        Le hash résultant, sous forme hexadécimale.
     """
     password_bytes = password.encode("utf-8") + salt.encode("utf-8")
     hash_object = hashlib.sha256(password_bytes)

@@ -8,11 +8,27 @@ import yaml
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-"""Logging utilities, a copy of teacher's code."""
+"""Utilitaires de journalisation (logging)."""
 
 
 def initialize_logs(name: str):
-    """Initialize logging from a configuration file"""
+    """
+    Initialise la journalisation à partir d'un fichier de configuration.
+ 
+    Crée le dossier `logs` à la racine du projet s'il n'existe pas,
+    charge la configuration de logging depuis `logging_config.yml`,
+    puis écrit un bandeau de démarrage dans les logs.
+ 
+    Parameters
+    ----------
+    name : str
+        Nom de l'application ou du module démarré, affiché dans le
+        bandeau de démarrage des logs.
+ 
+    Returns
+    -------
+    None
+    """
 
     # Create the logs folder at project root if it doesn't exist
     logs_dir = Path(__file__).resolve().parents[2] / "logs"
@@ -31,8 +47,22 @@ def initialize_logs(name: str):
 
 def get_logger(module_name: str, max_size: int = 25):
     """
-    Returns a logger with a shortened name based on the module path.
-    If the path exceeds max_size, it uses initials for the prefix parts.
+    Retourne un logger dont le nom est raccourci si nécessaire.
+ 
+    Si le chemin du module dépasse `max_size` caractères, les parties
+    du chemin (sauf la dernière) sont réduites à leur initiale.
+ 
+    Parameters
+    ----------
+    module_name : str
+        Nom complet du module (ex: `__name__` du module appelant).
+    max_size : int, optional
+        Longueur maximale du nom avant raccourcissement. Par défaut 25.
+ 
+    Returns
+    -------
+    logging.Logger
+        Logger associé au nom (raccourci ou non).
     """
     if len(module_name) <= max_size:
         return logging.getLogger(module_name)
@@ -45,33 +75,74 @@ def get_logger(module_name: str, max_size: int = 25):
 
 
 class LogIndentation:
-    """For indenting logs when entering a new method"""
+    """
+    Gère l'indentation des logs lors de l'entrée dans une nouvelle méthode.
+ 
+    Parameters
+    ----------
+    current_indentation : int
+        Niveau d'indentation courant (nombre de niveaux imbriqués).
+    indentation_size : int
+        Nombre d'espaces représentant un niveau d'indentation.
+    """
 
     current_indentation = 0
     indentation_size = 2
 
     @classmethod
     def increase_indentation(cls):
-        """Increase indentation"""
+        """
+        Augmente le niveau d'indentation courant d'un cran.
+ 
+        Returns
+        -------
+        None
+        """
         cls.current_indentation += 1
 
     @classmethod
     def decrease_indentation(cls):
-        """Decrease indentation"""
+        """
+        Diminue le niveau d'indentation courant d'un cran.
+ 
+        Returns
+        -------
+        None
+        """
         cls.current_indentation -= 1
 
     @classmethod
     def get_indentation(cls):
-        """Get the current indentation"""
+        """
+        Retourne la chaîne d'espaces correspondant à l'indentation courante.
+ 
+        Returns
+        -------
+        str
+            Chaîne composée d'espaces, dont la longueur dépend du niveau
+            d'indentation courant.
+        """
         return " " * cls.indentation_size * cls.current_indentation
 
 
 def log(func):
-    """Decorator to log method calls and their outputs.
-
-    When applied to a method, it logs:
-    - the method call with parameter values
-    - the return value of the method
+    """
+    Décorateur journalisant les appels de méthode et leurs résultats.
+ 
+    Appliqué à une méthode, ce décorateur journalise :
+    - l'appel de la méthode avec la valeur de ses paramètres (les
+      paramètres sensibles comme les mots de passe ou jetons sont masqués) ;
+    - la valeur de retour de la méthode (tronquée si elle est trop longue).
+ 
+    Parameters
+    ----------
+    func : callable
+        Méthode ou fonction à décorer.
+ 
+    Returns
+    -------
+    callable
+        La fonction `wrapper` encapsulant `func` avec la journalisation.
     """
 
     SENSITIVE_KEYWORDS = {
@@ -86,6 +157,21 @@ def log(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
+        """
+        Exécute `func` en journalisant son appel et son résultat.
+ 
+        Parameters
+        ----------
+        *args
+            Arguments positionnels transmis à `func`.
+        **kwargs
+            Arguments nommés transmis à `func`.
+ 
+        Returns
+        -------
+        Any
+            Le résultat retourné par `func`.
+        """
         if args and hasattr(args[0], "__class__"):
             logger = get_logger(f"{args[0].__class__.__module__}")
         else:
@@ -145,10 +231,32 @@ def log(func):
 
 
 class LogMiddleware(BaseHTTPMiddleware):
+    """Middleware FastAPI journalisant les requêtes et réponses HTTP."""
     async def dispatch(self, request: Request, call_next):
         """
-        Middleware to log HTTP requests and responses.
-        It captures the method, path, status code, and error details.
+        Journalise une requête HTTP entrante et sa réponse.
+ 
+        Capture la méthode, le chemin, le code de statut et les détails
+        d'erreur éventuels de la requête traitée.
+ 
+        Parameters
+        ----------
+        request : Request
+            Requête HTTP entrante.
+        call_next : callable
+            Fonction permettant de transmettre la requête au gestionnaire
+            suivant dans la chaîne de middlewares.
+ 
+        Returns
+        -------
+        Response
+            Réponse HTTP renvoyée par le gestionnaire suivant.
+ 
+        Raises
+        ------
+        Exception
+            Toute exception levée pendant le traitement de la requête,
+            journalisée puis propagée.
         """
 
         method = request.method

@@ -5,6 +5,16 @@ from .settings import Settings
 
 
 class DbConnection:
+    """
+    Gère un pool de connexions à la base de données PostgreSQL.
+ 
+    Parameters
+    ----------
+    settings : Settings
+        Configuration contenant les paramètres de connexion à la base
+        de données (hôte, port, nom de la base, utilisateur, mot de
+        passe, schéma).
+    """
     def __init__(self, settings: Settings):
         self._connection_pool = ThreadedConnectionPool(
             minconn=1,
@@ -20,6 +30,17 @@ class DbConnection:
 
     @contextmanager
     def get_connection(self):
+        """
+        Fournit une connexion issue du pool, sous forme de context manager.
+ 
+        La connexion est automatiquement remise dans le pool à la sortie
+        du bloc `with`, qu'une exception soit levée ou non.
+ 
+        Yields
+        ------
+        connection
+            Connexion à la base de données prête à l'emploi.
+        """
         conn = self._connection_pool.getconn()
         try:
             yield conn
@@ -27,4 +48,11 @@ class DbConnection:
             self._connection_pool.putconn(conn)
 
     def close(self):
+        """
+        Ferme toutes les connexions du pool.
+ 
+        Returns
+        -------
+        None
+        """
         self._connection_pool.closeall()
