@@ -3,7 +3,18 @@ from ..dao import StationDAO, StationStatusDAO, StationStatusHourlyDAO
 
 
 class StationService:
-    """Coordinate station and status operations."""
+    """
+    Gère la logique métier liée à la consultation des stations.
+ 
+    Parameters
+    ----------
+    station_dao : StationDAO
+        DAO permettant l'accès aux informations fixes des stations.
+    status_dao : StationStatusDAO
+        DAO permettant l'accès aux statuts en temps réel des stations.
+    hourly_dao : StationStatusHourlyDAO
+        DAO permettant l'accès aux agrégations horaires des stations.
+    """
 
     def __init__(
         self,
@@ -16,13 +27,49 @@ class StationService:
         self.hourly_dao = hourly_dao
 
     def list_stations(self, query_params: dict) -> list[StationInformation]:
-        """List stations."""
+        """
+        Liste les stations selon des critères de recherche.
+ 
+        Parameters
+        ----------
+        query_params : dict
+            Critères de filtrage et/ou de pagination.
+ 
+        Returns
+        -------
+        list of StationInformation
+            Liste des stations correspondant aux critères.
+        """
         raise NotImplementedError
 
     def get_station_current_status(self, station_id: str) -> dict:
-        """Get the current station status."""
+        """
+        Récupère l'état en temps réel d'une station.
+ 
+        Parameters
+        ----------
+        station_id : str
+            Identifiant de la station demandée.
+ 
+        Returns
+        -------
+        dict
+            État courant de la station (vélos/docks disponibles, etc.).
+        """
         raise NotImplementedError
 
     def get_station_history(self, query_params: dict) -> list[dict]:
-        """Get station history."""
+        """
+        Récupère l'historique d'état d'une station sur une période donnée.
+ 
+        Parameters
+        ----------
+        query_params : dict
+            Critères de la requête (ex: station_id, période).
+ 
+        Returns
+        -------
+        list of dict
+            Historique des états de la station sur la période demandée.
+        """
         raise NotImplementedError

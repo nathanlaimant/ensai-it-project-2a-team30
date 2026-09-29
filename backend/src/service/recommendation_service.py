@@ -2,7 +2,18 @@ from ..dao import StationDAO, StationStatusDAO, StationStatusHourlyDAO
 
 
 class RecommendationService:
-    """Coordinate station recommendations."""
+    """
+    Gère la logique métier de recommandation de stations à proximité.
+ 
+    Parameters
+    ----------
+    station_dao : StationDAO
+        DAO permettant l'accès aux informations fixes des stations.
+    status_dao : StationStatusDAO
+        DAO permettant l'accès aux statuts en temps réel des stations.
+    hourly_dao : StationStatusHourlyDAO
+        DAO permettant l'accès aux agrégations horaires des stations.
+    """
 
     def __init__(
         self,
@@ -15,5 +26,18 @@ class RecommendationService:
         self.hourly_dao = hourly_dao
 
     def get_nearby_recommendations(self, query_params: dict) -> list[dict]:
-        """Get nearby station recommendations."""
+        """
+        Recommande des stations à proximité d'une position donnée.
+ 
+        Parameters
+        ----------
+        query_params : dict
+            Critères de la requête (ex: latitude, longitude, rayon).
+ 
+        Returns
+        -------
+        list of dict
+            Liste des stations recommandées, avec leurs informations
+            pertinentes (distance, disponibilité, fiabilité, etc.).
+        """
         raise NotImplementedError
