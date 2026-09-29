@@ -1,4 +1,4 @@
-from ..business_object import StationStatusHourly
+from business_object.station_status_hourly import StationStatusHourly
 
 
 class StationReliabilityCalculator:

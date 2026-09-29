@@ -1,4 +1,4 @@
-from ..business_object import StationStatus
+from business_object.station_status import StationStatus
 
 
 class StationStateClassifier:

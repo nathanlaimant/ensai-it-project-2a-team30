@@ -1,42 +1,46 @@
 from datetime import date
 
-from pydantic import BaseModel
 
-
-class SystemInformation(BaseModel):
+class SystemInformation:
     """
     Décrit le système.
- 
+
     Parameters
     ----------
-    system_id : str
-        Identifiant unique du système.
+    system_id : str | None
+        Identifiant unique du système. Non-nullable, mais peut être None si l'objet n'a pas été persistée.
     language : str
         Langue par défaut des données du système (ex: "fr").
     name : str
         Nom public du système de vélos partagés.
-    url : str
-        URL du site web officiel du système.
-    start_date : date
-        Date de mise en service du système.
-    phone_number : str
-        Numéro de téléphone de contact du système.
-    email : str
-        Adresse email de contact du système.
+    url : str | None
+        URL du site web officiel du système. Nullable.
+    start_date : date | None
+        Date de mise en service du système. Nullable.
+    phone_number : str | None
+        Numéro de téléphone de contact du système. Nullable.
+    email : str | None
+        Adresse email de contact du système. Nullable.
     timezone : str
         Fuseau horaire du système (ex: "Europe/Paris").
- 
-    Returns
-    -------
-    SystemInformation
-        Instance représentant les métadonnées du système.
     """
 
-    system_id: str
-    language: str
-    name: str
-    url: str
-    start_date: date
-    phone_number: str
-    email: str
-    timezone: str
+    def __init__(
+        self,
+        language: str,
+        name: str,
+        url: str | None,
+        start_date: date | None,
+        phone_number: str | None,
+        email: str | None,
+        timezone: str,
+        system_id: str | None = None,
+    ):
+        self.system_id = system_id
+        self.language = language
+        self.name = name
+        self.url = url
+        self.start_date = start_date
+        self.phone_number = phone_number
+        self.email = email
+        self.timezone = timezone

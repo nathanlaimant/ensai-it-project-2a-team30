@@ -1,12 +1,10 @@
 from datetime import datetime
 
-from pydantic import BaseModel
 
-
-class StationStatusHourly(BaseModel):
+class StationStatusHourly:
     """
     Décrit l'agrégation horaire des statistiques d'une station.
- 
+
     Parameters
     ----------
     station_id : str
@@ -31,21 +29,30 @@ class StationStatusHourly(BaseModel):
         Nombre d'occurrences où la station est devenue pleine.
     reliability_score : float
         Score de fiabilité de la station sur le créneau horaire.
- 
-    Returns
-    -------
-    StationStatusHourly
-        Instance représentant l'agrégation horaire.
     """
-    
-    station_id: str
-    bucket_hour: datetime
-    sample_count: int
-    avg_operational_capacity: float
-    avg_num_bikes_available: float
-    avg_num_docks_available: float
-    empty_duration_sec: int
-    full_duration_sec: int
-    empty_events_cnt: int
-    full_events_cnt: int
-    reliability_score: float
+
+    def __init__(
+        self,
+        station_id: str,
+        bucket_hour: datetime,
+        sample_count: int,
+        avg_operational_capacity: float,
+        avg_num_bikes_available: float,
+        avg_num_docks_available: float,
+        empty_duration_sec: int,
+        full_duration_sec: int,
+        empty_events_cnt: int,
+        full_events_cnt: int,
+        reliability_score: float,
+    ):
+        self.station_id = station_id
+        self.bucket_hour = bucket_hour
+        self.sample_count = sample_count
+        self.avg_operational_capacity = avg_operational_capacity
+        self.avg_num_bikes_available = avg_num_bikes_available
+        self.avg_num_docks_available = avg_num_docks_available
+        self.empty_duration_sec = empty_duration_sec
+        self.full_duration_sec = full_duration_sec
+        self.empty_events_cnt = empty_events_cnt
+        self.full_events_cnt = full_events_cnt
+        self.reliability_score = reliability_score

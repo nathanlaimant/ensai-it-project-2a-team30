@@ -14,6 +14,8 @@ dependencies = [
     "requests",
     "regex",
     "uvicorn",
+    "httpx",
+    "apscheduler",
 ]
 
 # Dependencies used only for development, not for runtime

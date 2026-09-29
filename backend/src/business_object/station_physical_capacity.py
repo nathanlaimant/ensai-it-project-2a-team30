@@ -1,10 +1,7 @@
-from pydantic import BaseModel
-
-
-class StationPhysicalCapacity(BaseModel):
+class StationPhysicalCapacity:
     """
     Décrit la capacité physique d'une station pour un certain type de vehicule.
-    
+
     Parameters
     ----------
     station_id : str
@@ -13,13 +10,9 @@ class StationPhysicalCapacity(BaseModel):
         Identifiant unique d'un type de vehicule.
     dock_count : int
         Le nombre de bornes physiques dans une station.
-    
-    Returns
-    -------
-    StationPhysicalCapacity
-        Instance représentant la capacité physique.
     """
 
-    station_id: str
-    vehicle_type_id: str
-    dock_count: int
+    def __init__(self, station_id: str, vehicle_type_id: str, dock_count: int):
+        self.station_id = station_id
+        self.vehicle_type_id = vehicle_type_id
+        self.dock_count = dock_count

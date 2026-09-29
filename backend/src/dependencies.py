@@ -1,6 +1,10 @@
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from dao.favorite_station_dao import FavoriteStationDAO
+from dao.station_dao import StationDAO
+from dao.station_status_dao import StationStatusDAO
+from dao.station_status_hourly_dao import StationStatusHourlyDAO
 from dao.user_dao import UserDAO
 from service.user_service import UserService
 from utils.db_connection import DbConnection
@@ -13,11 +17,39 @@ def get_db(request: Request) -> DbConnection:
     return request.app.state.db
 
 
-def get_user_dao(db: DbConnection = Depends(get_db)) -> UserDAO:
+def get_favorite_station_dao(
+    db: DbConnection = Depends(get_db),
+) -> FavoriteStationDAO:
+    return FavoriteStationDAO(db)
+
+
+def get_station_dao(
+    db: DbConnection = Depends(get_db),
+) -> StationDAO:
+    return StationDAO(db)
+
+
+def get_station_status_dao(
+    db: DbConnection = Depends(get_db),
+) -> StationStatusDAO:
+    return StationStatusDAO(db)
+
+
+def get_station_status_hourly_dao(
+    db: DbConnection = Depends(get_db),
+) -> StationStatusHourlyDAO:
+    return StationStatusHourlyDAO(db)
+
+
+def get_user_dao(
+    db: DbConnection = Depends(get_db),
+) -> UserDAO:
     return UserDAO(db)
 
 
-def get_user_service(user_dao: UserDAO = Depends(get_user_dao)):
+def get_user_service(
+    user_dao: UserDAO = Depends(get_user_dao),
+) -> UserService:
     return UserService(user_dao)
 
 
