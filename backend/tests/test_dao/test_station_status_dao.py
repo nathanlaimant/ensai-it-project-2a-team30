@@ -8,12 +8,29 @@ from utils.reset_database import ResetDatabase
 
 from business_object.station_status import StationStatus
 from dao.station_status_dao import StationStatusDao
-
+# Trouver des station_status_id
 status = [
-    StationStatus(),
+    StationStatus(
+        station_status_id=1,
+        station_id="16bbf68d-685a-4799-9bba-8915f10700e0",
+        num_bikes_available=0,
+        operational_capacity=,
+        is_installed=True,
+        is_renting=True,
+        is_returning=True,
+        last_reported=,
+        station_state=
+    ),
     StationStatus(),
     StationStatus(),
     StationStatus()
+]
+
+stations = [
+    StationInformation(),
+    StationInformation(),
+    StationInformation(),
+    StationInformation()
 ]
 
 
