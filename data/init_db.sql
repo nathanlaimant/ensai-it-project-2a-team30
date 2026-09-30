@@ -75,3 +75,39 @@ CREATE TABLE station_status (
     station_state TEXT NOT NULL CHECK (station_state IN ('FULL', 'EMPTY', 'FUNCTIONAL'))
 );
 
+DROP TABLE IF EXISTS station_status_hourly CASCADE;
+CREATE TABLE station_status_hourly (
+    station_id TEXT NOT NULL REFERENCES station_information(station_id) ON DELETE CASCADE,
+    bucket_hour TIMESTAMPTZ NOT NULL,
+    sample_count INTEGER NOT NULL,
+    avg_operational_capacity REAL NOT NULL,
+    avg_num_bikes_available REAL NOT NULL,
+    avg_num_docks_available REAL NOT NULL,
+    empty_duration_sec INTEGER NOT NULL,
+    full_duration_sec INTEGER NOT NULL,
+    empty_events_cnt INTEGER NOT NULL,
+    full_events_cnt INTEGER NOT NULL,
+    reliability_score REAL NOT NULL,
+    PRIMARY KEY (station_id, bucket_hour)
+);
+
+DROP TABLE IF EXISTS user CASCADE;
+CREATE TABLE "user" (
+    user_id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    role TEXT NOT NULL CHECK (role IN ('ADMIN', 'USER')),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    access_token TEXT
+);
+
+DROP TABLE IF EXISTS user_favorite_station CASCADE;
+CREATE TABLE user_favorite_station (
+    user_id INTEGER NOT NULL REFERENCES "user"(user_id) ON DELETE CASCADE,
+    station_id TEXT NOT NULL REFERENCES station_information(station_id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, station_id)
+);
