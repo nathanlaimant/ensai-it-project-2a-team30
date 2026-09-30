@@ -1,6 +1,7 @@
 import os
 from unittest.mock import patch
 
+import psycopg3
 import pytest
 from utils.reset_database import ResetDatabase
 
@@ -9,73 +10,37 @@ from dao.station_dao import StationDao
 
 stations_list = [
     StationInformation(
-        station_id="id1",
-        name="name1",
-        short_name="n1",
-        lat=4.0,
-        lon=0.9,
-        address="address1",
+        station_id="16bbf68d-685a-4799-9bba-8915f10700e0",
+        name="id_38206",
+        lat=48.8727256662692,
+        lon=2.35437813765038,
         is_virtual_station=True,
-        station_area={
-            type: "MultiPolygon",
-            "coordinates": [
-                [
-                    [
-                        [
-                            11.51,
-                            54.65
-                        ],
-                        [
-                            54.87,
-                            86.21
-                        ],
-                        [
-                            65.21,
-                            66.02
-                        ]
-                    ]
-                ]
-            ]
-        },
-        contact_phone="phone1",
-        capacity=17,
-        is_charging_station=False
+        capacity=3
     ),
     StationInformation(
-        station_id="id1",
-        name="name1",
-        short_name="n1",
-        lat=4.0,
-        lon=0.9,
-        address="address2",
+        station_id="b42cb6d7-0558-4589-ad71-63e374fdb784",
+        name="id_34235",
+        lat=48.8266089252496,
+        lon=2.33467058582095,
         is_virtual_station=True,
-        station_area={
-            type: "MultiPolygon",
-            "coordinates": [
-                [
-                    [
-                        [
-                            11.51,
-                            54.65
-                        ],
-                        [
-                            54.87,
-                            86.21
-                        ],
-                        [
-                            65.61,
-                            66.02
-                        ]
-                    ]
-                ]
-            ]
-        },
-        contact_phone="phone1",
-        capacity=17,
-        is_charging_station=False
+        capacity=3
     ),
-    StationInformation(),
-    StationInformation()
+    StationInformation(
+        station_id="5770705c-cbb1-4baa-a1ca-eb40540b2f40",
+        name="17 RUE DU VIEUX COLOMBIER",
+        lat=48.851759,
+        lon=2.3306,
+        is_virtual_station=True,
+        capacity=3
+    ),
+    StationInformation(
+        station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
+        name="id_old844604G20081106092237",
+        lat=48.8322843827352,
+        lon=2.32105516137791,
+        is_virtual_station=True,
+        capacity=3
+    )
 ]
 
 
@@ -97,11 +62,29 @@ def test_upsert_station_info_ok():
     external_data = [stations_list[1]]
 
     # WHEN
-    local_data = StationDao(external_data)
+    local_data = StationDao().upsert_station_info(external_data)
 
     # THEN
     assert (local_data == external_data) is True
 
+
+def test_upsert_station_info_fail():
+    """L'importation de l'API externe à la liste des stations échoue car un des attributs de la
+    classe StationInformation est incorrect"""
+
+    # GIVEN
+    station = StationInformation(
+        station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
+        name="id_old844604G20081106092237",
+        lat=48.8322843827352,
+        lon=2.32105516137791,
+        is_virtual_station=True,
+        capacity="3"
+    )
+
+    # WHEN / THEN
+    with pytest.raises(psycopg3.Error):
+        StationDao().upsert_station_info(station)
 
 
 # Tests de get_by_id()
@@ -110,7 +93,7 @@ def test_get_by_id_ok():
     """Recherche d'une station par son identifiant réussie"""
 
     # GIVEN
-    id_station = "anid"
+    id_station = "16bbf68d-685a-4799-9bba-8915f10700e0"
 
     # WHEN
     station = StationDao().get_by_id(id_station)
@@ -138,7 +121,7 @@ def test_get_nearby_ok():
     """Recheche de stations proches réussie"""
 
     # GIVEN
-    lat, lon, radius_meter = 25.65, -65.09, 20
+    lat, lon, radius_meter = 48.8727256662692, 2.35437813765038, 20
 
     # WHEN
     stations = StationDao().get_nearby(lat, lon, radius_meter)
@@ -167,7 +150,7 @@ def test_list_stations_ok():
     recherche effectuée"""
 
     # GIVEN
-    name = "nam"
+    name = "id_34235"
 
     # WHEN
     stations = StationDao().list_stations({"name": name})
