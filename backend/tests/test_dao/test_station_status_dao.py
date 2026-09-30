@@ -1,6 +1,6 @@
 import os
 from unittest.mock import patch
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import psycopg3
 import pytest
@@ -8,29 +8,91 @@ from utils.reset_database import ResetDatabase
 
 from business_object.station_status import StationStatus
 from dao.station_status_dao import StationStatusDao
+
+first_date_counted = datetime.datetime(year=1970, month=1, day=1, hour=0, minute=0, second=0)
+
+# Pour ne passer par la fonction StationDao().get_by_id()
+stations = [
+    StationInformation(
+        station_id="16bbf68d-685a-4799-9bba-8915f10700e0",
+        is_virtual_station=True,
+        lat=48.8727256662692,
+        lon=2.35437813765038,
+        name="id_38206",
+        capacity=3
+    ),
+    StationInformation(
+        station_id="b42cb6d7-0558-4589-ad71-63e374fdb784",
+        name="id_34235",
+        is_virtual_station=True,
+        lat=48.8266089252496,
+        lon=2.33467058582095,
+        capacity=3
+    ),
+    StationInformation(
+        station_id="5770705c-cbb1-4baa-a1ca-eb40540b2f40",
+        name="17 RUE DU VIEUX COLOMBIER",
+        is_virtual_station=True,
+        lat=48.851759,
+        lon=2.3306,
+        capacity=3
+    ),
+    StationInformation(
+        station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
+        name="id_old844604G20081106092237,
+        is_virtual_station=True,
+        lat=48.8322843827352,
+        lon=2.32105516137791,
+        capacity=3
+    )
+]
+
 # Trouver des station_status_id
 status = [
     StationStatus(
         station_status_id=1,
         station_id="16bbf68d-685a-4799-9bba-8915f10700e0",
         num_bikes_available=0,
-        operational_capacity=,
+        operational_capacity=stations[0].capacity,
         is_installed=True,
         is_renting=True,
         is_returning=True,
-        last_reported=,
-        station_state=
+        last_reported=first_date_counted + timedelta(seconds=1790760336),
+        station_state="EMPTY"
     ),
-    StationStatus(),
-    StationStatus(),
-    StationStatus()
-]
-
-stations = [
-    StationInformation(),
-    StationInformation(),
-    StationInformation(),
-    StationInformation()
+    StationStatus(
+        station_status_id=2,
+        station_id="b42cb6d7-0558-4589-ad71-63e374fdb784",
+        num_bikes_available=0,
+        operational_capacity=stations[1].capacity,
+        is_installed=True,
+        is_renting=True,
+        is_returning=True,
+        last_reported=first_date_counted + timedelta(seconds=1790676268),
+        station_state="EMPTY"
+    ),
+    StationStatus(
+        station_status_id=3,
+        station_id="5770705c-cbb1-4baa-a1ca-eb40540b2f40",
+        num_bikes_available=0,
+        operational_capacity=stations[2].capacity,
+        is_installed=True,
+        is_renting=True,
+        is_returning=True,
+        last_reported=first_date_counted + timedelta(seconds=1790247765),
+        station_state="EMPTY"
+    ),
+    StationStatus(
+        station_status_id=4,
+        station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
+        num_bikes_available=0,
+        operational_capacity=stations[3].capacity,
+        is_installed=True,
+        is_renting=True,
+        is_returning=True,
+        last_reported=first_date_counted + timedelta(seconds=1790751940),
+        station_state="EMPTY"
+    )
 ]
 
 
