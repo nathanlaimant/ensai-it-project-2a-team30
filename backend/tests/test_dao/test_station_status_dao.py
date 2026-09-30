@@ -2,7 +2,7 @@ import os
 from unittest.mock import patch
 from datetime import datetime
 
-import psycopg2
+import psycopg3
 import pytest
 from utils.reset_database import ResetDatabase
 
@@ -98,5 +98,18 @@ def test_get_status_history_ok():
     # THEN
     for s in status_history:
         assert s.station_id == station_id
-        assert end_time >= s.last_reported
-        assert start_time <= s.last_reported
+        assert (end_time >= s.last_reported and start_time <= s.last_reported)
+
+def test_get_status_history_fail():
+    """Nous échouons à obtenir l'historique du statut d'une station car son identifiant n'est
+    pas reconnu"""
+
+    # GIVEN
+    station_id = "fakeid"
+    start_time, end_time = 1, 1
+
+    # WHEN
+    status_history = StationStatusDao().get_status_history(station_id, start_time, end_time)
+
+    # THEN
+    assert status_history is None
