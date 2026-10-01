@@ -4,7 +4,7 @@ from ..dao import StationDAO, StationStatusDAO, StationStatusHourlyDAO
 class RecommendationService:
     """
     Gère la logique métier de recommandation de stations à proximité.
- 
+
     Parameters
     ----------
     station_dao : StationDAO
@@ -28,12 +28,12 @@ class RecommendationService:
     def get_nearby_recommendations(self, query_params: dict) -> list[dict]:
         """
         Recommande des stations à proximité d'une position donnée.
- 
+
         Parameters
         ----------
         query_params : dict
             Critères de la requête (ex: latitude, longitude, rayon).
- 
+
         Returns
         -------
         list of dict

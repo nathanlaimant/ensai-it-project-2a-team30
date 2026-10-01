@@ -11,14 +11,14 @@ class FavoriteStationDAO:
     def add_favorite(self, user_id: int, station_id: str) -> bool:
         """
         Ajoute une station aux favoris d'un utilisateur.
- 
+
         Parameters
         ----------
         user_id : int
             Identifiant de l'utilisateur.
         station_id : str
             Identifiant de la station à ajouter aux favoris.
- 
+
         Returns
         -------
         bool
@@ -29,12 +29,12 @@ class FavoriteStationDAO:
     def list_by_user(self, user_id: int) -> list[StationInformation]:
         """
         Liste les stations favorites d'un utilisateur.
- 
+
         Parameters
         ----------
         user_id : int
             Identifiant de l'utilisateur.
- 
+
         Returns
         -------
         list of StationInformation
@@ -45,12 +45,12 @@ class FavoriteStationDAO:
     def count_favorites(self, station_ids: list[str]) -> dict[str, int]:
         """
         Compte le nombre d'utilisateurs ayant mis chaque station en favori.
- 
+
         Parameters
         ----------
         station_ids : list of str
             Identifiants des stations concernées.
- 
+
         Returns
         -------
         dict
@@ -62,14 +62,14 @@ class FavoriteStationDAO:
     def remove_favorite(self, user_id: int, station_id: str) -> bool:
         """
         Retire une station des favoris d'un utilisateur.
- 
+
         Parameters
         ----------
         user_id : int
             Identifiant de l'utilisateur.
         station_id : str
             Identifiant de la station à retirer des favoris.
- 
+
         Returns
         -------
         bool

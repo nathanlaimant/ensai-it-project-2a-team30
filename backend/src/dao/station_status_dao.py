@@ -13,12 +13,12 @@ class StationStatusDAO:
     def bulk_insert_status(self, records: list[StationStatus]) -> int:
         """
         Insère en masse une liste d'enregistrements de statut de stations.
- 
+
         Parameters
         ----------
         records : list of StationStatus
             Enregistrements de statut à insérer.
- 
+
         Returns
         -------
         int
@@ -29,12 +29,12 @@ class StationStatusDAO:
     def get_latest_status(self, station_id: str) -> StationStatus:
         """
         Récupère le dernier statut connu d'une station.
- 
+
         Parameters
         ----------
         station_id : str
             Identifiant de la station concernée.
- 
+
         Returns
         -------
         StationStatus
@@ -47,7 +47,7 @@ class StationStatusDAO:
     ) -> list[StationStatus]:
         """
         Récupère l'historique des statuts d'une station sur une période donnée.
- 
+
         Parameters
         ----------
         station_id : str
@@ -56,7 +56,7 @@ class StationStatusDAO:
             Date et heure de début de la période.
         end_time : datetime
             Date et heure de fin de la période.
- 
+
         Returns
         -------
         list of StationStatus

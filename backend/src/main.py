@@ -1,6 +1,6 @@
 """
 Module: main.py
- 
+
 Point d'entrée de l'application FastAPI VeloScope : initialisation des
 logs, gestion du cycle de vie de la connexion à la base de données,
 gestion globale des erreurs de validation, enregistrement des routeurs
@@ -28,15 +28,15 @@ initialize_logs()
 async def lifespan(app: FastAPI):
     """
     Gère le cycle de vie de l'application FastAPI.
- 
+
     Ouvre la connexion à la base de données au démarrage de l'application
     et la ferme proprement à son arrêt.
- 
+
     Parameters
     ----------
     app : FastAPI
         Instance de l'application FastAPI.
- 
+
     Yields
     ------
     None
@@ -56,14 +56,14 @@ app.add_middleware(LogMiddleware)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """
     Intercepte les erreurs de validation Pydantic (422) pour les journaliser.
- 
+
     Parameters
     ----------
     request : Request
         Requête HTTP à l'origine de l'erreur de validation.
     exc : RequestValidationError
         Exception de validation levée par FastAPI/Pydantic.
- 
+
     Returns
     -------
     JSONResponse
@@ -89,7 +89,7 @@ app.include_router(auth_and_user_controller.router)
 async def redirect_to_docs():
     """
     Redirige vers la documentation de l'API (Swagger UI).
- 
+
     Returns
     -------
     RedirectResponse
@@ -102,12 +102,12 @@ async def redirect_to_docs():
 async def hello_name(name: str):
     """
     Affiche un message de salutation personnalisé.
- 
+
     Parameters
     ----------
     name : str
         Nom à inclure dans le message de salutation.
- 
+
     Returns
     -------
     dict

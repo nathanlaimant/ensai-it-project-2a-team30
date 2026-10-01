@@ -5,7 +5,7 @@ from ..dao import StationDAO, StationStatusDAO, StationStatusHourlyDAO
 class StationService:
     """
     Gère la logique métier liée à la consultation des stations.
- 
+
     Parameters
     ----------
     station_dao : StationDAO
@@ -29,12 +29,12 @@ class StationService:
     def list_stations(self, query_params: dict) -> list[StationInformation]:
         """
         Liste les stations selon des critères de recherche.
- 
+
         Parameters
         ----------
         query_params : dict
             Critères de filtrage et/ou de pagination.
- 
+
         Returns
         -------
         list of StationInformation
@@ -45,12 +45,12 @@ class StationService:
     def get_station_current_status(self, station_id: str) -> dict:
         """
         Récupère l'état en temps réel d'une station.
- 
+
         Parameters
         ----------
         station_id : str
             Identifiant de la station demandée.
- 
+
         Returns
         -------
         dict
@@ -61,12 +61,12 @@ class StationService:
     def get_station_history(self, query_params: dict) -> list[dict]:
         """
         Récupère l'historique d'état d'une station sur une période donnée.
- 
+
         Parameters
         ----------
         query_params : dict
             Critères de la requête (ex: station_id, période).
- 
+
         Returns
         -------
         list of dict

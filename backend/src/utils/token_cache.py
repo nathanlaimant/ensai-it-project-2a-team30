@@ -11,14 +11,14 @@ class InMemTokenCache:
     def set(self, token: str, user_id: int) -> None:
         """
         Enregistre un jeton dans le cache, associé à un identifiant utilisateur.
- 
+
         Parameters
         ----------
         token : str
             Jeton à stocker dans le cache.
         user_id : int
             Identifiant de l'utilisateur associé au jeton.
- 
+
         Returns
         -------
         None
@@ -29,12 +29,12 @@ class InMemTokenCache:
     def get(self, token: str) -> int | None:
         """
         Récupère l'identifiant utilisateur associé à un jeton donné.
- 
+
         Parameters
         ----------
         token : str
             Jeton dont on souhaite récupérer l'identifiant utilisateur associé.
- 
+
         Returns
         -------
         int | None
@@ -47,12 +47,12 @@ class InMemTokenCache:
     def delete(self, token: str) -> None:
         """
         Supprime un jeton du cache.
- 
+
         Parameters
         ----------
         token : str
             Jeton à supprimer du cache.
- 
+
         Returns
         -------
         None

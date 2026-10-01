@@ -6,7 +6,7 @@ from .feed_ingestion_strategy import FeedIngestionStrategy
 class StationStatusStrategy(FeedIngestionStrategy[StationStatus]):
     """
     Ingère et persiste les flux de statut en temps réel des stations.
- 
+
     Parameters
     ----------
     dao : StationStatusDAO
@@ -28,14 +28,14 @@ class StationStatusStrategy(FeedIngestionStrategy[StationStatus]):
     def parse_payload(self, headers: dict, raw_data: dict) -> list[StationStatus]:
         """
         Transforme les données brutes d'un flux en entités StationStatus.
- 
+
         Parameters
         ----------
         headers : dict
             En-têtes de la réponse HTTP du flux ingéré.
         raw_data : dict
             Contenu brut du flux à transformer.
- 
+
         Returns
         -------
         list of StationStatus
@@ -46,12 +46,12 @@ class StationStatusStrategy(FeedIngestionStrategy[StationStatus]):
     def persist(self, entities: list[StationStatus]) -> int:
         """
         Persiste une liste de statuts de stations en base de données.
- 
+
         Parameters
         ----------
         entities : list of StationStatus
             Statuts de stations à persister.
- 
+
         Returns
         -------
         int

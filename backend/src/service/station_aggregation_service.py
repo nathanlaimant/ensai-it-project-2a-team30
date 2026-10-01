@@ -4,7 +4,7 @@ from ..dao import StationStatusDAO, StationStatusHourlyDAO
 class StationAggregationService:
     """
     Agrège les statuts en temps réel des stations en statistiques horaires.
- 
+
     Parameters
     ----------
     station_status_dao : StationStatusDAO
@@ -25,7 +25,7 @@ class StationAggregationService:
         """
         Agrège les statuts en temps réel des stations sur l'heure écoulée
         et persiste le résultat sous forme d'agrégations horaires.
- 
+
         Returns
         -------
         int

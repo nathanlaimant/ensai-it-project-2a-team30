@@ -11,6 +11,7 @@ router = APIRouter()
 
 logger = get_logger(__name__)
 
+
 @router.post("/signup", tags=["Authentication"])
 async def signup(
     payload: dict,
@@ -39,12 +40,12 @@ async def login(
 ) -> dict:
     """
     Authentifie un utilisateur et retourne ses informations de session.
- 
+
     Parameters
     ----------
     payload : dict
         Identifiants de connexion (ex: username, mot de passe).
- 
+
     Returns
     -------
     dict
@@ -60,7 +61,7 @@ async def logout(
 ) -> str:
     """
     Déconnecte l'utilisateur actuellement authentifié.
- 
+
     Returns
     -------
     str
@@ -76,7 +77,7 @@ async def get_user_info(
 ) -> User:
     """
     Récupère les informations du profil de l'utilisateur courant.
- 
+
     Returns
     -------
     User
@@ -93,12 +94,12 @@ async def update_user_info(
 ) -> str:
     """
     Met à jour les informations du profil de l'utilisateur courant.
- 
+
     Parameters
     ----------
     payload : dict
         Champs du profil à mettre à jour.
- 
+
     Returns
     -------
     str

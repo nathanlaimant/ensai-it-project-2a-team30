@@ -5,7 +5,7 @@ from ..dao import FavoriteStationDAO
 class FavoriteStationService:
     """
     Gère la logique métier liée aux stations favorites.
-    
+
     Parameters
     ----------
     favorite_dao : FavoriteStationDAO
@@ -18,14 +18,14 @@ class FavoriteStationService:
     def add_favorite_station(self, user_id: int, station_id: str) -> bool:
         """
         Ajoute une station aux favoris d'un utilisateur.
- 
+
         Parameters
         ----------
         user_id : int
             Identifiant de l'utilisateur.
         station_id : str
             Identifiant de la station à ajouter aux favoris.
- 
+
         Returns
         -------
         bool
@@ -36,13 +36,13 @@ class FavoriteStationService:
     def list_favorites(self, query_params: dict) -> list[StationInformation]:
         """
         Liste les stations favorites selon des critères de recherche.
- 
+
         Parameters
         ----------
         query_params : dict
             Critères de filtrage (ex: identifiant de l'utilisateur) et/ou
             de pagination.
- 
+
         Returns
         -------
         list of StationInformation
@@ -53,14 +53,14 @@ class FavoriteStationService:
     def remove_favorite_station(self, user_id: int, station_id: str) -> bool:
         """
         Retire une station des favoris d'un utilisateur.
- 
+
         Parameters
         ----------
         user_id : int
             Identifiant de l'utilisateur.
         station_id : str
             Identifiant de la station à retirer des favoris.
- 
+
         Returns
         -------
         bool

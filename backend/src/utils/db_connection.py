@@ -1,13 +1,15 @@
 from contextlib import contextmanager
-from psycopg2.pool import ThreadedConnectionPool
+
 from psycopg2.extras import RealDictCursor
+from psycopg2.pool import ThreadedConnectionPool
+
 from .settings import Settings
 
 
 class DbConnection:
     """
     Gère un pool de connexions à la base de données PostgreSQL.
- 
+
     Parameters
     ----------
     settings : Settings
@@ -15,6 +17,7 @@ class DbConnection:
         de données (hôte, port, nom de la base, utilisateur, mot de
         passe, schéma).
     """
+
     def __init__(self, settings: Settings):
         self._connection_pool = ThreadedConnectionPool(
             minconn=1,
@@ -32,10 +35,10 @@ class DbConnection:
     def get_connection(self):
         """
         Fournit une connexion issue du pool, sous forme de context manager.
- 
+
         La connexion est automatiquement remise dans le pool à la sortie
         du bloc `with`, qu'une exception soit levée ou non.
- 
+
         Yields
         ------
         connection
@@ -50,7 +53,7 @@ class DbConnection:
     def close(self):
         """
         Ferme toutes les connexions du pool.
- 
+
         Returns
         -------
         None

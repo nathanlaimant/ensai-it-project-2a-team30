@@ -11,12 +11,12 @@ class StationDAO:
     def upsert_station_info(self, station: StationInformation) -> bool:
         """
         Crée ou met à jour les informations d'une station.
- 
+
         Parameters
         ----------
         station : StationInformation
             Informations de la station à créer ou mettre à jour.
- 
+
         Returns
         -------
         bool
@@ -27,12 +27,12 @@ class StationDAO:
     def get_by_id(self, station_id: str) -> StationInformation:
         """
         Récupère une station à partir de son identifiant.
- 
+
         Parameters
         ----------
         station_id : str
             Identifiant de la station recherchée.
- 
+
         Returns
         -------
         StationInformation
@@ -45,7 +45,7 @@ class StationDAO:
     ) -> list[StationInformation]:
         """
         Récupère les stations situées à proximité d'une position donnée.
- 
+
         Parameters
         ----------
         lat : float
@@ -54,7 +54,7 @@ class StationDAO:
             Longitude du point de référence.
         radius_meters : float
             Rayon de recherche en mètres.
- 
+
         Returns
         -------
         list of StationInformation
@@ -65,12 +65,12 @@ class StationDAO:
     def list_stations(self, query_params: dict) -> list[StationInformation]:
         """
         Liste les stations selon des critères de recherche.
- 
+
         Parameters
         ----------
         query_params : dict
             Critères de filtrage et/ou de pagination.
- 
+
         Returns
         -------
         list of StationInformation

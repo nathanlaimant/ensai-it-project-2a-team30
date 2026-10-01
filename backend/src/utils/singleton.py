@@ -1,7 +1,7 @@
 class Singleton(type):
     """Métaclasse garantissant qu'une classe n'a qu'une seule instance,
     tout en fournissant un point d'accès global à cette instance.
- 
+
     Voir : https://refactoring.guru/fr/design-patterns/singleton
     """
 
@@ -10,7 +10,7 @@ class Singleton(type):
     def __call__(cls, *args, **kwargs):
         """
         Retourne l'instance unique de la classe, en la créant si nécessaire.
- 
+
         Parameters
         ----------
         *args
@@ -19,7 +19,7 @@ class Singleton(type):
         **kwargs
             Arguments nommés transmis au constructeur de la classe,
             utilisés uniquement lors de la première instanciation.
- 
+
         Returns
         -------
         object

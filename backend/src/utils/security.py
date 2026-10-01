@@ -4,7 +4,7 @@ import hashlib
 def hash_password(password: str, salt: str = "") -> str:
     """
     Hache un mot de passe avec l'algorithme SHA-256.
- 
+
     Parameters
     ----------
     password : str
@@ -12,7 +12,7 @@ def hash_password(password: str, salt: str = "") -> str:
     salt : str, optional
         Chaîne ajoutée au mot de passe avant le hachage, pour se
         protéger des attaques par rainbow table.
- 
+
     Returns
     -------
     str

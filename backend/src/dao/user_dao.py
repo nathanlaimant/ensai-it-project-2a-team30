@@ -11,12 +11,12 @@ class UserDAO:
     def create_user(self, user: User) -> bool:
         """
         Crée un nouvel utilisateur en base de données.
- 
+
         Parameters
         ----------
         user : User
             Instance de l'utilisateur à créer.
- 
+
         Returns
         -------
         bool
@@ -27,12 +27,12 @@ class UserDAO:
     def get_by_id(self, user_id: int) -> User | None:
         """
         Récupère un utilisateur à partir de son identifiant.
- 
+
         Parameters
         ----------
         user_id : int
             Identifiant de l'utilisateur recherché.
- 
+
         Returns
         -------
         User
@@ -56,12 +56,12 @@ class UserDAO:
     def get_by_username(self, username: str) -> User:
         """
         Récupère un utilisateur à partir de son nom d'utilisateur.
- 
+
         Parameters
         ----------
         username : str
             Nom d'utilisateur recherché.
- 
+
         Returns
         -------
         User
@@ -72,12 +72,12 @@ class UserDAO:
     def get_by_access_token(self, token: str) -> User:
         """
         Récupère un utilisateur à partir de son jeton d'accès.
- 
+
         Parameters
         ----------
         token : str
             Jeton d'accès de l'utilisateur.
- 
+
         Returns
         -------
         User
@@ -88,12 +88,12 @@ class UserDAO:
     def list_users(self, query_params: dict) -> list[User]:
         """
         Liste les utilisateurs selon des critères de recherche.
- 
+
         Parameters
         ----------
         query_params : dict
             Critères de filtrage et/ou de pagination.
- 
+
         Returns
         -------
         list of User
@@ -104,14 +104,14 @@ class UserDAO:
     def update_user(self, user_id: int, updates: dict) -> bool:
         """
         Met à jour les informations d'un utilisateur.
- 
+
         Parameters
         ----------
         user_id : int
             Identifiant de l'utilisateur à mettre à jour.
         updates : dict
             Champs à mettre à jour.
- 
+
         Returns
         -------
         bool
@@ -122,12 +122,12 @@ class UserDAO:
     def delete_user(self, user_id: int) -> bool:
         """
         Supprime un utilisateur de la base de données.
- 
+
         Parameters
         ----------
         user_id : int
             Identifiant de l'utilisateur à supprimer.
- 
+
         Returns
         -------
         bool

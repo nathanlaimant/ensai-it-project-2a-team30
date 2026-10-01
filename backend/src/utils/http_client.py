@@ -7,12 +7,12 @@ class HttpClient:
     def get(self, url: str) -> dict:
         """
         Récupère un contenu JSON à partir d'une URL.
- 
+
         Parameters
         ----------
         url : str
             URL à interroger.
- 
+
         Returns
         -------
         dict

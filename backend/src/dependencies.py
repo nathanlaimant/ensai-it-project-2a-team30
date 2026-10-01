@@ -1,6 +1,6 @@
 """
 Module: dependencies.py
- 
+
 Fonctions de dépendance FastAPI (injection de dépendances) permettant
 de construire et fournir les instances de connexion base de données,
 DAO, services et utilisateur courant authentifié aux endpoints de
@@ -25,13 +25,13 @@ security = HTTPBearer()
 def get_db(request: Request) -> DbConnection:
     """
     Récupère la connexion à la base de données stockée dans l'état de l'application.
- 
+
     Parameters
     ----------
     request : Request
         Requête HTTP entrante, dont l'état de l'application (`app.state`)
         contient l'instance de connexion à la base de données.
- 
+
     Returns
     -------
     DbConnection
@@ -45,12 +45,12 @@ def get_favorite_station_dao(
 ) -> FavoriteStationDAO:
     """
     Construit une instance de FavoriteStationDAO.
- 
+
     Parameters
     ----------
     db : DbConnection
         Connexion à la base de données, injectée via `get_db`.
- 
+
     Returns
     -------
     FavoriteStationDAO
@@ -64,12 +64,12 @@ def get_station_dao(
 ) -> StationDAO:
     """
     Construit une instance de StationDAO.
- 
+
     Parameters
     ----------
     db : DbConnection
         Connexion à la base de données, injectée via `get_db`.
- 
+
     Returns
     -------
     StationDAO
@@ -83,12 +83,12 @@ def get_station_status_dao(
 ) -> StationStatusDAO:
     """
     Construit une instance de StationStatusDAO.
- 
+
     Parameters
     ----------
     db : DbConnection
         Connexion à la base de données, injectée via `get_db`.
- 
+
     Returns
     -------
     StationStatusDAO
@@ -102,12 +102,12 @@ def get_station_status_hourly_dao(
 ) -> StationStatusHourlyDAO:
     """
     Construit une instance de StationStatusHourlyDAO.
- 
+
     Parameters
     ----------
     db : DbConnection
         Connexion à la base de données, injectée via `get_db`.
- 
+
     Returns
     -------
     StationStatusHourlyDAO
@@ -121,12 +121,12 @@ def get_user_dao(
 ) -> UserDAO:
     """
     Construit une instance de UserDAO.
- 
+
     Parameters
     ----------
     db : DbConnection
         Connexion à la base de données, injectée via `get_db`.
- 
+
     Returns
     -------
     UserDAO
@@ -140,12 +140,12 @@ def get_user_service(
 ) -> UserService:
     """
     Construit une instance de UserService.
- 
+
     Parameters
     ----------
     user_dao : UserDAO
         DAO des utilisateurs, injecté via `get_user_dao`.
- 
+
     Returns
     -------
     UserService
@@ -160,11 +160,11 @@ def get_current_user(
 ) -> int:
     """
     Résout l'utilisateur courant à partir du jeton d'authentification.
- 
+
     Vérifie d'abord si le jeton est présent dans le cache en mémoire
     (`app_token_cache`) ; sinon, recherche l'utilisateur en base de
     données via le DAO puis met à jour le cache pour les prochains appels.
- 
+
     Parameters
     ----------
     credentials : HTTPAuthorizationCredentials
@@ -172,12 +172,12 @@ def get_current_user(
         `security`.
     user_dao : UserDAO
         DAO des utilisateurs, injecté via `get_user_dao`.
- 
+
     Returns
     -------
     int
         Identifiant de l'utilisateur authentifié.
- 
+
     Raises
     ------
     HTTPException
