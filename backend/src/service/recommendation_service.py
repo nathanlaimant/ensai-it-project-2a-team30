@@ -1,4 +1,6 @@
-from ..dao import StationDAO, StationStatusDAO, StationStatusHourlyDAO
+from dao.station_dao import StationDAO
+from dao.station_status_dao import StationStatusDAO
+from dao.station_status_hourly_dao import StationStatusHourlyDAO
 
 
 class RecommendationService:

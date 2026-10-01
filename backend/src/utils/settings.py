@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     uvicorn_host: str = Field(default="127.0.0.1")
     uvicorn_port: int = Field(default=5000)
 
-    settings_config = SettingsConfigDict(
+    model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,
         extra="ignore",

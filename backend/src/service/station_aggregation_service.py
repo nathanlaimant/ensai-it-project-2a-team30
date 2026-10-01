@@ -1,4 +1,5 @@
-from ..dao import StationStatusDAO, StationStatusHourlyDAO
+from dao.station_status_dao import StationStatusDAO
+from dao.station_status_hourly_dao import StationStatusHourlyDAO
 
 
 class StationAggregationService:

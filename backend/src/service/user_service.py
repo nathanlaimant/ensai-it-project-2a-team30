@@ -1,5 +1,5 @@
-from ..business_object import User
-from ..dao import UserDAO
+from business_object.user import User
+from dao.user_dao import UserDAO
 
 
 class UserService:

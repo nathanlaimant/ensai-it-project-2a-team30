@@ -1,5 +1,7 @@
-from ..business_object import StationInformation
-from ..dao import StationDAO, StationStatusDAO, StationStatusHourlyDAO
+from business_object.station_information import StationInformation
+from dao.station_dao import StationDAO
+from dao.station_status_dao import StationStatusDAO
+from dao.station_status_hourly_dao import StationStatusHourlyDAO
 
 
 class StationService:
