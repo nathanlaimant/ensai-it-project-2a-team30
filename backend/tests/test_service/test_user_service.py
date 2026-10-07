@@ -168,12 +168,42 @@ def test_list_users_wrong_param():
 def test_update_user_ok():
     """La mise à jour d'un utilisateur est réussie"""
 
+    # GIVEN
+    id, update = 1, {"username": "newname"}
+    UserDao().update_user(id, update) = MagicMock(return_value=True)
+
+    # WHEN
+    updated = UserService().update_user(id, update)
+
+    # THEN
+    assert updated
+
 
 def test_update_user_wrong_id():
     """Impossibilité de mettre à jour l'utilisateur car l'identifiant donné n'est pas
     reconnu"""
 
+    # GIVEN
+    id, update = 565768, {"username": "newname"}
+    UserDao().update_user(id, update) = MagicMock(return_value=False)
+
+    # WHEN
+    updated = UserService().update_user(id, update)
+
+    # THEN
+    assert not updated
+
 
 def test_update_user_wrong_param():
     """Impossibilité de mettre à jour l'utilisateur car l'un des paramètres donné n'est
     pas dans le bon format"""
+
+    # GIVEN
+    id, update = 1, {"username": 3}
+    UserDao().update_user(id, update) = MagicMock(return_value=False)
+
+    # WHEN
+    updated = UserService().update_user(id, update)
+
+    # THEN
+    assert not updated
