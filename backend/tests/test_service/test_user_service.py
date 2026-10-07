@@ -97,9 +97,29 @@ def test_login_wrong_info():
 def test_logout_ok():
     """La déconnexion est réussie"""
 
+    # GIVEN
+    id = 1
+    UserDao().get_by_id(id) = MagicMock(return_value=User())
+
+    # WHEN
+    logged_out = UserService().logout(id)
+
+    # THEN
+    assert logged_out
+
 
 def test_logout_wrong_id():
     """La déconnexion échoue car l'identifiant donné n'est pas reconnu"""
+
+    # GIVEN
+    id = 6566898089
+    UserDao().get_by_id(id) = MagicMock(return_value=None)
+
+    # WHEN
+    logged_out = UserService().logout(id)
+
+    # THEN
+    assert not logged_out
 
 
 # Tests de list_users()
