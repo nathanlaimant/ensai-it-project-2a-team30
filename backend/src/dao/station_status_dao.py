@@ -61,5 +61,7 @@ class StationStatusDAO:
         -------
         list of StationStatus
             Liste des statuts de la station sur la période demandée.
+            Ne renvoie rien si la station est introuvable ou si les bornes chronologiques
+            ne sont pas disponibles dans la base de données.
         """
         raise NotImplementedError
