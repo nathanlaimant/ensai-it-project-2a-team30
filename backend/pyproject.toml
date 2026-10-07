@@ -20,7 +20,16 @@ dependencies = [
 
 # Dependencies used only for development, not for runtime
 [project.optional-dependencies]
-dev = ["bandit", "coverage", "pylint", "pytest", "ruff"]
+dev = [
+    "bandit",
+    "black",
+    "coverage",
+    "mypy",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "ruff",
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]
@@ -43,7 +52,10 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.mypy]
+mypy_path = "src"
+explicit_package_bases = true
 plugins = ['pydantic.mypy']
+exclude = ["test_"]
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
