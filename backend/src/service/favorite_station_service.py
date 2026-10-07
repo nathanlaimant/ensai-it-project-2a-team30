@@ -1,5 +1,5 @@
 from business_object.station_information import StationInformation
-from dao.favorite_station_dao import FavoriteStationDAO
+from dao.favorite_station_dao import FavoriteStationDao
 
 
 class FavoriteStationService:
