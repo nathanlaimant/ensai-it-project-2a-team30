@@ -127,14 +127,40 @@ def test_logout_wrong_id():
 def test_list_users_no_params():
     """Nous obtenons la liste des utilisateurs sans paramètres de tri"""
 
+    # GIVEN
+    UserDao().list_users() = MagicMock(return_value=user_list)
+
+    # WHEN
+    list = UserService().list_users()
+
+    # THEN
+    assert len(list) == len(user_list)
+    for u in list:
+        assert isinstance(u, User)
+
 
 def test_list_users_with_params():
     """Nous obtenons la liste des utilisateurs avec un paramètre de tri"""
+
+    # GIVEN
+    ex_username = "m"
+    UserDao().list_users(query_params={"username": ex_username}) = MagicMock(return_value=user_list[2])
+
+    # WHEN
+    list = UserService().list_users(query_params={"username": ex_username})
+
+    # THEN
+    assert len(list) == 1
+    for u in list:
+        assert isinstance(u, User)
 
 
 def test_list_users_wrong_param():
     """Nous n'obtenons pas de liste d'utilisateurs car un des paramètres rensignés n'est pas
     dans le bon format"""
+
+    # GIVEN
+    ex_username = 2
 
 
 # Tests de update_user()
