@@ -128,9 +128,9 @@ def test_get_by_access_token_non_existing():
     assert user is None
 
 
-# Test de list_users()
+# Tests de list_users()
 
-def test_list_users():
+def test_list_users_no_params():
     """Nous vérifions si la méthode retourne bien une liste d'objets User
     de taille supérieure à 2"""
 
@@ -142,6 +142,11 @@ def test_list_users():
     for p in users:
         assert isinstance(p, User)
     assert len(users) >= 2
+
+
+def test_list_users_with_params():
+    """Nous vérifions si la méthode retourne bien une liste d'objets User qui est filtrée
+    selon le paramètre indiqué"""
 
 
 # Tests de update_user()
