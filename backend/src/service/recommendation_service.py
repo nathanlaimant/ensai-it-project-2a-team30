@@ -41,5 +41,6 @@ class RecommendationService:
         list of dict
             Liste des stations recommandées, avec leurs informations
             pertinentes (distance, disponibilité, fiabilité, etc.).
+            Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
         raise NotImplementedError
