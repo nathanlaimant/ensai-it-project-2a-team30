@@ -46,6 +46,8 @@ class UserService:
         -------
         str
             Jeton d'accès de la session créée.
+            Ne renvoie rien si les deux arguments ne correspondent pas au nom d'utilisateur
+            et au mot de passe d'un même utilisateur.
         """
         raise NotImplementedError
 
@@ -78,6 +80,7 @@ class UserService:
         -------
         list of User
             Liste des utilisateurs correspondant aux critères.
+            Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
         raise NotImplementedError
 
