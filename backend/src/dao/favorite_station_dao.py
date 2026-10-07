@@ -39,6 +39,7 @@ class FavoriteStationDAO:
         -------
         list of StationInformation
             Liste des stations favorites de l'utilisateur.
+            Ne renvoie rien si l'utilisateur n'est pas reconnu avec son identifiant.
         """
         raise NotImplementedError
 
@@ -56,6 +57,8 @@ class FavoriteStationDAO:
         dict
             Dictionnaire associant chaque identifiant de station à son
             nombre de favoris.
+            Ne renvoie rien si un ou plusieurs identifiants de stations ne sont
+            pas reconnus.
         """
         raise NotImplementedError
 
