@@ -33,20 +33,20 @@ class FavoriteStationService:
         """
         raise NotImplementedError
 
-    def list_favorites(self, query_params: dict) -> list[StationInformation]:
+    def list_by_user(self, user_id: int) -> list[StationInformation]:
         """
         Liste les stations favorites selon des critères de recherche.
 
         Parameters
         ----------
-        query_params : dict
-            Critères de filtrage (ex: identifiant de l'utilisateur) et/ou
-            de pagination.
+        user_id : int
+            Identifiant de l'utilisateur.
 
         Returns
         -------
         list of StationInformation
             Liste des stations favorites correspondant aux critères.
+            Ne renvoie rien si l'utilisateur n'est pas reconnu.
         """
         raise NotImplementedError
 
