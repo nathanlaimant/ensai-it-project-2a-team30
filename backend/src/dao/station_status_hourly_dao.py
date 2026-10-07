@@ -44,6 +44,8 @@ class StationStatusHourlyDAO:
         -------
         list of StationStatusHourly
             Liste des agrégations horaires de la station sur la période demandée.
+            Ne renvoie rien si la station n'est pas identifiable ou si les brones chronologiques
+            ne sont pas présentes dans la base de données.
         """
         raise NotImplementedError
 
@@ -66,5 +68,7 @@ class StationStatusHourlyDAO:
         -------
         list of dict
             Liste des statistiques journalières agrégées de la station.
+            Ne renvoie rien si la station n'est pas identifiable ou que les bornes chronologiques
+            ne sont pas présentes dans la base de données.
         """
         raise NotImplementedError
