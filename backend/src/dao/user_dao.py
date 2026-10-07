@@ -98,6 +98,7 @@ class UserDAO:
         -------
         list of User
             Liste des utilisateurs correspondant aux critères.
+            Ne renvoie rien si l'un des critères de recherche n'est pas dans le bon format.
         """
         raise NotImplementedError
 
