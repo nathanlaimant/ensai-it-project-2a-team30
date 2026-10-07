@@ -41,6 +41,7 @@ class StationService:
         -------
         list of StationInformation
             Liste des stations correspondant aux critères.
+            Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
         raise NotImplementedError
 
@@ -57,6 +58,7 @@ class StationService:
         -------
         dict
             État courant de la station (vélos/docks disponibles, etc.).
+            Ne renvoie rien si la station n'est pas identifiable.
         """
         raise NotImplementedError
 
@@ -73,5 +75,7 @@ class StationService:
         -------
         list of dict
             Historique des états de la station sur la période demandée.
+            Ne renvoie rien si la station n'est pas identifiable, ou l'un des autres
+            critères n'est pas dans le bon format.
         """
         raise NotImplementedError
