@@ -75,5 +75,6 @@ class StationDAO:
         -------
         list of StationInformation
             Liste des stations correspondant aux critères.
+            Ne renvoie rien lorsqu'un des critères ne correspond à aucune station.
         """
         raise NotImplementedError
