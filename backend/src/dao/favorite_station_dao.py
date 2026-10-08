@@ -28,14 +28,16 @@ class FavoriteStationDAO:
         """
         raise NotImplementedError
 
-    def list_by_user(self, user_id: int) -> list[StationInformation]:
+    def list_favorites(self, query_params: dict) -> list[StationInformation]:
         """
         Liste les stations favorites d'un utilisateur.
 
         Parameters
         ----------
-        user_id : int
-            Identifiant de l'utilisateur.
+        query_params: dict
+            Identifiant de l'utilisateur, 
+            Limite du nombre de stations par page d'affichage
+            Nombre de pages maximum à afficher.
 
         Returns
         -------
