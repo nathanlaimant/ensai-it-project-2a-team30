@@ -2,8 +2,10 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from business_object.user import User
-from dependencies import get_current_user, get_user_service
+from dependencies.authentication import get_current_user
+from dependencies.service import get_user_service
+from schema.common_model import MessageResponse
+from schema.user_model import UserResponse
 from service.user_service import UserService
 from utils.log_utils import get_logger
 
@@ -12,12 +14,12 @@ router = APIRouter(prefix="/admin", tags=["Administration"])
 logger = get_logger(__name__)
 
 
-@router.get("/users")
+@router.post("/users", response_model=list[UserResponse])
 async def list_users(
     payload: dict,
     user_service: UserService = Depends(get_user_service),
     admin_id: int = Depends(get_current_user),
-) -> list[User]:
+) -> list[UserResponse]:
     """
     Liste les utilisateurs selon des critères de recherche.
 
@@ -38,12 +40,12 @@ async def list_users(
     raise NotImplementedError
 
 
-@router.post("/users/activate/{user_id}")
+@router.post("/users/activate/{user_id}", response_model=MessageResponse)
 def activate_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
     admin_id: int = Depends(get_current_user),
-) -> str:
+) -> MessageResponse:
     """
     Active le compte d'un utilisateur.
 
@@ -64,12 +66,12 @@ def activate_user(
     raise NotImplementedError
 
 
-@router.post("/users/deactivate/{user_id}")
+@router.post("/users/deactivate/{user_id}", response_model=MessageResponse)
 def deactivate_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
     admin_id: int = Depends(get_current_user),
-) -> str:
+) -> MessageResponse:
     """
     Désactive le compte d'un utilisateur.
 

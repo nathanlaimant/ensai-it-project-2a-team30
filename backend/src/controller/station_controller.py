@@ -1,7 +1,7 @@
 """Gère les consultations de stations."""
 
-from ..business_object.station_information import StationInformation
-from ..service.station_service import StationService
+from business_object.station_information import StationInformation
+from service.station_service import StationService
 
 
 def get_station_info(station_id: str) -> StationInformation:
