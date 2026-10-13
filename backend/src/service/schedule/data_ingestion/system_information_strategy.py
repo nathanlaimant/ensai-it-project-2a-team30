@@ -3,11 +3,12 @@ from typing import Any
 import httpx
 
 from business_object.system_information import SystemInformation
+from dao.system_information_dao import SystemInformationDAO
 
-from .feed_ingestion_strategy import FeedIngestionStrategy
+from .feed_ingestion_strategy import BaseIngestionStrategy
 
 
-class SystemInformationStrategy(FeedIngestionStrategy[SystemInformation]):
+class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
     """Ingest system information feeds."""
 
     def __init__(
@@ -15,10 +16,9 @@ class SystemInformationStrategy(FeedIngestionStrategy[SystemInformation]):
         dao: SystemInformationDAO,
         feed_name: str,
         url: str,
-        interval_seconds: int,
         http_client: httpx.AsyncClient,
     ):
-        super().__init__(feed_name, url, interval_seconds, http_client)
+        super().__init__(feed_name, url, http_client)
         self.dao = dao
 
     def parse_payload(self, raw_data: Any) -> list[SystemInformation]:

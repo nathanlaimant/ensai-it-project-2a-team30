@@ -3,11 +3,12 @@ from typing import Any
 import httpx
 
 from business_object.vehicle_type import VehicleType
+from dao.vehicle_type_dao import VehicleTypeDAO
 
-from .feed_ingestion_strategy import FeedIngestionStrategy
+from .feed_ingestion_strategy import BaseIngestionStrategy
 
 
-class VehicleTypeStrategy(FeedIngestionStrategy[VehicleType]):
+class VehicleTypeStrategy(BaseIngestionStrategy[VehicleType]):
     """Ingest vehicle type feeds."""
 
     def __init__(
@@ -15,10 +16,9 @@ class VehicleTypeStrategy(FeedIngestionStrategy[VehicleType]):
         dao: VehicleTypeDAO,
         feed_name: str,
         url: str,
-        interval_seconds: int,
         http_client: httpx.AsyncClient,
     ):
-        super().__init__(feed_name, url, interval_seconds, http_client)
+        super().__init__(feed_name, url, http_client)
         self.dao = dao
 
     def parse_payload(self, raw_data: Any) -> list[VehicleType]:

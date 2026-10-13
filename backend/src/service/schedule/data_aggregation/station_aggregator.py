@@ -2,7 +2,7 @@ from dao.station_status_dao import StationStatusDAO
 from dao.station_status_hourly_dao import StationStatusHourlyDAO
 
 
-class StationAggregationService:
+class StationAggregator:
     """
     Agrège les statuts en temps réel des stations en statistiques horaires.
 
@@ -22,7 +22,7 @@ class StationAggregationService:
         self.station_status_dao = station_status_dao
         self.station_hourly_dao = station_hourly_dao
 
-    def aggregate_hourly_stats(self) -> int:
+    async def aggregate_hourly_stats(self) -> int:
         """
         Agrège les statuts en temps réel des stations sur l'heure écoulée
         et persiste le résultat sous forme d'agrégations horaires.

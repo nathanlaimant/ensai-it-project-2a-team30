@@ -5,10 +5,10 @@ import httpx
 from business_object.station_information import StationInformation
 from dao import StationDAO
 
-from .feed_ingestion_strategy import FeedIngestionStrategy
+from .feed_ingestion_strategy import BaseIngestionStrategy
 
 
-class StationInformationStrategy(FeedIngestionStrategy[StationInformation]):
+class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
     """Ingest station information feeds."""
 
     def __init__(
@@ -16,10 +16,9 @@ class StationInformationStrategy(FeedIngestionStrategy[StationInformation]):
         dao: StationDAO,
         feed_name: str,
         url: str,
-        interval_seconds: int,
         http_client: httpx.AsyncClient,
     ):
-        super().__init__(feed_name, url, interval_seconds, http_client)
+        super().__init__(feed_name, url, http_client)
         self.dao = dao
 
     def parse_payload(self, raw_data: Any) -> list[StationInformation]:

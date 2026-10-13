@@ -15,22 +15,20 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from controller import admin_controller, auth_and_user_controller
-from utils.db_connection import DbConnection
+from dependencies.job import get_job_scheduler
+from dependencies.utils import get_db, get_http_client
 from utils.log_utils import LogMiddleware, get_logger, initialize_logs
 from utils.settings import get_settings
 
 logger = get_logger(__name__)
 
-initialize_logs()
+initialize_logs("VeloScopeWS")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Gère le cycle de vie de l'application FastAPI.
-
-    Ouvre la connexion à la base de données au démarrage de l'application
-    et la ferme proprement à son arrêt.
 
     Parameters
     ----------
@@ -42,9 +40,14 @@ async def lifespan(app: FastAPI):
     None
         Contrôle rendu à l'application pendant toute sa durée de vie.
     """
-    app.state.db = DbConnection(get_settings())
+    job_scheduler = get_job_scheduler()
+    job_scheduler.start()
+
     yield
-    app.state.db.close()
+
+    job_scheduler.shutdown()
+    await get_http_client().aclose()
+    get_db().close()
 
 
 app = FastAPI(title="VeloScope webservice", lifespan=lifespan)
