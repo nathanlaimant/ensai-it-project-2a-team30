@@ -29,8 +29,8 @@ class Settings(BaseSettings):
     """
 
     postgres_host: str = Field(default=...)
-    postgres_port: int = Field(default=...)
-    postgres_database: str = Field(default=...)
+    postgres_port: int = Field(default=5432)
+    postgres_database: str = Field(default="defaultdb")
     postgres_user: str = Field(default=...)
     postgres_password: str = Field(default=...)
     postgres_schema: str = Field(default=...)
