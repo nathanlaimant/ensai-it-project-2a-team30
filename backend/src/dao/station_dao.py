@@ -131,7 +131,13 @@ class StationDAO:
                     cursor.execute(
                         "SELECT *"
                         "FROM station_information"
-                        "WHERE 2 * radius_meters * ASIN(SQRT(POWER(SIN(), 2) + COS() * COS() * POWER(SIN(),2)))"
+                        "WHERE 2 * 6371200 * ASIN(SQRT(POWER(SIN(%(t)s * (lat - %(lat_dep)s) / 2), 2) + COS(lat * %(t)s) * COS(%(lat_dep)s * %(t)s) * POWER(SIN(%(t)s * (lon - %(lon_dep)s) / 2),2))) <= %(radius_meters)s",
+                        {
+                            "lat_dep": lat,
+                            "lon_dep": lon,
+                            "radius_meters": radius_meters,
+                            "t": t
+                        }
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -143,17 +149,17 @@ class StationDAO:
             stations_list = []
             for i in range(len(res)):
                 stations_list[i] = StationInformation(
-                    station_id=res["station_id"],
-                    name=res["name"],
-                    short_name=res["short_name"],
-                    lat=res["lat"],
-                    lon=res["lon"],
-                    address=res["address"],
-                    is_virtual_station=res["is_virtual_station"],
-                    station_area=res["station_area"],
-                    contact_phone=res["contact_phone"],
-                    capacity=res["capacity"],
-                    is_charging_station=res["is_charging_station"]
+                    station_id=res[i]["station_id"],
+                    name=res[i]["name"],
+                    short_name=res[i]["short_name"],
+                    lat=res[i]["lat"],
+                    lon=res[i]["lon"],
+                    address=res[i]["address"],
+                    is_virtual_station=res[i]["is_virtual_station"],
+                    station_area=res[i]["station_area"],
+                    contact_phone=res[i]["contact_phone"],
+                    capacity=res[i]["capacity"],
+                    is_charging_station=res[i]["is_charging_station"]
                 )
         return stations_list
 
@@ -172,4 +178,53 @@ class StationDAO:
             Liste des stations correspondant aux critères.
             Ne renvoie rien lorsqu'un des critères n'est pas dans le bon format.
         """
-        raise NotImplementedError
+        # L'ensemble des attributs de StationInformation peuvent être utilisés
+        # La pagination sert à limiter le nombre de stations qui s'affichent sur une page internet
+        res = None
+        
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT *"
+                        "FROM station_information"
+                        "WHERE ",
+                        {
+                            "station_id": query_params["station_id"],
+                            "name": query_params["name"],
+                            "short_name": query_params["hort_name"],
+                            "lat": query_params["lat"],
+                            "lon": query_params["lon"],
+                            "address": query_params["address"],
+                            "is_virtual_station": query_params["is_virtual_station"],
+                            "station_area": query_params["station_area"],
+                            "contact_phone": query_params["contact_phone"],
+                            "capacity": query_params["capacity"],
+                            "is_charging_station": query_params["is_charging_station"]
+                        }
+                    )
+                    res = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        stations_list = None
+        if res:
+            stations_list = []
+            for i in range(len(res)):
+                stations_list[i] = StationInformation(
+                    station_id=res[i]["station_id"],
+                    name=res[i]["name"],
+                    short_name=res[i]["short_name"],
+                    lat=res[i]["lat"],
+                    lon=res[i]["lon"],
+                    address=res[i]["address"],
+                    is_virtual_station=res[i]["is_virtual_station"],
+                    station_area=res[i]["station_area"],
+                    contact_phone=res[i]["contact_phone"],
+                    capacity=res[i]["capacity"],
+                    is_charging_station=res[i]["is_charging_station"]
+                )
+            if isinstance(query_params["nb_pages"], int) and query_params["nb_pages"] > 1:
+                
+        return stations_list
