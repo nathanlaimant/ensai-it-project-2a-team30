@@ -1,11 +1,13 @@
 #
 
-From project root:
+`cd backend` to go into backend/ from project root
 
-`cd backend`
+Inside `backend/`:
 
 `uv sync` for production
 
 `uv sync --all-extras` for development
 
 `uv run mypy src` for mypy check
+
+`uv run .\src\main.py` for start your webservice
