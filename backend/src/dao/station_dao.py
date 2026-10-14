@@ -121,18 +121,7 @@ class StationDAO:
         list of StationInformation
             Liste des stations situées dans le rayon demandé.
         """
-        res = None
-
-        if lat < 0:
-            lat_meters = 20003931.5 * (0.5 - lat / 90)
-        else:
-            lat_meters = 20003931.5 * (1 - lat / 90)
-
-        len_parallel = 1 # à revoir
-        if lon < 0:
-            lon_meters = - len_parallel * (1 - lon / 360) # on va vers l'est
-        else:
-            lon_meters = len_parallel * lon / 360
+        res = None # Use the Haversine formula
 
         try:
             with DBConnection().connection as connection:
