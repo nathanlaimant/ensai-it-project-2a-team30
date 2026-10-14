@@ -1,5 +1,6 @@
 from business_object.user import User
 from utils.db_connection import DbConnection
+from src.utils.db_connection import DBConnection
 
 
 class UserDAO:
@@ -22,7 +23,27 @@ class UserDAO:
         bool
             True si la création a réussi.
         """
-        raise NotImplementedError
+        with DBConnection().connection as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO "user" (username, password_hash, email, role)
+                    VALUES (%(username)s, %(password_hash)s, %(email)s, %(role)s)
+                    RETURNING user_id;
+                    """,
+                    {
+                        "username": user.username,
+                        "password_hash": pwd,
+                        "email": user.email,
+                        "role": user.role,
+                    },
+                )
+                res = cursor.fetchone()
+                if res:
+                    user.user_id = res["user_id"]
+                    return True
+
+        return False
 
     def get_by_id(self, user_id: int) -> User | None:
         """
@@ -67,7 +88,24 @@ class UserDAO:
         User
             Instance de l'utilisateur correspondant, ou None si introuvable.
         """
-        raise NotImplementedError
+        with DBConnection().connection as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """SELECT * FROM "user" WHERE username = %(username)s;""",
+                    {"username": username},
+                )
+                result = cursor.fetchone()
+                if result:
+                    return User(
+                        user_id=result["user_id"],
+                        username=result["username"],
+                        password_hash=result["password_hash"],
+                        email=result["email"],
+                        role=result["role"],
+                        is_active=result["is_active"],
+                    )
+
+        return None
 
     def get_by_access_token(self, token: str) -> User:
         """
@@ -83,7 +121,23 @@ class UserDAO:
         User
             Instance de l'utilisateur correspondant, ou None si introuvable.
         """
-        raise NotImplementedError
+        with DBConnection().connection as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """SELECT * FROM "user" WHERE access_token = %(token)s;""",
+                    {"token": token},
+                )
+                result = cursor.fetchone()
+                if result:
+                    return User(
+                        user_id=result["user_id"],
+                        username=result["username"],
+                        password_hash=result["password_hash"],
+                        email=result["email"],
+                        role=result["role"],
+                        is_active=result["is_active"],
+                    )
+        return None
 
     def list_users(self, query_params: dict) -> list[User]:
         """
