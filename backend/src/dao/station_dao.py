@@ -123,10 +123,16 @@ class StationDAO:
         """
         res = None # Use the Haversine formula
 
+        t = 0.01745329251994 # nombre de radian dans 1°
+
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute()
+                    cursor.execute(
+                        "SELECT *"
+                        "FROM station_information"
+                        "WHERE 2 * radius_meters * ASIN(SQRT(POWER(SIN(), 2) + COS() * COS() * POWER(SIN(),2)))"
+                    )
                     res = cursor.fetchone()
         except Exception as e:
             logger.error(e)
