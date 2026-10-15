@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import date
 
 
@@ -44,3 +46,21 @@ class SystemInformation:
         self.phone_number = phone_number
         self.email = email
         self.timezone = timezone
+
+    @classmethod
+    def from_dict(cls, data: dict) -> SystemInformation:
+        """Crée une instance de SystemInformation à partir d'un dictionnaire."""
+        return cls(
+            language=data["language"],
+            name=data["name"],
+            url=data.get("url"),
+            start_date=(
+                date.fromisoformat(data["start_date"])
+                if data.get("start_date")
+                else None
+            ),
+            phone_number=data.get("phone_number"),
+            email=data.get("email"),
+            timezone=data["timezone"],
+            system_id=data["system_id"],
+        )

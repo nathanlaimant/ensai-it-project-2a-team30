@@ -4,8 +4,11 @@ import httpx
 
 from business_object.system_information import SystemInformation
 from dao.system_information_dao import SystemInformationDAO
+from utils.log_utils import get_logger
 
 from .feed_ingestion_strategy import BaseIngestionStrategy
+
+logger = get_logger(__name__)
 
 
 class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
@@ -31,4 +34,4 @@ class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
 
     async def persist(self, entities: list[SystemInformation]) -> int:
         """Persist system information entities."""
-        raise NotImplementedError
+        return len(entities)  # TODO

@@ -27,7 +27,7 @@ class DbConnection:
             database=settings.postgres_database,
             user=settings.postgres_user,
             password=settings.postgres_password,
-            options=f"-c search_path={settings.postgres_schema}",
+            options=f"-c search_path={settings.postgres_schema} -c timezone=UTC",
             cursor_factory=RealDictCursor,
         )
 
