@@ -3,22 +3,14 @@
 DROP TABLE IF EXISTS vehicle_type CASCADE;
 CREATE TABLE vehicle_type(
     vehicle_type_id TEXT PRIMARY KEY,
-    form_factor TEXT NOT NULL CHECK (form_factor IN (
-        'bicycle', 'cargo_bicycle', 'car', 'moped', 
-        'scooter', 'scooter_standing', 'scooter_seated', 'other'
-    )),
+    form_factor TEXT NOT NULL,
     rider_capacity INT,
     cargo_volume_capacity INT,
     cargo_load_capacity INT,
-    propulsion_type TEXT NOT NULL CHECK (propulsion_type IN (
-        'human', 'electric_assist', 'electric', 'combustion', 
-        'combustion_diesel', 'hybrid', 'plug_in_hybrid', 'hydrogen_fuel_cell'
-    )),
+    propulsion_type TEXT NOT NULL,
     max_range_meters REAL,
     name TEXT,
-    return_constraint TEXT CHECK (return_constraint IN (
-        'free_floating', 'roundtrip_station', 'any_station', 'hybrid'
-    ))
+    return_constraint TEXT
 );
 
 DROP TABLE IF EXISTS system_information CASCADE;
@@ -79,7 +71,7 @@ CREATE TABLE station_status (
     last_reported TIMESTAMPTZ NOT NULL,
     vehicle_types_available JSONB,
     vehicle_docks_available JSONB,
-    station_state TEXT NOT NULL CHECK (station_state IN ('FULL', 'EMPTY', 'FUNCTIONAL'))
+    station_state TEXT NOT NULL
 );
 
 DROP TABLE IF EXISTS station_status_hourly CASCADE;
@@ -104,7 +96,7 @@ CREATE TABLE "user" (
     username TEXT NOT NULL UNIQUE,
     password_hashed TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
-    role TEXT NOT NULL CHECK (role IN ('ADMIN', 'USER')),
+    role TEXT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
