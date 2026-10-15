@@ -9,7 +9,20 @@ from .feed_ingestion_strategy import BaseIngestionStrategy
 
 
 class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
-    """Ingest system information feeds."""
+    """
+    Ingère le flux d'informations générales du système.
+ 
+    Parameters
+    ----------
+    dao : SystemInformationDAO
+        DAO permettant la persistance des informations système.
+    feed_name : str
+        Nom du flux de données ingéré.
+    url : str
+        URL du flux de données à ingérer.
+    http_client : httpx.AsyncClient
+        Client HTTP asynchrone utilisé pour récupérer le flux.
+    """
 
     def __init__(
         self,
@@ -22,7 +35,20 @@ class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
         self.dao = dao
 
     def parse_payload(self, raw_data: Any) -> list[SystemInformation]:
-        """Parse system information payload."""
+        """
+        Transforme les données brutes du flux en entité SystemInformation.
+ 
+        Parameters
+        ----------
+        raw_data : Any
+            Contenu brut du flux (format GBFS `system_information`).
+ 
+        Returns
+        -------
+        list of SystemInformation
+            Liste contenant l'unique entité système extraite du flux, ou
+            une liste vide si le flux est vide ou mal formé.
+        """
         if raw_data:
             data = raw_data.get("data", {})
             if data:
@@ -30,5 +56,17 @@ class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
         return []
 
     async def persist(self, entities: list[SystemInformation]) -> int:
-        """Persist system information entities."""
+        """
+        Persiste les informations système en base de données.
+ 
+        Parameters
+        ----------
+        entities : list of SystemInformation
+            Informations système à persister.
+ 
+        Returns
+        -------
+        int
+            Nombre d'entités effectivement persistées.
+        """
         raise NotImplementedError
