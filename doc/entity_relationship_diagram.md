@@ -8,14 +8,14 @@ erDiagram
     %% ═══════════════════════════════════════════════
 
     system_information {
-        string system_id PK
-        string language
-        string name
-        string url "Nullable"
+        text system_id PK
+        text language
+        text name
+        text url "Nullable"
         date start_date "Nullable"
-        string phone_number "Nullable"
-        string email "Nullable"
-        string timezone
+        text phone_number "Nullable"
+        text email "Nullable"
+        text timezone
     }
 
     %% ═══════════════════════════════════════════════
@@ -23,15 +23,15 @@ erDiagram
     %% ═══════════════════════════════════════════════
 
     vehicle_type {
-        string vehicle_type_id PK
-        string form_factor
+        text vehicle_type_id PK
+        text form_factor
         integer rider_capacity "Nullable"
         integer cargo_volume_capacity "Nullable"
         integer cargo_load_capacity "Nullable"
-        string propulsion_type
+        text propulsion_type
         real max_range_meters "Nullable"
-        string name "Nullable"
-        string return_constraint "Nullable"
+        text name "Nullable"
+        text return_constraint "Nullable"
     }
 
     %% ═══════════════════════════════════════════════
@@ -39,28 +39,28 @@ erDiagram
     %% ═══════════════════════════════════════════════
 
     station_information {
-        string station_id PK
-        string name
-        string short_name "Nullable"
-        real lat
-        real lon
-        string address "Nullable"
+        text station_id PK
+        text name
+        text short_name "Nullable"
+        double_precision lat
+        double_precision lon
+        text address "Nullable"
         boolean is_virtual_station "Nullable"
-        json station_area "Nullable"
-        string contact_phone "Nullable"
+        jsonb station_area "Nullable"
+        text contact_phone "Nullable"
         integer capacity "Nullable"
         boolean is_charging_station "Nullable"
     }
 
     station_virtual_capacity {
-        string station_id PK,FK
-        string vehicle_type_id PK,FK
+        text station_id PK,FK
+        text vehicle_type_id PK,FK
         integer capacity
     }
 
     station_physical_capacity {
-        string station_id PK,FK
-        string vehicle_type_id PK,FK
+        text station_id PK,FK
+        text vehicle_type_id PK,FK
         integer dock_count
     }
 
@@ -74,8 +74,8 @@ erDiagram
     %% ═══════════════════════════════════════════════
 
     station_status {
-        integer station_status_id PK
-        string station_id FK
+        bigint station_status_id PK
+        text station_id FK
         integer num_bikes_available
         integer num_bikes_disabled "Nullable"
         integer num_docks_available "Nullable"
@@ -84,10 +84,10 @@ erDiagram
         boolean is_installed
         boolean is_renting
         boolean is_returning
-        timestampt last_reported
-        json vehicle_types_available "Nullable"
-        json vehicle_docks_available "Nullable"
-        string station_state
+        timestamptz last_reported
+        jsonb vehicle_types_available "Nullable"
+        jsonb vehicle_docks_available "Nullable"
+        text station_state
     }
 
     station_information ||--o{ station_status : "has"
@@ -97,8 +97,8 @@ erDiagram
     %% ═══════════════════════════════════════════════
 
     station_status_hourly {
-        string station_id PK,FK
-        timestampt bucket_hour PK
+        text station_id PK,FK
+        timestamptz bucket_hour PK
         integer sample_count
         real avg_operational_capacity
         real avg_num_bikes_available
@@ -118,20 +118,20 @@ erDiagram
 
     user {
         integer user_id PK
-        string username 
-        string password_hashed
-        string email
-        string role
+        text username 
+        text password_hashed
+        text email
+        text role
         boolean is_active
-        timestampt created_at
-        timestampt updated_at
-        string access_token
+        timestamptz created_at
+        timestamptz updated_at
+        text access_token
     }
 
     user_favorite_station {
         integer user_id PK,FK
-        string station_id PK,FK
-        timestampt created_at
+        text station_id PK,FK
+        timestamptz created_at
     }
 
     user ||--o{ user_favorite_station : "favorites"
