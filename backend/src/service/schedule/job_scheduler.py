@@ -16,7 +16,27 @@ from utils.settings import Settings
 
 
 class JobScheduler:
-    """Schedule recurring application jobs."""
+    """
+    Planifie les tâches récurrentes de l'application (ingestion des
+    flux de données et agrégation des statistiques de stations).
+ 
+    Parameters
+    ----------
+    settings : Settings
+        Configuration de l'application, notamment les intervalles (en
+        secondes) de chaque tâche planifiée.
+    system_information_strategy : SystemInformationStrategy
+        Stratégie d'ingestion du flux d'informations système.
+    station_information_strategy : StationInformationStrategy
+        Stratégie d'ingestion du flux d'informations de stations.
+    vehicle_type_strategy : VehicleTypeStrategy
+        Stratégie d'ingestion du flux des types de véhicules.
+    station_status_strategy : StationStatusStrategy
+        Stratégie d'ingestion du flux de statuts de stations.
+    station_aggregator : StationAggregator
+        Service responsable de l'agrégation horaire des statistiques
+        de stations.
+    """
 
     def __init__(
         self,
@@ -38,7 +58,27 @@ class JobScheduler:
         self.station_aggregator = station_aggregator
 
     def setup_jobs(self):
-        """Schedule jobs."""
+        """
+        Enregistre l'ensemble des tâches planifiées dans le scheduler.
+ 
+        Chaque tâche est ajoutée avec un déclencheur à intervalle fixe
+        (`IntervalTrigger`), dont la période est lue dans `self.settings`.
+        Les options `coalesce=True` et `max_instances=1` garantissent
+        qu'une tâche n'est jamais exécutée en parallèle d'elle-même et
+        que les exécutions manquées ne s'accumulent pas.
+ 
+        Les tâches planifiées sont :
+        - `job_system_information` : ingestion du flux d'informations système.
+        - `job_station_information` : ingestion du flux d'informations de stations.
+        - `job_vehicle_type` : ingestion du flux des types de véhicules.
+        - `job_station_status` : ingestion du flux de statuts de stations.
+        - `job_station_aggregation` : agrégation horaire des statistiques
+          de stations.
+ 
+        Returns
+        -------
+        None
+        """
         self.scheduler.add_job(
             self.system_information_strategy.execute,
             trigger=IntervalTrigger(
@@ -91,10 +131,22 @@ class JobScheduler:
         )
 
     def start(self):
-        """Start scheduled jobs."""
+        """
+        Démarre le scheduler après avoir enregistré les tâches planifiées.
+ 
+        Returns
+        -------
+        None
+        """
         self.setup_jobs()
         self.scheduler.start()
 
     def shutdown(self):
-        """Shutdown the scheduler."""
+        """
+        Arrête le scheduler sans attendre la fin des tâches en cours.
+ 
+        Returns
+        -------
+        None
+        """
         self.scheduler.shutdown(wait=False)

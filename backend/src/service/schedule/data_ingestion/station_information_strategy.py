@@ -9,7 +9,20 @@ from .feed_ingestion_strategy import BaseIngestionStrategy
 
 
 class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
-    """Ingest station information feeds."""
+    """
+    Ingère le flux d'informations fixes des stations.
+ 
+    Parameters
+    ----------
+    dao : StationDAO
+        DAO permettant la persistance des informations de stations.
+    feed_name : str
+        Nom du flux de données ingéré.
+    url : str
+        URL du flux de données à ingérer.
+    http_client : httpx.AsyncClient
+        Client HTTP asynchrone utilisé pour récupérer le flux.
+    """
 
     def __init__(
         self,
@@ -22,7 +35,20 @@ class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
         self.dao = dao
 
     def parse_payload(self, raw_data: Any) -> list[StationInformation]:
-        """Parse station information payloads."""
+        """
+        Transforme les données brutes du flux en entités StationInformation.
+ 
+        Parameters
+        ----------
+        raw_data : Any
+            Contenu brut du flux (format GBFS `station_information`).
+ 
+        Returns
+        -------
+        list of StationInformation
+            Liste des stations extraites du flux, ou une liste vide si
+            le flux est vide ou mal formé.
+        """
         if raw_data:
             data = raw_data.get("data", {})
             if data:
@@ -31,5 +57,17 @@ class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
         return []
 
     async def persist(self, entities: list[StationInformation]) -> int:
-        """Persist station information entities."""
+        """
+        Persiste une liste d'informations de stations en base de données.
+ 
+        Parameters
+        ----------
+        entities : list of StationInformation
+            Informations de stations à persister.
+ 
+        Returns
+        -------
+        int
+            Nombre d'entités effectivement persistées.
+        """
         raise NotImplementedError

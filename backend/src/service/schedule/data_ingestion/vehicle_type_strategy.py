@@ -9,7 +9,20 @@ from .feed_ingestion_strategy import BaseIngestionStrategy
 
 
 class VehicleTypeStrategy(BaseIngestionStrategy[VehicleType]):
-    """Ingest vehicle type feeds."""
+    """
+    Ingère le flux des types de véhicules.
+ 
+    Parameters
+    ----------
+    dao : VehicleTypeDAO
+        DAO permettant la persistance des types de véhicules.
+    feed_name : str
+        Nom du flux de données ingéré.
+    url : str
+        URL du flux de données à ingérer.
+    http_client : httpx.AsyncClient
+        Client HTTP asynchrone utilisé pour récupérer le flux.
+    """
 
     def __init__(
         self,
@@ -22,7 +35,20 @@ class VehicleTypeStrategy(BaseIngestionStrategy[VehicleType]):
         self.dao = dao
 
     def parse_payload(self, raw_data: Any) -> list[VehicleType]:
-        """Parse vehicle type payloads."""
+        """
+        Transforme les données brutes du flux en entités VehicleType.
+ 
+        Parameters
+        ----------
+        raw_data : Any
+            Contenu brut du flux (format GBFS `vehicle_types`).
+ 
+        Returns
+        -------
+        list of VehicleType
+            Liste des types de véhicules extraits du flux, ou une liste
+            vide si le flux est vide ou mal formé.
+        """
         if raw_data:
             data = raw_data.get("data", {})
             if data:
@@ -34,5 +60,17 @@ class VehicleTypeStrategy(BaseIngestionStrategy[VehicleType]):
         return []
 
     async def persist(self, entities: list[VehicleType]) -> int:
-        """Persist vehicle type entities."""
+        """
+        Persiste une liste de types de véhicules en base de données.
+ 
+        Parameters
+        ----------
+        entities : list of VehicleType
+            Types de véhicules à persister.
+ 
+        Returns
+        -------
+        int
+            Nombre d'entités effectivement persistées.
+        """
         raise NotImplementedError
