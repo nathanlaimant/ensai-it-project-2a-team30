@@ -76,7 +76,7 @@ class StationDAO:
                     cursor.execute(
                         "SELECT *                            "
                         "  FROM station_information          "
-                        " WHERE station_id = %(station_id)s;   ",
+                        " WHERE station_id = %(station_id)s; ",
                         {"station_id": station_id},
                     )
                     res = cursor.fetchone()
@@ -131,7 +131,7 @@ class StationDAO:
                     cursor.execute(
                         "SELECT *"
                         "FROM station_information"
-                        "WHERE 2 * 6371200 * ASIN(SQRT(POWER(SIN(%(t)s * (lat - %(lat_dep)s) / 2), 2) + COS(lat * %(t)s) * COS(%(lat_dep)s * %(t)s) * POWER(SIN(%(t)s * (lon - %(lon_dep)s) / 2),2))) <= %(radius_meters)s",
+                        "WHERE 2 * 6371200 * ASIN(SQRT(POWER(SIN(%(t)s * (lat - %(lat_dep)s) / 2), 2) + COS(lat * %(t)s) * COS(%(lat_dep)s * %(t)s) * POWER(SIN(%(t)s * (lon - %(lon_dep)s) / 2),2))) <= %(radius_meters)s;",
                         {
                             "lat_dep": lat,
                             "lon_dep": lon,
@@ -178,8 +178,6 @@ class StationDAO:
             Liste des stations correspondant aux critères.
             Ne renvoie rien lorsqu'un des critères n'est pas dans le bon format.
         """
-        # L'ensemble des attributs de StationInformation peuvent être utilisés
-        # La pagination sert à limiter le nombre de stations qui s'affichent sur une page internet
         res = None
         
         try:
@@ -188,7 +186,16 @@ class StationDAO:
                     cursor.execute(
                         "SELECT *"
                         "FROM station_information"
-                        "WHERE ",
+                        "WHERE station_id ILIKE %%(station_id)s%"
+                        "AND name ILIKE %%(name)s%"
+                        "AND short_name ILIKE %%(short_name)s%"
+                        "AND lat = %(lat)s"
+                        "AND lon = %(lon)s"
+                        "AND address ILIKE %%(address)s%"
+                        "AND is_virtual_station = %(is_virtual_station)s"
+                        "AND contact_phone ILIKE %%(contact_phone)s%"
+                        "AND capacity = %(capacity)s"
+                        "AND is_charging_station = %(is_charging_station)s",
                         {
                             "station_id": query_params["station_id"],
                             "name": query_params["name"],
@@ -197,7 +204,6 @@ class StationDAO:
                             "lon": query_params["lon"],
                             "address": query_params["address"],
                             "is_virtual_station": query_params["is_virtual_station"],
-                            "station_area": query_params["station_area"],
                             "contact_phone": query_params["contact_phone"],
                             "capacity": query_params["capacity"],
                             "is_charging_station": query_params["is_charging_station"]
@@ -226,5 +232,8 @@ class StationDAO:
                     is_charging_station=res[i]["is_charging_station"]
                 )
             if isinstance(query_params["nb_pages"], int) and query_params["nb_pages"] > 1:
-                
+                sous_liste = []
+                for k in range(query_params["nb_pages"]):
+                    sous_liste[k] = stations_list[k * query_params["per_page"]:(k+1) * query_params["per_page"] - 1]
+                stations_list = sous_liste
         return stations_list
