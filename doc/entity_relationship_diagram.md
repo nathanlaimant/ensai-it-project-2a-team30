@@ -1,5 +1,10 @@
 # ERD
 
+La table SystemInformation n'est reliée à aucune autre table car :
+
+- Métadonnées globales (singleton) : Cette table stocke des informations générales décrivant le réseau dans son ensemble (nom du service, contacts, fuseau horaire, URL). Elle n'a vocation à contenir qu'un enregistrement unique représentant l'opérateur.
+- Périmètre mono-réseau (absence de multi-tenant) : L'application étant dédiée à la gestion d'un unique réseau de vélos en libre-service, propager une clé étrangère system_id vers chaque station ou entité opérationnelle introduirait une redondance inutile dans le schéma relationnel.
+
 ```mermaid
 erDiagram
  direction LR
@@ -16,22 +21,6 @@ erDiagram
         text phone_number "Nullable"
         text email "Nullable"
         text timezone
-    }
-
-    %% ═══════════════════════════════════════════════
-    %% VEHICLE TYPES
-    %% ═══════════════════════════════════════════════
-
-    vehicle_type {
-        text vehicle_type_id PK
-        text form_factor
-        integer rider_capacity "Nullable"
-        integer cargo_volume_capacity "Nullable"
-        integer cargo_load_capacity "Nullable"
-        text propulsion_type
-        real max_range_meters "Nullable"
-        text name "Nullable"
-        text return_constraint "Nullable"
     }
 
     %% ═══════════════════════════════════════════════
@@ -52,23 +41,6 @@ erDiagram
         boolean is_charging_station "Nullable"
     }
 
-    station_virtual_capacity {
-        text station_id PK,FK
-        text vehicle_type_id PK,FK
-        integer capacity
-    }
-
-    station_physical_capacity {
-        text station_id PK,FK
-        text vehicle_type_id PK,FK
-        integer dock_count
-    }
-
-    station_information ||--o{ station_virtual_capacity : "has"
-    station_information ||--o{ station_physical_capacity : "has"
-    station_virtual_capacity }o--|| vehicle_type : "is available at"
-    station_physical_capacity }o--|| vehicle_type : "is available at"
-
     %% ═══════════════════════════════════════════════
     %% STATION STATUS
     %% ═══════════════════════════════════════════════
@@ -81,9 +53,6 @@ erDiagram
         integer num_docks_available "Nullable"
         integer num_docks_disabled "Nullable"
         integer operational_capacity
-        boolean is_installed
-        boolean is_renting
-        boolean is_returning
         timestamptz last_reported
         jsonb vehicle_types_available "Nullable"
         jsonb vehicle_docks_available "Nullable"

@@ -7,12 +7,12 @@ class StationStateClassifier:
     def classify_state(self, status: StationStatus) -> str:
         """
         Détermine l'état d'une station à partir de son statut.
- 
+
         Parameters
         ----------
         status : StationStatus
             Statut courant de la station à classifier.
- 
+
         Returns
         -------
         str

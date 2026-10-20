@@ -11,10 +11,10 @@ logger = get_logger(__name__)
 class BaseIngestionStrategy[T](ABC):
     """
     Définit le contrat commun à toute stratégie d'ingestion de flux.
- 
+
     Classe abstraite générique : `T` représente le type d'entité métier
     produite par la stratégie (ex: `StationStatus`, `SystemInformation`).
- 
+
     Parameters
     ----------
     feed_name : str
@@ -38,7 +38,7 @@ class BaseIngestionStrategy[T](ABC):
     async def fetch_feed(self) -> Any:
         """
         Récupère le contenu JSON brut du flux à l'URL configurée.
- 
+
         Returns
         -------
         Any
@@ -52,12 +52,12 @@ class BaseIngestionStrategy[T](ABC):
     def parse_payload(self, raw_data: Any) -> list[T]:
         """
         Transforme les données brutes d'un flux en entités métier.
- 
+
         Parameters
         ----------
         raw_data : Any
             Contenu brut du flux à transformer.
- 
+
         Returns
         -------
         list of T
@@ -69,12 +69,12 @@ class BaseIngestionStrategy[T](ABC):
     async def persist(self, records: list[T]) -> int:
         """
         Persiste une liste d'entités métier extraites d'un flux.
- 
+
         Parameters
         ----------
         records : list of T
             Entités métier à persister.
- 
+
         Returns
         -------
         int
@@ -85,11 +85,11 @@ class BaseIngestionStrategy[T](ABC):
     async def execute(self) -> None:
         """
         Exécute la stratégie d'ingestion de bout en bout.
- 
+
         Enchaîne la récupération du flux (`fetch_feed`), son analyse
         (`parse_payload`) puis sa persistance (`persist`), en
         journalisant le résultat ou toute erreur survenue.
- 
+
         Returns
         -------
         None

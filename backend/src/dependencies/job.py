@@ -7,7 +7,6 @@ from dependencies.dao import (
     get_station_status_dao,
     get_station_status_hourly_dao,
     get_system_information_dao,
-    get_vehicle_type_dao,
 )
 from dependencies.utils import get_http_client
 from service.schedule.data_aggregation.station_aggregator import StationAggregator
@@ -20,7 +19,6 @@ from service.schedule.data_ingestion.station_status_strategy import (
 from service.schedule.data_ingestion.system_information_strategy import (
     SystemInformationStrategy,
 )
-from service.schedule.data_ingestion.vehicle_type_strategy import VehicleTypeStrategy
 from service.schedule.job_scheduler import JobScheduler
 from utils.settings import get_settings
 
@@ -43,17 +41,6 @@ def get_station_information_strategy() -> StationInformationStrategy:
         dao=get_station_dao(),
         feed_name="station_information",
         url=get_settings().station_information_feed_url,
-        http_client=get_http_client(),
-    )
-
-
-@lru_cache
-def get_vehicle_type_strategy() -> VehicleTypeStrategy:
-    """Construit une instance de VehicleTypeStrategy."""
-    return VehicleTypeStrategy(
-        dao=get_vehicle_type_dao(),
-        feed_name="vehicle_type",
-        url=get_settings().vehicle_type_feed_url,
         http_client=get_http_client(),
     )
 
@@ -85,7 +72,6 @@ def get_job_scheduler() -> JobScheduler:
         settings=get_settings(),
         system_information_strategy=get_system_information_strategy(),
         station_information_strategy=get_station_information_strategy(),
-        vehicle_type_strategy=get_vehicle_type_strategy(),
         station_status_strategy=get_station_status_strategy(),
         station_aggregator=get_station_aggregator(),
     )

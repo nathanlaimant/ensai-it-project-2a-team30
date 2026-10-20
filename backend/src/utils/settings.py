@@ -44,9 +44,6 @@ class Settings(BaseSettings):
     station_information_feed_url: str = Field(default=...)
     station_information_interval_seconds: int = Field(default=3600)
 
-    vehicle_type_feed_url: str = Field(default=...)
-    vehicle_type_interval_seconds: int = Field(default=3600)
-
     station_status_feed_url: str = Field(default=...)
     station_status_interval_seconds: int = Field(default=300)
 

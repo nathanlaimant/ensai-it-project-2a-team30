@@ -20,30 +20,6 @@ classDiagram
         +str timezone
     }
 
-    class VehicleType {
-        +str vehicle_type_id
-        +str form_factor
-        +int rider_capacity
-        +int cargo_volume_capacity
-        +int cargo_load_capacity
-        +str propulsion_type
-        +float max_range_meters
-        +str name
-        +str return_constraint
-    }
-
-    class StationVirtualCapacity {
-        +str station_id
-        +str vehicle_type_id
-        +int capacity
-    }
-
-    class StationPhysicalCapacity {
-        +str station_id
-        +str vehicle_type_id
-        +int dock_count
-    }
-
     class StationInformation {
         +str station_id
         +str name
@@ -66,9 +42,6 @@ classDiagram
         +int num_docks_available
         +int num_docks_disabled
         +int operational_capacity
-        +bool is_installed
-        +bool is_renting
-        +bool is_returning
         +datetime last_reported
         +list vehicle_types_available
         +list vehicle_docks_available
@@ -108,10 +81,6 @@ classDiagram
     }
 
     %% Entity Relations
-    VehicleType "1" <-- "0..*" StationVirtualCapacity
-    StationInformation "1" *-- "0..*" StationVirtualCapacity
-    StationInformation "1" *-- "0..*" StationPhysicalCapacity
-    VehicleType "1" <-- "0..*" StationPhysicalCapacity
     StationInformation "1" *-- "0..*" StationStatus
     StationInformation "1" *-- "0..*" StationStatusHourly
     StationInformation "1" <-- "0..*" UserFavoriteStation
@@ -297,13 +266,13 @@ classDiagram
         +persist(entities: List~StationStatus~) int
     }
 
-    class StationStateClassifier {
-        +classify_state(status: StationStatus) str
-    }
+    %%class StationStateClassifier {
+    %%    +classify_state(status: StationStatus) str
+    %%}
 
-    class StationCapacityCalculator {
-        +calculate_capacity(station_status: StationStatus) int
-    }
+    %%class StationCapacityCalculator {
+    %%    +calculate_capacity(station_status: StationStatus) int
+    %%}
 
     class StationAggregationService {
         -StationStatusDAO station_status_dao
@@ -312,13 +281,13 @@ classDiagram
         +aggregate_hourly_stats() int
     }
 
-    class StationStateDurationCalculator {
-        +calculate_durations(station_status: list~StationStatus~) list~dict~
-    }
+    %%class StationStateDurationCalculator {
+    %%    +calculate_durations(station_status: list~StationStatus~) list~dict~
+    %%}
 
-    class StationReliabilityCalculator {
-        +calculate_reliability(station_status_hourly: StationStatusHourly) float
-    }
+    %%class StationReliabilityCalculator {
+    %%    +calculate_reliability(station_status_hourly: StationStatusHourly) float
+    %%}
 
     %% ==========================================
     %% DEPENDENCIES
@@ -352,9 +321,9 @@ classDiagram
     StationAggregationService --> StationStatusDAO
     StationAggregationService --> StationStatusHourlyDAO
 
-    StationStatusStrategy ..> StationStateClassifier : uses
-    StationStatusStrategy ..> StationCapacityCalculator : uses
+    %%StationStatusStrategy ..> StationStateClassifier : uses
+    %%StationStatusStrategy ..> StationCapacityCalculator : uses
 
-    StationAggregationService ..> StationStateDurationCalculator : uses
-    StationAggregationService ..> StationReliabilityCalculator : uses
+    %%StationAggregationService ..> StationStateDurationCalculator : uses
+    %%StationAggregationService ..> StationReliabilityCalculator : uses
 ```

@@ -9,13 +9,13 @@ class StationReliabilityCalculator:
     ) -> float:
         """
         Calcule le score de fiabilité d'une station.
- 
+
         Parameters
         ----------
         station_status_hourly : StationStatusHourly
             Agrégation horaire des statistiques de la station, utilisée
             pour calculer son score de fiabilité.
- 
+
         Returns
         -------
         float

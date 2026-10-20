@@ -8,7 +8,6 @@ from dao.station_status_dao import StationStatusDAO
 from dao.station_status_hourly_dao import StationStatusHourlyDAO
 from dao.system_information_dao import SystemInformationDAO
 from dao.user_dao import UserDAO
-from dao.vehicle_type_dao import VehicleTypeDAO
 from dependencies.utils import get_db
 
 
@@ -46,9 +45,3 @@ def get_system_information_dao() -> SystemInformationDAO:
 def get_user_dao() -> UserDAO:
     """Construit une instance de UserDAO."""
     return UserDAO(get_db())
-
-
-@lru_cache
-def get_vehicle_type_dao() -> VehicleTypeDAO:
-    """Construit une instance de VehicleTypeDAO."""
-    return VehicleTypeDAO(get_db())

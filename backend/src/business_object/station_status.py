@@ -21,12 +21,6 @@ class StationStatus:
         Nombre de bornes hors service. Nullable.
     operational_capacity : int
         Capacité opérationnelle actuelle de la station.
-    is_installed : bool
-        True si la station est physiquement installée.
-    is_renting : bool
-        True si la station permet actuellement la location de véhicules.
-    is_returning : bool
-        True si la station permet actuellement le retour de véhicules.
     last_reported : datetime
         Date et heure du dernier rapport d'état reçu.
     vehicle_types_available : list | None
@@ -45,9 +39,6 @@ class StationStatus:
         num_docks_available: int | None,
         num_docks_disabled: int | None,
         operational_capacity: int,
-        is_installed: bool,
-        is_renting: bool,
-        is_returning: bool,
         last_reported: datetime,
         vehicle_types_available: list | None,
         vehicle_docks_available: list | None,
@@ -61,9 +52,6 @@ class StationStatus:
         self.num_docks_available = num_docks_available
         self.num_docks_disabled = num_docks_disabled
         self.operational_capacity = operational_capacity
-        self.is_installed = is_installed
-        self.is_renting = is_renting
-        self.is_returning = is_returning
         self.last_reported = last_reported
         self.vehicle_types_available = vehicle_types_available
         self.vehicle_docks_available = vehicle_docks_available

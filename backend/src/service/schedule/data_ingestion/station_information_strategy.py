@@ -11,7 +11,7 @@ from .feed_ingestion_strategy import BaseIngestionStrategy
 class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
     """
     Ingère le flux d'informations fixes des stations.
- 
+
     Parameters
     ----------
     dao : StationDAO
@@ -37,12 +37,12 @@ class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
     def parse_payload(self, raw_data: Any) -> list[StationInformation]:
         """
         Transforme les données brutes du flux en entités StationInformation.
- 
+
         Parameters
         ----------
         raw_data : Any
             Contenu brut du flux (format GBFS `station_information`).
- 
+
         Returns
         -------
         list of StationInformation
@@ -59,12 +59,12 @@ class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
     async def persist(self, entities: list[StationInformation]) -> int:
         """
         Persiste une liste d'informations de stations en base de données.
- 
+
         Parameters
         ----------
         entities : list of StationInformation
             Informations de stations à persister.
- 
+
         Returns
         -------
         int

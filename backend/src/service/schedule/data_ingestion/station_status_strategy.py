@@ -11,7 +11,7 @@ from .feed_ingestion_strategy import BaseIngestionStrategy
 class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
     """
     Ingère le flux de statuts en temps réel des stations.
- 
+
     Parameters
     ----------
     dao : StationStatusDAO
@@ -37,12 +37,12 @@ class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
     def parse_payload(self, raw_data: Any) -> list[StationStatus]:
         """
         Transforme les données brutes du flux en entités StationStatus.
- 
+
         Parameters
         ----------
         raw_data : Any
             Contenu brut du flux (format GBFS `station_status`).
- 
+
         Returns
         -------
         list of StationStatus
@@ -54,6 +54,7 @@ class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
             if data:
                 statuses = data.get("stations", [])
                 return [
+                    # TODO let num_bikes_available = sum(vehicle_types_available[count])
                     StationStatus.from_dict(station_status)
                     for station_status in statuses
                 ]
@@ -62,12 +63,12 @@ class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
     async def persist(self, entities: list[StationStatus]) -> int:
         """
         Persiste une liste de statuts de stations en base de données.
- 
+
         Parameters
         ----------
         entities : list of StationStatus
             Statuts de stations à persister.
- 
+
         Returns
         -------
         int

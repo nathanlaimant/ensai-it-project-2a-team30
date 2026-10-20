@@ -7,14 +7,14 @@ class StationStateDurationCalculator:
     def calculate_durations(self, station_status: list[StationStatus]) -> list[dict]:
         """
         Calcule les durées passées dans chaque état à partir d'un historique de statuts.
- 
+
         Parameters
         ----------
         station_status : list of StationStatus
             Historique chronologique des statuts d'une station, à partir
             duquel sont déduites les durées passées dans chaque état
             (ex: "FULL", "EMPTY", "FUNCTIONAL").
- 
+
         Returns
         -------
         list of dict
