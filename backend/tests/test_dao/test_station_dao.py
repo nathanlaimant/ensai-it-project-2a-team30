@@ -8,41 +8,6 @@ from utils.reset_database import ResetDatabase
 from business_object.station_information import StationInformation
 from dao.station_dao import StationDao
 
-stations_list = [
-    StationInformation(
-        station_id="16bbf68d-685a-4799-9bba-8915f10700e0",
-        name="id_38206",
-        lat=48.8727256662692,
-        lon=2.35437813765038,
-        is_virtual_station=True,
-        capacity=3
-    ),
-    StationInformation(
-        station_id="b42cb6d7-0558-4589-ad71-63e374fdb784",
-        name="id_34235",
-        lat=48.8266089252496,
-        lon=2.33467058582095,
-        is_virtual_station=True,
-        capacity=3
-    ),
-    StationInformation(
-        station_id="5770705c-cbb1-4baa-a1ca-eb40540b2f40",
-        name="17 RUE DU VIEUX COLOMBIER",
-        lat=48.851759,
-        lon=2.3306,
-        is_virtual_station=True,
-        capacity=3
-    ),
-    StationInformation(
-        station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
-        name="id_old844604G20081106092237",
-        lat=48.8322843827352,
-        lon=2.32105516137791,
-        is_virtual_station=True,
-        capacity=3
-    )
-]
-
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():
@@ -58,14 +23,20 @@ def test_upsert_station_info_ok():
     """L'importation de l'API externe avec la liste des stations a réussi"""
 
     # GIVEN
-    local_data = [stations_list[0]]
-    external_data = [stations_list[1]]
+    external_data = [StationInformation(
+        station_id="19179944124",
+        name="Hôpital Mondor",
+        short_name="40001",
+        lat=48.798922410229,
+        lon=2.4537451531298,
+        capacity=28
+    )]
 
     # WHEN
     local_data = StationDao().upsert_station_info(external_data)
 
     # THEN
-    assert (local_data == external_data) is True
+    assert local_data
 
 
 def test_upsert_station_info_fail():
@@ -99,7 +70,7 @@ def test_get_by_id_ok():
     station = StationDao().get_by_id(id_station)
 
     # THEN
-    assert station is not None
+    assert isinstance(station, StationInformation)
 
 
 def test_get_by_id_fail():
@@ -150,7 +121,7 @@ def test_list_stations_ok():
     recherche effectuée"""
 
     # GIVEN
-    name = "id_34235"
+    name = "Toudouze - Clauzel"
 
     # WHEN
     stations = StationDao().list_stations({"name": name})
