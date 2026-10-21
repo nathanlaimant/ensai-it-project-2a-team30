@@ -1,100 +1,75 @@
 from unittest.mock import MagicMock
 
+import pytest
+
 from business_object.station_information import StationInformation
-from dao.favorit_station_dao import FavoriteStationDao
+from dao.favorite_station_dao import FavoriteStationDAO
 from service.favorite_station_service import FavoriteStationService
 
 
-# Tests de add_favorite_station() :
+@pytest.fixture
+def favorite_dao():
+    return MagicMock(spec=FavoriteStationDAO)
 
-def test_add_favorite_station_ok():
-    """L'ajout de la station à la liste des favoris de l'utilisateur est réussie"""
+
+
+
+def test_add_favorite_station_ok(favorite_dao):
+    """L'ajout est transmis au DAO et son résultat est renvoyé."""
 
     # GIVEN
-    id_user, id_station = 1, ""
-    FavoriteStationDao().add_favorite(id_user, id_station) = MagicMock(return_value=True)
+    user_id, station_id = 1, "station-1"
+    favorite_dao.add_favorite.return_value = True
+    service = FavoriteStationService(favorite_dao)
 
     # WHEN
-    added = FavoriteStationService().add_favorite(id_user, id_station)
+    added = service.add_favorite_station(user_id, station_id)
 
     # THEN
     assert added
+    favorite_dao.add_favorite.assert_called_once_with(user_id, station_id)
 
 
-def test_add_favorite_station_wrong_user():
-    """L'identifiant de l'utilisateur n'est pas reconnu"""
+def test_add_favorite_station_failure(favorite_dao):
+    """Le service renvoie l'échec communiqué par le DAO."""
 
     # GIVEN
-    id_user, id_station = 1676769, ""
-    FavoriteStationDao().add_favorite(id_user, id_station) = MagicMock(return_value=False)
+    favorite_dao.add_favorite.return_value = False
+    service = FavoriteStationService(favorite_dao)
 
     # WHEN
-    added = FavoriteStationService().add_favorite(id_user, id_station)
+    added = service.add_favorite_station(1, "station-1")
 
     # THEN
     assert not added
 
 
-def test_add_favorite_station_wrong_station():
-    """L'identifiant de la station n'est pas reconnu"""
+
+def test_remove_favorite_station_ok(favorite_dao):
+    """Le retrait est transmis au DAO et son résultat est renvoyé."""
 
     # GIVEN
-    id_user, id_station = 1, "fakeid"
-    FavoriteStationDao().add_favorite(id_user, id_station) = MagicMock(return_value=False)
+    user_id, station_id = 1, "station-1"
+    favorite_dao.remove_favorite.return_value = True
+    service = FavoriteStationService(favorite_dao)
 
     # WHEN
-    added = FavoriteStationService().add_favorite(id_user, id_station)
-
-    # THEN
-    assert not added
-
-
-# Tests de list_favorites() :
-
-def test_list_favorites_ok():
-    """Nous réussissons à obtenir la liste des stations favorites d'un utilisateur donné"""
-
-
-# Tests de remove_favorite_station() :
-
-def test_remove_favorite_station_ok():
-    """La station est bien retirée de la liste des stations favorites de l'utilisateur"""
-
-    # GIVEN
-    id_station, id_user = "", 1
-    FavoriteStationDao().remove_favorite(id_user, id_station) = MagicMock(return_value=True)
-
-    # WHEN
-    removed = FavoriteStationService().remove_favorite_station(id_user, id_station)
+    removed = service.remove_favorite_station(user_id, station_id)
 
     # THEN
     assert removed
+    favorite_dao.remove_favorite.assert_called_once_with(user_id, station_id)
 
 
-def test_remove_favorite_station_wrong_user():
-    """L'identifiant de l'utilisateur n'est pas reconnu pour retirer une station
-    de la liste des favoris"""
-
-    # GIVEN
-    id_station, id_user = "", 5656576
-    FavoriteStationDao().remove_favorite(id_user, id_station) = MagicMock(return_value=False)
-
-    # WHEN
-    removed = FavoriteStationService().remove_favorite_station(id_user, id_station)
-
-    # THEN
-    assert not removed
-
-
-def test_remove_favorite_station_wrong_station():
-    """La station n'est pas présente dans la liste des stations favorites de l'utilisateur"""
+def test_remove_favorite_station_failure(favorite_dao):
+    """Le service renvoie l'échec communiqué par le DAO."""
 
     # GIVEN
-    id_station, id_user = "", 1
-    FavoriteStationDao().remove_favorite(id_user, id_station) = MagicMock(return_value=False)
+    favorite_dao.remove_favorite.return_value = False
+    service = FavoriteStationService(favorite_dao)
 
     # WHEN
-    removed = FavoriteStationService().remove_favorite_station(id_user, id_station)
+    removed = service.remove_favorite_station(1, "station-1")
 
     # THEN
     assert not removed

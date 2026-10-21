@@ -31,18 +31,18 @@ class FavoriteStationService:
         bool
             True si l'ajout a réussi.
         """
-        raise NotImplementedError
+        return self.favorite_dao.add_favorite(user_id, station_id)
 
-    def list_favorites(self, query_params: dict) -> list[StationInformation]:
+    def list_favorites(
+        self, query_params: dict
+    ) -> list[StationInformation] | None:
         """
         Liste les stations favorites selon des critères de recherche.
 
         Parameters
         ----------
         query_params: dict
-            Identifiant de l'utilisateur,
-            Limite du nombre de stations par page d'affichage,
-            Nombre de pages maximum
+            Identifiant de l'utilisateur.
 
         Returns
         -------
@@ -50,7 +50,7 @@ class FavoriteStationService:
             Liste des stations favorites correspondant aux critères.
             Ne renvoie rien si l'utilisateur n'est pas reconnu.
         """
-        raise NotImplementedError
+        return self.favorite_dao.list_favorites(query_params)
 
     def remove_favorite_station(self, user_id: int, station_id: str) -> bool:
         """
@@ -68,4 +68,4 @@ class FavoriteStationService:
         bool
             True si le retrait a réussi.
         """
-        raise NotImplementedError
+        return self.favorite_dao.remove_favorite(user_id, station_id)
