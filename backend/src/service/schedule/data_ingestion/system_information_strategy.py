@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Any
 
 import httpx
@@ -37,6 +38,35 @@ class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
         super().__init__(feed_name, url, http_client)
         self.dao = dao
 
+    def from_json_dict(self, json_dict: dict) -> SystemInformation:
+        """
+        Crée une instance de SystemInformation à partir d'un dictionnaire JSON.
+
+        Parameters
+        ----------
+        json_dict : dict
+            Données du système extraites du JSON.
+
+        Returns
+        -------
+        SystemInformation
+            Instance représentant le système.
+        """
+        return SystemInformation(
+            language=json_dict["language"],
+            name=json_dict["name"],
+            url=json_dict.get("url"),
+            start_date=(
+                date.fromisoformat(json_dict["start_date"])
+                if json_dict.get("start_date")
+                else None
+            ),
+            phone_number=json_dict.get("phone_number"),
+            email=json_dict.get("email"),
+            timezone=json_dict["timezone"],
+            system_id=json_dict["system_id"],
+        )
+
     def parse_payload(self, raw_data: Any) -> list[SystemInformation]:
         """
         Transforme les données brutes du flux en entité SystemInformation.
@@ -55,7 +85,7 @@ class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
         if raw_data:
             data = raw_data.get("data", {})
             if data:
-                return [SystemInformation.from_dict(data)]
+                return [self.from_json_dict(data)]
         return []
 
     async def persist(self, entities: list[SystemInformation]) -> int:

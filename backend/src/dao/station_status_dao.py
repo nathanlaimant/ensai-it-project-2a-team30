@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 
 from psycopg2.extras import Json, execute_values
@@ -41,9 +42,6 @@ class StationStatusDAO:
                 num_docks_available,
                 num_docks_disabled,
                 operational_capacity,
-                is_installed,
-                is_renting,
-                is_returning,
                 last_reported,
                 vehicle_types_available,
                 vehicle_docks_available,
@@ -61,9 +59,6 @@ class StationStatusDAO:
                 r.num_docks_available,
                 r.num_docks_disabled,
                 r.operational_capacity,
-                r.is_installed,
-                r.is_renting,
-                r.is_returning,
                 r.last_reported,
                 Json(r.vehicle_types_available) if r.vehicle_types_available else None,
                 Json(r.vehicle_docks_available) if r.vehicle_docks_available else None,
@@ -126,17 +121,14 @@ class StationStatusDAO:
                 num_docks_available=row[4],
                 num_docks_disabled=row[5],
                 operational_capacity=row[6],
-                is_installed=row[7],
-                is_renting=row[8],
-                is_returning=row[9],
-                last_reported=row[10],
-                vehicle_types_available=row[11],
-                vehicle_docks_available=row[12],
-                station_state=row[13],
+                last_reported=row[7],
+                vehicle_types_available=row[8],
+                vehicle_docks_available=row[9],
+                station_state=row[10],
             )
         return None
 
-    def get_status_history(
+    def get_one_station_history(
         self, station_id: str, start_time: datetime, end_time: datetime
     ) -> list[StationStatus]:
         """
@@ -149,12 +141,12 @@ class StationStatusDAO:
         start_time : datetime
             Date et heure de début de la période.
         end_time : datetime
-            Date et heure de fin de la période.
+            Date et heure de fin de la période (exclusif).
 
         Returns
         -------
         list of StationStatus
-            Liste des statuts de la station sur la période demandée.
+            Liste des statuts de la station sur la période demandée, triés par last_reported croissante.
             Renvoie une liste vide si la station est introuvable ou si les bornes chronologiques
             ne sont pas disponibles dans la base de données.
         """
@@ -165,7 +157,8 @@ class StationStatusDAO:
                         SELECT *
                         FROM station_status
                         WHERE station_id = %s
-                        AND last_reported BETWEEN %s AND %s
+                        AND last_reported >= %s
+                        AND last_reported < %s
                         ORDER BY last_reported ASC;
                     """
                     cursor.execute(query, (station_id, start_time, end_time))
@@ -184,13 +177,65 @@ class StationStatusDAO:
                     num_docks_available=row[4],
                     num_docks_disabled=row[5],
                     operational_capacity=row[6],
-                    is_installed=row[7],
-                    is_renting=row[8],
-                    is_returning=row[9],
-                    last_reported=row[10],
-                    vehicle_types_available=row[11],
-                    vehicle_docks_available=row[12],
-                    station_state=row[13],
+                    last_reported=row[7],
+                    vehicle_types_available=row[8],
+                    vehicle_docks_available=row[9],
+                    station_state=row[10],
                 )
                 station_statuses.append(station_status)
         return station_statuses
+
+    def get_all_station_history(
+        self, start_time: datetime, end_time: datetime
+    ) -> dict[str, list[StationStatus]]:
+        """
+        Récupère l'historique des statuts des stations sur une période donnée.
+
+        Parameters
+        ----------
+        start_time : datetime
+            Date et heure de début de la période.
+        end_time : datetime
+            Date et heure de fin de la période (exclusif).
+
+        Returns
+        -------
+        dict[str, list[StationStatus]]
+            Dictionnaire avec clé=(ID de la station) et valeur=(la liste des statuts)
+            de cette station sur la période demandée, triés par last_reported croissante.
+            Renvoie un dictionnaire vide si aucune station n'est trouvée ou si les bornes chronologiques
+            ne sont pas disponibles dans la base de données.
+        """
+        try:
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = """
+                            SELECT *
+                            FROM station_status
+                            WHERE last_reported >= %s
+                            AND last_reported < %s
+                            ORDER BY last_reported ASC;
+                        """
+                    cursor.execute(query, (start_time, end_time))
+                    res = cursor.fetchall()
+        except Exception as e:
+            logger.error(e)
+
+        history: defaultdict[str, list[StationStatus]] = defaultdict(list)
+        if res:
+            for row in res:
+                station_status = StationStatus(
+                    station_status_id=row[0],
+                    station_id=row[1],
+                    num_bikes_available=row[2],
+                    num_bikes_disabled=row[3],
+                    num_docks_available=row[4],
+                    num_docks_disabled=row[5],
+                    operational_capacity=row[6],
+                    last_reported=row[7],
+                    vehicle_types_available=row[8],
+                    vehicle_docks_available=row[9],
+                    station_state=row[10],
+                )
+                history[station_status.station_id].append(station_status)
+        return history

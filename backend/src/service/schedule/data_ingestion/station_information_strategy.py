@@ -34,6 +34,44 @@ class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
         super().__init__(feed_name, url, http_client)
         self.dao = dao
 
+    def from_json_dict(self, json_dict: dict) -> StationInformation:
+        """
+        Crée une instance de StationInformation à partir d'un dictionnaire JSON.
+
+        Parameters
+        ----------
+        json_dict : dict
+            Données d'une station extraites du JSON.
+
+        Returns
+        -------
+        StationInformation
+            Instance représentant la station.
+        """
+        return StationInformation(
+            name=json_dict["name"],
+            short_name=json_dict.get("short_name"),
+            lat=float(json_dict["lat"]),
+            lon=float(json_dict["lon"]),
+            address=json_dict.get("address"),
+            is_virtual_station=(
+                bool(json_dict["is_virtual_station"])
+                if json_dict.get("is_virtual_station")
+                else None
+            ),
+            station_area=json_dict.get("station_area"),
+            contact_phone=json_dict.get("contact_phone"),
+            capacity=(
+                int(json_dict["capacity"]) if json_dict.get("capacity") else None
+            ),
+            is_charging_station=(
+                bool(json_dict["is_charging_station"])
+                if json_dict.get("is_charging_station")
+                else None
+            ),
+            station_id=json_dict["station_id"],
+        )
+
     def parse_payload(self, raw_data: Any) -> list[StationInformation]:
         """
         Transforme les données brutes du flux en entités StationInformation.
@@ -53,7 +91,7 @@ class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
             data = raw_data.get("data", {})
             if data:
                 stations = data.get("stations", [])
-                return [StationInformation.from_dict(station) for station in stations]
+                return [self.from_json_dict(station) for station in stations]
         return []
 
     async def persist(self, entities: list[StationInformation]) -> int:

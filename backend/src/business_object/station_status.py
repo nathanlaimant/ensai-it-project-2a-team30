@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from business_object.station_state import StationState
+
 
 class StationStatus:
     """
@@ -8,7 +10,7 @@ class StationStatus:
     Parameters
     ----------
     station_status_id : int | None
-        Identifiant unique de l'enregistrement de statut. Non-nullable, mais peut être None si l'objet n'a pas été persistée.
+        Identifiant unique de l'enregistrement de statut. Non-nullable, mais peut être None si l'objet n'a pas été persisté.
     station_id : str
         Identifiant de la station concernée.
     num_bikes_available : int
@@ -27,8 +29,8 @@ class StationStatus:
         Liste du nombre de véhicules disponibles par type de véhicule. Nullable.
     vehicle_docks_available : list | None
         Liste du nombre de bornes disponibles par type de véhicule. Nullable.
-    station_state : str
-        État global de la station (ex: "full", "functional", "empty").
+    station_state : StationState | str
+        État global de la station (StationState.FULL, StationState.EMPTY, StationState.FUNCTIONAL).
     """
 
     def __init__(
@@ -42,7 +44,7 @@ class StationStatus:
         last_reported: datetime,
         vehicle_types_available: list | None,
         vehicle_docks_available: list | None,
-        station_state: str,
+        station_state: StationState | str,
         station_status_id: int | None = None,
     ):
         self.station_status_id = station_status_id

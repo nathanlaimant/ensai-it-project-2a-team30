@@ -1,5 +1,13 @@
+import time
+from datetime import UTC, datetime, timedelta
+
+from business_object.station_state import StationState
+from business_object.station_status_hourly import StationStatusHourly
 from dao.station_status_dao import StationStatusDAO
 from dao.station_status_hourly_dao import StationStatusHourlyDAO
+from utils.log_utils import get_logger
+
+logger = get_logger(__name__)
 
 
 class StationAggregator:
@@ -22,14 +30,227 @@ class StationAggregator:
         self.station_status_dao = station_status_dao
         self.station_hourly_dao = station_hourly_dao
 
-    async def aggregate_hourly_stats(self) -> int:
+    async def aggregate_hourly_stats(
+        self,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+    ) -> int:
         """
         Agrège les statuts en temps réel des stations sur l'heure écoulée
         et persiste le résultat sous forme d'agrégations horaires.
 
+        Parameters
+        ----------
+        start_time : datetime | None, optional
+            Heure de début du créneau horaire à agréger. Par défaut :
+            end_time - timedelta(hours=1).
+        end_time : datetime | None, optional
+            Heure de fin du créneau horaire à agréger. Par défaut :
+            datetime.now(UTC).replace(minute=0, second=0, microsecond=0).
+
         Returns
         -------
         int
-            Nombre d'agrégations horaires générées.
+            Nombre d'agrégations horaires insérées en base de données.
         """
-        raise NotImplementedError
+        agg_start_perf = time.perf_counter()
+
+        # 1. Calculate bucket hour:
+        # start_time = current_hour - 1 hour
+        # end_time = current_hour
+        if end_time is None:
+            now = datetime.now(UTC)
+            end_time = now.replace(minute=0, second=0, microsecond=0)
+        if start_time is None:
+            start_time = end_time - timedelta(hours=1)
+
+        logger.info(
+            "Aggregating hourly stats for bucket [%s, %s)",
+            start_time.isoformat(),
+            end_time.isoformat(),
+        )
+
+        # 2. Read raw statuses sorted and grouped by station_id from DB:
+        # Call station_status_dao.get_all_station_history
+        # If there is no record, log warn and return 0.
+        raw_statuses = self.station_status_dao.get_all_station_history(
+            start_time=start_time,
+            end_time=end_time,
+        )
+        if not raw_statuses:
+            logger.warning(
+                "No station status records found for bucket [%s, %s)",
+                start_time.isoformat(),
+                end_time.isoformat(),
+            )
+            return 0
+
+        # 3. Aggregate stats for each station
+        hourly_records: list[StationStatusHourly] = []
+
+        for station_id, statuses in raw_statuses.items():
+            st = start_time
+            et = end_time
+
+            # a. Basic stats:
+            # sample_count = len(statuses)
+            sample_count = len(statuses)
+
+            # avg_operational_capacity = ROUND(AVG(s.operational_capacity), 2)
+            op_capacities = [
+                s.operational_capacity
+                for s in statuses
+                if s.operational_capacity is not None
+            ]
+            avg_operational_capacity = (
+                round(sum(op_capacities) / len(op_capacities), 2)
+                if op_capacities
+                else 0.0
+            )
+
+            # avg_num_bikes_available = ROUND(AVG(s.num_bikes_available), 2)
+            bikes_available = [
+                s.num_bikes_available
+                for s in statuses
+                if s.num_bikes_available is not None
+            ]
+            avg_num_bikes_available = (
+                round(sum(bikes_available) / len(bikes_available), 2)
+                if bikes_available
+                else 0.0
+            )
+
+            # avg_num_docks_available = ROUND(AVG(s.num_docks_available), 2)
+            docks_available = [
+                s.num_docks_available
+                for s in statuses
+                if s.num_docks_available is not None
+            ]
+            avg_num_docks_available = (
+                round(sum(docks_available) / len(docks_available), 2)
+                if docks_available
+                else 0.0
+            )
+
+            # b. Empty and full events: use station_state
+            # #TODO to be carefully reviewed
+            # Calculate total empty time in seconds: empty_duration_sec
+            # Calculate total full time in seconds: full_duration_sec
+            empty_duration_sec_float = 0.0
+            full_duration_sec_float = 0.0
+            n = len(statuses)
+
+            if n == 1:
+                state = (statuses[0].station_state or "").upper()
+                dt = (et - st).total_seconds()
+                if state == StationState.EMPTY:
+                    empty_duration_sec_float = dt
+                elif state == StationState.FULL:
+                    full_duration_sec_float = dt
+            else:
+                for i in range(n):
+                    state = (statuses[i].station_state or "").upper()
+                    t_start_i = st if i == 0 else statuses[i].last_reported
+                    t_end_i = statuses[i + 1].last_reported if i < n - 1 else et
+                    dt = max(0.0, (t_end_i - t_start_i).total_seconds())
+                    if state == StationState.EMPTY:
+                        empty_duration_sec_float += dt
+                    elif state == StationState.FULL:
+                        full_duration_sec_float += dt
+
+            empty_duration_sec = int(round(empty_duration_sec_float))
+            full_duration_sec = int(round(full_duration_sec_float))
+
+            # _events_cnt: count ONLY events STARTED in this bucket
+            empty_events_cnt = 0
+            full_events_cnt = 0
+            prev_state = None
+            for s in statuses:
+                curr_state = (s.station_state or "").upper()
+                if (
+                    curr_state == StationState.EMPTY
+                    and prev_state != StationState.EMPTY
+                ):
+                    empty_events_cnt += 1
+                elif (
+                    curr_state == StationState.FULL and prev_state != StationState.FULL
+                ):
+                    full_events_cnt += 1
+                prev_state = curr_state
+
+            # Guard against inconsistent 0 counts if duration > 0 or vice versa
+            if empty_duration_sec > 0 and empty_events_cnt == 0:
+                empty_events_cnt = 1
+            if full_duration_sec > 0 and full_events_cnt == 0:
+                full_events_cnt = 1
+            if empty_duration_sec == 0:
+                empty_events_cnt = 0
+            if full_duration_sec == 0:
+                full_events_cnt = 0
+
+            # d. Calculate reliability_score:
+            # P_empty = (empty_duration_sec / 3600.0) * 100
+            # P_full  = (full_duration_sec / 3600.0) * 100
+            total_duration_sec = (et - st).total_seconds()
+            p_empty = (empty_duration_sec / total_duration_sec) * 100.0
+            p_full = (full_duration_sec / total_duration_sec) * 100.0
+
+            # Weights
+            a = 1.0
+            b = 1.0
+            w_1 = 0.55  # w_1 = 0.55 (penalty weight of empty)
+            w_2 = 0.35  # w_2 = 0.35 (penalty weight of full)
+            w_3 = 0.1  # w_3 = 0.1 (penalty weight for persistent episodes)
+
+            # D_penalty (in minutes) = (a * empty_duration_sec / empty_events_cnt) + (b * full_duration_sec / full_events_cnt)
+            d_empty = (
+                (empty_duration_sec / 60.0) / empty_events_cnt
+                if empty_events_cnt > 0
+                else 0.0
+            )
+            d_full = (
+                (full_duration_sec / 60.0) / full_events_cnt
+                if full_events_cnt > 0
+                else 0.0
+            )
+            d_penalty = a * d_empty + b * d_full
+
+            # Score = max(0.0, 100.0 - (w_1 * P_empty + w_2 * P_full + w_3 * min(100, D_penalty)))
+            score = max(
+                0.0,
+                100.0 - (w_1 * p_empty + w_2 * p_full + w_3 * min(100.0, d_penalty)),
+            )
+            reliability_score = round(score, 2)
+
+            # c. Init objects StationStatusHourly:
+            hourly_obj = StationStatusHourly(
+                station_id=station_id,
+                bucket_hour=start_time,
+                sample_count=sample_count,
+                avg_operational_capacity=avg_operational_capacity,
+                avg_num_bikes_available=avg_num_bikes_available,
+                avg_num_docks_available=avg_num_docks_available,
+                empty_duration_sec=empty_duration_sec,
+                full_duration_sec=full_duration_sec,
+                empty_events_cnt=empty_events_cnt,
+                full_events_cnt=full_events_cnt,
+                reliability_score=reliability_score,
+            )
+            hourly_records.append(hourly_obj)
+
+        # 4. Bulk Insert
+        inserted_records = self.station_hourly_dao.bulk_insert_hourly_stats(
+            hourly_records
+        )
+
+        # 5. Ending:
+        # Log (no of stations aggregated, agg time,...)
+        # Return no of records.
+        elapsed_sec = time.perf_counter() - agg_start_perf
+        logger.info(
+            "Aggregated %d stations into %d hourly stats in %.2f seconds",
+            len(raw_statuses),
+            inserted_records,
+            elapsed_sec,
+        )
+        return inserted_records
