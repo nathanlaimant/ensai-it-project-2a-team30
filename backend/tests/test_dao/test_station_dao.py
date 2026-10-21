@@ -8,41 +8,6 @@ from utils.reset_database import ResetDatabase
 from business_object.station_information import StationInformation
 from dao.station_dao import StationDao
 
-stations_list = [
-    StationInformation(
-        station_id="213688169",
-        name="Benjamin Godard - Victor Hugo",
-        short_name="16107",
-        lat=48.865983,
-        lon=2.275725,
-        capacity=35
-    ),
-    StationInformation(
-        station_id="19179944124",
-        name="Hôpital Mondor",
-        short_name="40001",
-        lat=48.798922410229,
-        lon=2.4537451531298,
-        capacity=28
-    ),
-    StationInformation(
-        station_id="18795078746",
-        name="Charcot - Benfleet",
-        short_name="32304",
-        lat=48.878370277021,
-        lon=2.440523876268,
-        capacity=28
-    ),
-    StationInformation(
-        station_id="36255",
-        name="Toudouze - Clauzel",
-        short_name="9020",
-        lat=48.87929591733507,
-        lon=2.3373600840568547,
-        capacity=21
-    )
-]
-
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():
@@ -58,7 +23,14 @@ def test_upsert_station_info_ok():
     """L'importation de l'API externe avec la liste des stations a réussi"""
 
     # GIVEN
-    external_data = [stations_list[1]]
+    external_data = [StationInformation(
+        station_id="19179944124",
+        name="Hôpital Mondor",
+        short_name="40001",
+        lat=48.798922410229,
+        lon=2.4537451531298,
+        capacity=28
+    )]
 
     # WHEN
     local_data = StationDao().upsert_station_info(external_data)
