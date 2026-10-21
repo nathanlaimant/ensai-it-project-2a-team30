@@ -89,83 +89,39 @@ class StationAggregator:
         hourly_records: list[StationStatusHourly] = []
 
         for station_id, statuses in raw_statuses.items():
+            sample_count = len(statuses)
+            if sample_count == 0:
+                continue
+
             st = start_time
             et = end_time
 
-            # a. Basic stats:
-            # sample_count = len(statuses)
-            sample_count = len(statuses)
+            # Accumulators for averages
+            sum_op_cap, count_op_cap = 0, 0
+            sum_bikes, count_bikes = 0, 0
+            sum_docks, count_docks = 0, 0
 
-            # avg_operational_capacity = ROUND(AVG(s.operational_capacity), 2)
-            op_capacities = [
-                s.operational_capacity
-                for s in statuses
-                if s.operational_capacity is not None
-            ]
-            avg_operational_capacity = (
-                round(sum(op_capacities) / len(op_capacities), 2)
-                if op_capacities
-                else 0.0
-            )
-
-            # avg_num_bikes_available = ROUND(AVG(s.num_bikes_available), 2)
-            bikes_available = [
-                s.num_bikes_available
-                for s in statuses
-                if s.num_bikes_available is not None
-            ]
-            avg_num_bikes_available = (
-                round(sum(bikes_available) / len(bikes_available), 2)
-                if bikes_available
-                else 0.0
-            )
-
-            # avg_num_docks_available = ROUND(AVG(s.num_docks_available), 2)
-            docks_available = [
-                s.num_docks_available
-                for s in statuses
-                if s.num_docks_available is not None
-            ]
-            avg_num_docks_available = (
-                round(sum(docks_available) / len(docks_available), 2)
-                if docks_available
-                else 0.0
-            )
-
-            # b. Empty and full events: use station_state
-            # #TODO to be carefully reviewed
-            # Calculate total empty time in seconds: empty_duration_sec
-            # Calculate total full time in seconds: full_duration_sec
+            # Accumulators for durations and events
             empty_duration_sec_float = 0.0
             full_duration_sec_float = 0.0
-            n = len(statuses)
-
-            if n == 1:
-                state = (statuses[0].station_state or "").upper()
-                dt = (et - st).total_seconds()
-                if state == StationState.EMPTY:
-                    empty_duration_sec_float = dt
-                elif state == StationState.FULL:
-                    full_duration_sec_float = dt
-            else:
-                for i in range(n):
-                    state = (statuses[i].station_state or "").upper()
-                    t_start_i = st if i == 0 else statuses[i].last_reported
-                    t_end_i = statuses[i + 1].last_reported if i < n - 1 else et
-                    dt = max(0.0, (t_end_i - t_start_i).total_seconds())
-                    if state == StationState.EMPTY:
-                        empty_duration_sec_float += dt
-                    elif state == StationState.FULL:
-                        full_duration_sec_float += dt
-
-            empty_duration_sec = int(round(empty_duration_sec_float))
-            full_duration_sec = int(round(full_duration_sec_float))
-
-            # _events_cnt: count ONLY events STARTED in this bucket
             empty_events_cnt = 0
             full_events_cnt = 0
             prev_state = None
-            for s in statuses:
+
+            # Loop over statuses: basic stats, events, and durations
+            for i, s in enumerate(statuses):
+                # a. Basic stats accumulation
+                if s.operational_capacity is not None:
+                    sum_op_cap += s.operational_capacity
+                    count_op_cap += 1
+                if s.num_bikes_available is not None:
+                    sum_bikes += s.num_bikes_available
+                    count_bikes += 1
+                if s.num_docks_available is not None:
+                    sum_docks += s.num_docks_available
+                    count_docks += 1
+
+                # b. Events counting (transitions of state)
                 curr_state = (s.station_state or "").upper()
                 if (
                     curr_state == StationState.EMPTY
@@ -178,7 +134,37 @@ class StationAggregator:
                     full_events_cnt += 1
                 prev_state = curr_state
 
-            # Guard against inconsistent 0 counts if duration > 0 or vice versa
+                # c. Durations
+                if sample_count == 1:
+                    dt = (et - st).total_seconds()
+                else:
+                    t_start_i = st if i == 0 else s.last_reported
+                    t_end_i = (
+                        statuses[i + 1].last_reported if i < sample_count - 1 else et
+                    )
+                    dt = max(0.0, (t_end_i - t_start_i).total_seconds())
+
+                if curr_state == StationState.EMPTY:
+                    empty_duration_sec_float += dt
+                elif curr_state == StationState.FULL:
+                    full_duration_sec_float += dt
+
+            # Finalize averages
+            avg_operational_capacity = (
+                round(sum_op_cap / count_op_cap, 2) if count_op_cap else 0.0
+            )
+            avg_num_bikes_available = (
+                round(sum_bikes / count_bikes, 2) if count_bikes else 0.0
+            )
+            avg_num_docks_available = (
+                round(sum_docks / count_docks, 2) if count_docks else 0.0
+            )
+
+            # Finalize durations
+            empty_duration_sec = int(round(empty_duration_sec_float))
+            full_duration_sec = int(round(full_duration_sec_float))
+
+            # Fix inconsistencies
             if empty_duration_sec > 0 and empty_events_cnt == 0:
                 empty_events_cnt = 1
             if full_duration_sec > 0 and full_events_cnt == 0:
@@ -222,7 +208,7 @@ class StationAggregator:
             )
             reliability_score = round(score, 2)
 
-            # c. Init objects StationStatusHourly:
+            # e. Init StationStatusHourly:
             hourly_obj = StationStatusHourly(
                 station_id=station_id,
                 bucket_hour=start_time,
@@ -243,7 +229,7 @@ class StationAggregator:
             hourly_records
         )
 
-        # 5. Ending:
+        # 5. Ending
         # Log (no of stations aggregated, agg time,...)
         # Return no of records.
         elapsed_sec = time.perf_counter() - agg_start_perf
