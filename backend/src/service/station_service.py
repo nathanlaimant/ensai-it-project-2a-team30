@@ -1,3 +1,7 @@
+from datetime import datetime
+
+from fastapi import HTTPException
+
 from business_object.station_information import StationInformation
 from dao.station_dao import StationDAO
 from dao.station_status_dao import StationStatusDAO
@@ -43,7 +47,7 @@ class StationService:
             Liste des stations correspondant aux critères.
             Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
-        raise NotImplementedError
+        return StationDAO().list_stations(query_params)
 
     def get_station_current_status(self, station_id: str) -> dict:
         """
@@ -60,16 +64,31 @@ class StationService:
             État courant de la station (vélos/docks disponibles, etc.).
             Ne renvoie rien si la station n'est pas identifiable.
         """
-        raise NotImplementedError
+        exists = StationDAO().get_by_id(station_id)
 
-    def get_station_history(self, query_params: dict) -> list[dict]:
+        if not exists:
+            raise HTTPException(status_code=404, detail="Station introuvable")
+        return StationStatusDAO().get_latest_status(station_id)
+
+    def get_station_history(
+        self,
+        station_id: str,
+        start_time: datetime,
+        end_time: datetime
+    ) -> list[dict]:
         """
         Récupère l'historique d'état d'une station sur une période donnée.
 
         Parameters
         ----------
-        query_params : dict
-            Critères de la requête (ex: station_id, période).
+        station_id: str
+            Identifiant de la station
+
+        start_time: datetime
+            Début de la période considérée pour la recherche
+        
+        end_time: datetime
+            Fin de la période considérée pour la recherche
 
         Returns
         -------
@@ -78,4 +97,9 @@ class StationService:
             Ne renvoie rien si la station n'est pas identifiable, ou l'un des autres
             critères n'est pas dans le bon format.
         """
-        raise NotImplementedError
+        station_exists = StationDAO().get_by_id(station_id)
+        if not station_exists:
+            raise HTTPException(status_code=404, detail="Station introuvable")
+        if start_time < end_time:
+            raise HTTPException(status_code=400, detail="Horaires mal organisés")
+        return StationStatusDAO().get_status_history(station_id, start_time, end_time)
