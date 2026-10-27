@@ -1,3 +1,7 @@
+from datetime import timedelta
+
+from haversine import haversine
+
 from dao.station_dao import StationDAO
 from dao.station_status_dao import StationStatusDAO
 from dao.station_status_hourly_dao import StationStatusHourlyDAO
@@ -27,14 +31,20 @@ class RecommendationService:
         self.status_dao = status_dao
         self.hourly_dao = hourly_dao
 
-    def get_nearby_recommendations(self, query_params: dict) -> list[dict]:
+    def get_nearby_recommendations(self, lat: int, lon: int, radius_meters: int) -> list[dict]:
         """
         Recommande des stations à proximité d'une position donnée.
 
         Parameters
         ----------
-        query_params : dict
-            Critères de la requête (ex: latitude, longitude, rayon).
+        lat: int
+            Latitude de l'adresse données
+
+        longitude: int
+            Longitude de l'adresse données
+
+        radius_meters: int
+            Rayon envisagé pour la recherche de stations
 
         Returns
         -------
@@ -43,4 +53,31 @@ class RecommendationService:
             pertinentes (distance, disponibilité, fiabilité, etc.).
             Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
-        raise NotImplementedError
+        stations = StationDAO().get_nearby(lat, lon, radius_meters)
+
+        res = None
+        if stations:
+            statuses, hourly_stats, daily_stats = [], [], []
+            for i in range(len(stations)):
+                statuses[i] = StationStatusDAO().get_latest_status(stations[i].station_id)
+                hourly_stats[i] = StationStatusHourlyDAO().get_hourly_stats(
+                    stations[i].station_id,
+                    statuses[i].last_reported,
+                    statuses[i].last_reported - timedelta(hours=1)
+                )
+                daily_stats[i] = StationStatusHourlyDAO().get_daily_stats(
+                    stations[i].station_id,
+                    statuses[i].last_reported,
+                    statuses[i].last_reported - timedelta(hours=1)
+                )["avg_reliability_score"]
+
+                la, lo = stations[i].lat, stations[i].lon
+                res[i] = {
+                    "station_id": stations[i].station_id,
+                    "name": stations[i].station_id,
+                    "distance_meters": haversine((la, lo), (lat, lon), unit='m'),
+                    "hourly_reliability": hourly_stats[i].reliability_score,
+                    "daily_reliability": daily_stats[i]
+                }
+
+        return res

@@ -1,5 +1,8 @@
 from business_object.station_information import StationInformation
 from utils.db_connection import DbConnection
+from utils.log_utils import get_logger
+
+logger = get_logger(__name__)
 
 
 class StationDAO:
@@ -25,11 +28,15 @@ class StationDAO:
         res = None
 
         try:
-            with DBConnection().connection as connection:
+            with DbConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "INSERT INTO station_information(station_id, name, short_name, lat, lon, address, is_virtual_station, station_area, contact_phone, capacity, is_charging_station) VALUES"
-                        "(%(station_id)s, %(name)s, %(short_name)s, %(lat)s, %(lon)s, %(address)s, %(is_virtual_station)s, %(station_area)s, %(contact_phone)s, %(capacity)s, %(is_charging_station)s) "
+                        "INSERT INTO station_information(station_id, name, short_name, lat, lon,"
+                        "address, is_virtual_station, station_area, contact_phone, capacity,"
+                        "is_charging_station) VALUES"
+                        "(%(station_id)s, %(name)s, %(short_name)s, %(lat)s, %(lon)s, %(address)s,"
+                        "%(is_virtual_station)s, %(station_area)s, %(contact_phone)s, %(capacity)s,"
+                        " %(is_charging_station)s) "
                         "RETURNING station_id;",
                         {
                             "station_id": station.station_id,
@@ -71,7 +78,7 @@ class StationDAO:
             Informations de la station correspondante, ou None si introuvable.
         """
         try:
-            with DBConnection().connection as connection:
+            with DbConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT *                            "
@@ -121,12 +128,12 @@ class StationDAO:
         list of StationInformation
             Liste des stations situées dans le rayon demandé.
         """
-        res = None # Use the Haversine formula
+        res = None
 
-        t = 0.01745329251994 # nombre de radian dans 1°
+        t = 0.01745329251994  # nombre de radian dans 1°
 
         try:
-            with DBConnection().connection as connection:
+            with DbConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT *"
@@ -179,9 +186,9 @@ class StationDAO:
             Ne renvoie rien lorsqu'un des critères n'est pas dans le bon format.
         """
         res = None
-        
+
         try:
-            with DBConnection().connection as connection:
+            with DbConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT *"
@@ -231,9 +238,10 @@ class StationDAO:
                     capacity=res[i]["capacity"],
                     is_charging_station=res[i]["is_charging_station"]
                 )
-            if isinstance(query_params["nb_pages"], int) and query_params["nb_pages"] > 1:
+            nb_pages = query_params["nb_pages"]
+            if isinstance(nb_pages, int) and nb_pages > 1:
                 sous_liste = []
-                for k in range(query_params["nb_pages"]):
-                    sous_liste[k] = stations_list[k * query_params["per_page"]:(k+1) * query_params["per_page"] - 1]
+                for k in range(nb_pages):
+                    sous_liste[k] = stations_list[k * nb_pages:(k+1) * nb_pages - 1]
                 stations_list = sous_liste
         return stations_list
