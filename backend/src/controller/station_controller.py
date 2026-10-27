@@ -1,10 +1,17 @@
 """Gère les consultations de stations."""
 
+from fastapi import APIRouter, Depends, HTTPException
+
 from business_object.station_information import StationInformation
 from service.station_service import StationService
+from utils.log_utils import get_logger
+
+router = APIRouter()
+
+logger = get_logger(__name__)
 
 
-def get_station_info(station_id: str) -> StationInformation:
+async def get_station_info(station_id: str) -> StationInformation:
     """
     Récupère les informations fixes d'une station.
 
@@ -21,7 +28,7 @@ def get_station_info(station_id: str) -> StationInformation:
     raise NotImplementedError
 
 
-def list_stations(payload: dict) -> list[StationInformation]:
+async def list_stations(payload: dict) -> list[StationInformation]:
     """
     Liste les stations selon des critères de recherche.
 
@@ -38,7 +45,7 @@ def list_stations(payload: dict) -> list[StationInformation]:
     raise NotImplementedError
 
 
-def get_station_current_status(station_id: str) -> dict:
+async def get_station_current_status(station_id: str) -> dict:
     """
     Récupère l'état en temps réel d'une station.
 
@@ -55,7 +62,7 @@ def get_station_current_status(station_id: str) -> dict:
     raise NotImplementedError
 
 
-def get_station_history(payload: dict) -> list[dict]:
+async def get_station_history(payload: dict) -> list[dict]:
     """
     Récupère l'historique de l'état d'une station sur une période donnée.
 
