@@ -1,9 +1,11 @@
 """Gère les consultations de stations."""
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from business_object.station_information import StationInformation
-from service.station_service import StationService
+from dependencies.service import get_station_service
 from utils.log_utils import get_logger
 
 router = APIRouter()
@@ -11,7 +13,8 @@ router = APIRouter()
 logger = get_logger(__name__)
 
 
-async def get_station_info(station_id: str) -> StationInformation:
+@router.get("/{station_id}", response_model=StationInformation, tags=["Stations"])
+async def get_station_info(station_id: str, station_service=Depends(get_station_service)) -> Any:
     """
     Récupère les informations fixes d'une station.
 
@@ -24,11 +27,20 @@ async def get_station_info(station_id: str) -> StationInformation:
     -------
     StationInformation
         Informations statiques de la station.
+
+    Raises
+    ------
+    HTTPException: Erreur 404 si la station n'est pas trouvée
     """
-    raise NotImplementedError
+    logger.info("Recherche d'une station à partir de son identifiant")
+    station = station_service.get_by_id(station_id)
+    if not station:
+        raise HTTPException(status_code=404, detail="Station (id={station_id}) non trouvée.")
+    return station
 
 
-async def list_stations(payload: dict) -> list[StationInformation]:
+@router.get("/", response_model=list[StationInformation], tags=["Stations"])
+async def list_stations(payload: dict, station_service=Depends(get_station_service)) -> Any:
     """
     Liste les stations selon des critères de recherche.
 
@@ -42,7 +54,9 @@ async def list_stations(payload: dict) -> list[StationInformation]:
     list of StationInformation
         Liste des stations correspondant aux critères.
     """
-    raise NotImplementedError
+    logger.info("Recherche d'une station à partir de paramètres donnés ou non")
+    stations = station_service.list_stations(payload)
+    return stations
 
 
 async def get_station_current_status(station_id: str) -> dict:

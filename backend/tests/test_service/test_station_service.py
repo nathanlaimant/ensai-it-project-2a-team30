@@ -83,6 +83,39 @@ statuses = [
   )
 ]
 
+
+# Tests de get_by_id()
+
+def test_get_by_id_ok():
+    """Nous réussissons à obtenir la bonne station"""
+
+    # GIVEN
+    station_id = stations[3].station_id
+    StationDAO().get_by_id = MagicMock(return_value=stations[3])
+
+    # WHEN
+    station = StationService().get_by_id(station_id)
+
+    # THEN
+    assert station is not None
+    assert station_id == station.station_id
+
+
+def test_get_by_id_fail():
+    """Échec de l'obtention des information de la station car l'identifiant
+    n'est pas reconnu"""
+
+    # GIVEN
+    id = "fakeid"
+    StationDAO().get_by_id(return_value=None)
+
+    # WHEN
+    station = StationService().get_by_id(id)
+
+    # THEN
+    assert station is None
+
+
 # Tests de list_stations()
 
 

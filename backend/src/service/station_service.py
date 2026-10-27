@@ -32,6 +32,22 @@ class StationService:
         self.status_dao = status_dao
         self.hourly_dao = hourly_dao
 
+    def get_by_id(self, station_id: str) -> StationInformation:
+        """
+        Donne une station à partir de son identifiant.
+
+        Parameters
+        ----------
+        station_id: int
+            Identifiant de la station à trouver
+
+        Returns
+        -------
+        StationInformation
+            Station avec l'identifiant correspondant.
+        """
+        return StationDAO().get_by_id(station_id)
+
     def list_stations(self, query_params: dict) -> list[StationInformation]:
         """
         Liste les stations selon des critères de recherche.
