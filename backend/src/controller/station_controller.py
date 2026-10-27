@@ -1,5 +1,6 @@
 """Gère les consultations de stations."""
 
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -30,7 +31,7 @@ async def get_station_info(station_id: str, station_service=Depends(get_station_
 
     Raises
     ------
-    HTTPException: Erreur 404 si la station n'est pas trouvée
+    HTTPException: Erreur 404 si la station n'est pas trouvée.
     """
     logger.info("Recherche d'une station à partir de son identifiant")
     station = station_service.get_by_id(station_id)
@@ -59,7 +60,11 @@ async def list_stations(payload: dict, station_service=Depends(get_station_servi
     return stations
 
 
-async def get_station_current_status(station_id: str) -> dict:
+@router.get("/{station_id}/status", response_model=dict, tags=["Stations"])
+async def get_station_current_status(
+    station_id: str,
+    station_service=Depends(get_station_service)
+) -> Any:
     """
     Récupère l'état en temps réel d'une station.
 
@@ -72,22 +77,42 @@ async def get_station_current_status(station_id: str) -> dict:
     -------
     dict
         État courant de la station (vélos/docks disponibles, etc.).
+
+    Raises
+    ------
+    HTTPException: Erreur 404 si la station n'est pas trouvée.
     """
-    raise NotImplementedError
+    logger.info("Statut le plus récent de la station")
+    statut = station_service.get_station_current_status(station_id)
+    if not statut:
+        raise HTTPException(status_code=404, detail="Station (id={station_id}) non trouvée.")
+    return statut
 
 
-async def get_station_history(payload: dict) -> list[dict]:
+@router.get("/{station_id}/history", response_model=list[dict], tags=["Stations"])
+async def get_station_history(
+    station_id: str, start_time: datetime, end_time: datetime,
+    station_service=Depends(get_station_service)
+) -> list[dict]:
     """
     Récupère l'historique de l'état d'une station sur une période donnée.
 
     Parameters
     ----------
-    payload : dict
-        Critères de la requête (ex: station_id, période).
+    station_id: str
+        Identifiant de la station
+    start_time: datetime
+        Début de la période
+    end_time: datetime
+        Fin de la période
 
     Returns
     -------
     list of dict
         Historique des états de la station sur la période demandée.
     """
-    raise NotImplementedError
+    if end_time > start_time:
+        temp = start_time
+        start_time = end_time
+        end_time = temp
+    pass

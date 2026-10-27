@@ -80,11 +80,16 @@ class StationService:
             État courant de la station (vélos/docks disponibles, etc.).
             Ne renvoie rien si la station n'est pas identifiable.
         """
-        exists = StationDAO().get_by_id(station_id)
-
-        if not exists:
-            raise HTTPException(status_code=404, detail="Station introuvable")
-        return StationStatusDAO().get_latest_status(station_id)
+        statut = StationStatusDAO().get_latest_status(station_id)
+        return {
+            "last_reported": statut.last_reported,
+            "station_state": statut.station_state,
+            "operational_capacity": statut.operational_capacity,
+            "num_bikes_available": statut.num_bikes_available,
+            "vehicule_types_available": statut.vehicule_types_available,
+            "num_docks_available": statut.num_docks_available,
+            "vehicule_docks_available": statut.vehicule_docks_available
+        }
 
     def get_station_history(
         self,
