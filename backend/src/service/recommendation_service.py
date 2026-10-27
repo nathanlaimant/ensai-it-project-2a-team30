@@ -57,27 +57,27 @@ class RecommendationService:
 
         res = None
         if stations:
-            statuses, hourly_stats, daily_stats = [], [], []
+            statuses, hourly_reliability, daily_reliability = [], [], []
             for i in range(len(stations)):
                 statuses[i] = StationStatusDAO().get_latest_status(stations[i].station_id)
-                hourly_stats[i] = StationStatusHourlyDAO().get_hourly_stats(
+                hourly_reliability[i] = StationStatusHourlyDAO().get_hourly_stats(
                     stations[i].station_id,
                     statuses[i].last_reported,
                     statuses[i].last_reported - timedelta(hours=1)
-                )
-                daily_stats[i] = StationStatusHourlyDAO().get_daily_stats(
+                )[0].reliability_score
+                daily_reliability[i] = StationStatusHourlyDAO().get_daily_stats(
                     stations[i].station_id,
                     statuses[i].last_reported,
                     statuses[i].last_reported - timedelta(hours=1)
-                )["avg_reliability_score"]
+                )[10]["avg_reliability_score"]
 
                 la, lo = stations[i].lat, stations[i].lon
                 res[i] = {
                     "station_id": stations[i].station_id,
                     "name": stations[i].station_id,
                     "distance_meters": haversine((la, lo), (lat, lon), unit='m'),
-                    "hourly_reliability": hourly_stats[i].reliability_score,
-                    "daily_reliability": daily_stats[i]
+                    "hourly_reliability": hourly_reliability[i],
+                    "daily_reliability": daily_reliability[i]
                 }
 
         return res
