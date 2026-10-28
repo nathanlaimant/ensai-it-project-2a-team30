@@ -170,14 +170,56 @@ class StationDAO:
                 )
         return stations_list
 
-    def list_stations(self, query_params: dict) -> list[StationInformation]:
+    def list_stations(
+        self,
+        station_id: str = None,
+        name: str = None,
+        short_name: str = None,
+        lat: int = None,
+        lon: int = None,
+        address: str = None,
+        is_virtual_station: bool = None,
+        contact_phone: str = None,
+        capacity: int = None,
+        is_charging_station: bool = None,
+        station_state: str = None,
+        operational_capacity: int = None,
+        num_bikes_available: int = None,
+        vehicule_types_available: int = None,
+        num_docks_available: int = None,
+        vehicule_docks_available: int = None,
+        nb_pages: int = None
+    ) -> list[StationInformation]:
         """
         Liste les stations selon des critères de recherche.
+        Tous les arguments de la méthode sont optionnels.
 
-        Parameters
+        Arguments
         ----------
-        query_params : dict
-            Critères de filtrage et/ou de pagination.
+        station_id: str = None
+            Identifiant de stations
+        name: str = None
+            Nom de station
+        short_name: str = None
+            Nom raccourci de station
+        lat: int = None
+            Latitude de station
+        lon: int = None
+            Longitude de station
+        address: str = None
+            Adresse de station
+        is_virtual_station: bool = None
+            Si True, lister les stations virtuelles
+            Si False, lister les stations non virtuelles
+        contact_phone: str = None
+            Contact téléphonique de station
+        capacity: int = None
+            Capacité totale de la station
+        is_charging_station: bool = None
+            Si True, lister les stations avec bornes de charge
+            Si False, ne pas lister les stations avec bornes de charge
+        nb_pages: int = None
+            Nombre de pages de stations à créer
 
         Returns
         -------
@@ -204,16 +246,16 @@ class StationDAO:
                         "AND capacity = %(capacity)s"
                         "AND is_charging_station = %(is_charging_station)s",
                         {
-                            "station_id": query_params["station_id"],
-                            "name": query_params["name"],
-                            "short_name": query_params["hort_name"],
-                            "lat": query_params["lat"],
-                            "lon": query_params["lon"],
-                            "address": query_params["address"],
-                            "is_virtual_station": query_params["is_virtual_station"],
-                            "contact_phone": query_params["contact_phone"],
-                            "capacity": query_params["capacity"],
-                            "is_charging_station": query_params["is_charging_station"]
+                            "station_id": station_id,
+                            "name": name,
+                            "short_name": short_name,
+                            "lat": lat,
+                            "lon": lon,
+                            "address": address,
+                            "is_virtual_station": is_virtual_station,
+                            "contact_phone": contact_phone,
+                            "capacity": capacity,
+                            "is_charging_station": is_charging_station
                         }
                     )
                     res = cursor.fetchone()
@@ -238,7 +280,6 @@ class StationDAO:
                     capacity=res[i]["capacity"],
                     is_charging_station=res[i]["is_charging_station"]
                 )
-            nb_pages = query_params["nb_pages"]
             if isinstance(nb_pages, int) and nb_pages > 1:
                 sous_liste = []
                 for k in range(nb_pages):
