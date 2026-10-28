@@ -1,7 +1,5 @@
 from datetime import datetime
 
-from fastapi import HTTPException
-
 from business_object.station_information import StationInformation
 from dao.station_dao import StationDAO
 from dao.station_status_dao import StationStatusDAO
@@ -12,7 +10,7 @@ class StationService:
     """
     Gère la logique métier liée à la consultation des stations.
 
-    Parameters
+    Attributes
     ----------
     station_dao : StationDAO
         DAO permettant l'accès aux informations fixes des stations.
@@ -36,8 +34,8 @@ class StationService:
         """
         Donne une station à partir de son identifiant.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         station_id: int
             Identifiant de la station à trouver
 
@@ -65,8 +63,8 @@ class StationService:
         """
         Liste les stations selon des critères de recherche.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         station_id: str = None
             Identifiant de stations
         name: str = None
@@ -116,8 +114,8 @@ class StationService:
         """
         Récupère l'état en temps réel d'une station.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         station_id : str
             Identifiant de la station demandée.
 
@@ -147,8 +145,8 @@ class StationService:
         """
         Récupère l'historique d'état d'une station sur une période donnée.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         station_id: str
             Identifiant de la station
 

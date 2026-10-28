@@ -10,7 +10,8 @@ class StationStatus:
     Parameters
     ----------
     station_status_id : int | None
-        Identifiant unique de l'enregistrement de statut. Non-nullable, mais peut être None si l'objet n'a pas été persisté.
+        Identifiant unique de l'enregistrement de statut. Non-nullable, mais peut être None si
+        l'objet n'a pas été persisté.
     station_id : str
         Identifiant de la station concernée.
     num_bikes_available : int
