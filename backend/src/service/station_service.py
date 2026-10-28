@@ -141,8 +141,8 @@ class StationService:
     def get_station_history(
         self,
         station_id: str,
-        start_time: datetime,
-        end_time: datetime
+        start_time: datetime = None,
+        end_time: datetime = None
     ) -> list[dict]:
         """
         Récupère l'historique d'état d'une station sur une période donnée.
@@ -154,7 +154,7 @@ class StationService:
 
         start_time: datetime
             Début de la période considérée pour la recherche
-        
+
         end_time: datetime
             Fin de la période considérée pour la recherche
 
@@ -167,7 +167,8 @@ class StationService:
         """
         station_exists = StationDAO().get_by_id(station_id)
         if not station_exists:
-            raise HTTPException(status_code=404, detail="Station introuvable")
-        if start_time < end_time:
-            raise HTTPException(status_code=400, detail="Horaires mal organisés")
-        return StationStatusDAO().get_status_history(station_id, start_time, end_time)
+            return None
+        if start_time > end_time:
+            temp, start_time = start_time, end_time
+            end_time = temp
+        return StationStatusDAO().get_one_station_history(station_id, start_time, end_time)

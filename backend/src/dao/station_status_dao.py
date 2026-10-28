@@ -129,7 +129,7 @@ class StationStatusDAO:
         return None
 
     def get_one_station_history(
-        self, station_id: str, start_time: datetime, end_time: datetime
+        self, station_id: str, start_time: datetime = None, end_time: datetime = None
     ) -> list[StationStatus]:
         """
         Récupère l'historique des statuts d'une station sur une période donnée.
@@ -138,18 +138,22 @@ class StationStatusDAO:
         ----------
         station_id : str
             Identifiant de la station concernée.
-        start_time : datetime
+        start_time : datetime = None
             Date et heure de début de la période.
-        end_time : datetime
+        end_time : datetime = None
             Date et heure de fin de la période (exclusif).
 
         Returns
         -------
         list of StationStatus
-            Liste des statuts de la station sur la période demandée, triés par last_reported croissante.
+            Liste des statuts de la station sur la période demandée,
+            triés par last_reported croissante.
             Renvoie une liste vide si la station est introuvable ou si les bornes chronologiques
             ne sont pas disponibles dans la base de données.
         """
+        if start_time > end_time:
+            temp, start_time = start_time, end_time
+            end_time = temp
         try:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
@@ -203,8 +207,8 @@ class StationStatusDAO:
         dict[str, list[StationStatus]]
             Dictionnaire avec clé=(ID de la station) et valeur=(la liste des statuts)
             de cette station sur la période demandée, triés par last_reported croissante.
-            Renvoie un dictionnaire vide si aucune station n'est trouvée ou si les bornes chronologiques
-            ne sont pas disponibles dans la base de données.
+            Renvoie un dictionnaire vide si aucune station n'est trouvée ou si les bornes
+            chronologiques ne sont pas disponibles dans la base de données.
         """
         try:
             with self._db_connection.get_connection() as conn:

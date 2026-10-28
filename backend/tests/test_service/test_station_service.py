@@ -182,22 +182,22 @@ def test_get_station_current_status_non_existing():
 
 # Tests de get_station_history()
 
-def test_get_status_history_no_params():
+def test_get_station_history_no_params():
     """Nous réussions à obtenir l'historique de la station demandée sans critères demandés"""
 
     # GIVEN
     station_id = "213688169"
-    StationStatusDAO().get_status_history = MagicMock(return_value=statuses[0])
+    StationStatusDAO().get_one_station_history = MagicMock(return_value=statuses[0])
 
     # WHEN
-    history = StationService().get_status_history({"station_id": station_id})
+    history = StationService().get_station_history(station_id)
 
     # THEN
     assert isinstance(history[0], StationStatus)
     assert len(history) == 1
 
 
-def test_get_status_history_with_params():
+def test_get_station_history_with_params():
     """Nous réussissons à obtenir l'historique de la station demandée avec un critère sur
     la période"""
 
@@ -205,16 +205,10 @@ def test_get_status_history_with_params():
     station_id = "18795078746"
     start_time = debut + timedelta(seconds=1792526580)
     end_time = debut + timedelta(seconds=1792526598)
-    StationStatusDAO().get_status_history = MagicMock(return_value=[])
+    StationStatusDAO().get_one_station_history = MagicMock(return_value=[])
 
     # WHEN
-    history = StationService().get_status_history(
-      {
-        "station_id": station_id,
-        "start_time": start_time,
-        "end_time": end_time
-      }
-    )
+    history = StationService().get_station_history(station_id, start_time, end_time)
 
     # THEN
     assert len(history) == 0
