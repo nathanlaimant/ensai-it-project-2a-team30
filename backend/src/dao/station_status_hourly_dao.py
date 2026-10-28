@@ -94,6 +94,53 @@ class StationStatusHourlyDAO:
             logger.error(e)
         return res
 
+    def get_latest_hourly_status(self, station_id: str) -> StationStatusHourly | None:
+        """
+        Récupère le dernier enregistrement d'agrégation horaire d'une station.
+
+        Parameters
+        ----------
+        station_id : str
+            Identifiant de la station concernée.
+
+        Returns
+        -------
+        StationStatusHourly | None
+            Dernier enregistrement d'agrégation horaire de la station.
+            Renvoie None si la station n'est pas identifiable.
+        """
+        try:
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = """
+                        SELECT *
+                        FROM station_status_hourly
+                        WHERE station_id = %s
+                        ORDER BY bucket_hour DESC
+                        LIMIT 1;
+                    """
+                    cursor.execute(query, (station_id,))
+                    row = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            return None
+
+        if row:
+            return StationStatusHourly(
+                station_id=row[0],
+                bucket_hour=row[1],
+                sample_count=row[2],
+                avg_operational_capacity=row[3],
+                avg_num_bikes_available=row[4],
+                avg_num_docks_available=row[5],
+                empty_duration_sec=row[6],
+                full_duration_sec=row[7],
+                empty_events_cnt=row[8],
+                full_events_cnt=row[9],
+                reliability_score=row[10],
+            )
+        return None
+
     def get_hourly_stats(
         self, station_id: str, start_time: datetime, end_time: datetime
     ) -> list[StationStatusHourly]:

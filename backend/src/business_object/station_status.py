@@ -26,10 +26,10 @@ class StationStatus:
         Capacité opérationnelle actuelle de la station.
     last_reported : datetime
         Date et heure du dernier rapport d'état reçu.
-    vehicle_types_available : list | None
-        Liste du nombre de véhicules disponibles par type de véhicule. Nullable.
-    vehicle_docks_available : list | None
-        Liste du nombre de bornes disponibles par type de véhicule. Nullable.
+    vehicle_types_available : dict[str, int] | None
+        Dictionnaire du nombre de véhicules disponibles par type de véhicule. Nullable.
+    vehicle_docks_available : dict[str, int] | None
+        Dictionnaire du nombre de bornes disponibles par type de véhicule. Nullable.
     station_state : StationState | str
         État global de la station (StationState.FULL, StationState.EMPTY, StationState.FUNCTIONAL).
     """
@@ -43,8 +43,8 @@ class StationStatus:
         num_docks_disabled: int | None,
         operational_capacity: int,
         last_reported: datetime,
-        vehicle_types_available: list | None,
-        vehicle_docks_available: list | None,
+        vehicle_types_available: dict[str, int] | None,
+        vehicle_docks_available: dict[str, int] | None,
         station_state: StationState | str,
         station_status_id: int | None = None,
     ):

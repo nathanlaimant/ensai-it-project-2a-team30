@@ -1,5 +1,7 @@
 """Common request and response models exposed by the API."""
 
+from enum import Enum
+
 from pydantic import BaseModel
 
 
@@ -18,3 +20,10 @@ class MessageResponse(BaseModel):
     """
 
     message: str
+
+
+class TimePeriod(str, Enum):
+    une_heure = "1h"
+    vingt_quatre_heures = "24h"
+    sept_jours = "7j"
+    trente_jours = "30j"
