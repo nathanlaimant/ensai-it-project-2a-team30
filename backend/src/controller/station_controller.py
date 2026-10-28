@@ -31,7 +31,8 @@ async def get_station_info(station_id: str, station_service=Depends(get_station_
 
     Raises
     ------
-    HTTPException: Erreur 404 si la station n'est pas trouvée.
+    HTTPException:
+        Erreur 404 si la station n'est pas trouvée.
     """
     logger.info("Recherche d'une station à partir de son identifiant")
     station = station_service.get_by_id(station_id)
@@ -80,7 +81,8 @@ async def get_station_current_status(
 
     Raises
     ------
-    HTTPException: Erreur 404 si la station n'est pas trouvée.
+    HTTPException:
+        Erreur 404 si la station n'est pas trouvée.
     """
     logger.info("Statut le plus récent de la station")
     statut = station_service.get_station_current_status(station_id)
@@ -93,7 +95,7 @@ async def get_station_current_status(
 async def get_station_history(
     station_id: str, start_time: datetime, end_time: datetime,
     station_service=Depends(get_station_service)
-) -> list[dict]:
+) -> Any:
     """
     Récupère l'historique de l'état d'une station sur une période donnée.
 
@@ -110,9 +112,14 @@ async def get_station_history(
     -------
     list of dict
         Historique des états de la station sur la période demandée.
+
+    Raises
+    ------
+    HTTPException:
+        Erreur 404 si la station n'est pas trouvée.
     """
-    if end_time > start_time:
-        temp = start_time
-        start_time = end_time
-        end_time = temp
-    pass
+    logger.info("Historique de la station")
+    history = station_service.get_station_history(station_id, start_time, end_time)
+    if not history:
+        raise HTTPException(status_code=404, detail="Station (id={station_id}) non trouvée.")
+    return history
