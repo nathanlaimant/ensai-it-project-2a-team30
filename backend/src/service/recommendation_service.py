@@ -79,5 +79,5 @@ class RecommendationService:
                     "hourly_reliability": hourly_reliability[i],
                     "daily_reliability": daily_reliability[i]
                 }
-
+        sorted(res, key=lambda r: r[2])  # Ordonnée par distance
         return res
