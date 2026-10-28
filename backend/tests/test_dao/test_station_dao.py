@@ -121,13 +121,15 @@ def test_list_stations_ok():
     recherche effectuée"""
 
     # GIVEN
-    name = "Toudouze - Clauzel"
+    a_name = "Toudouze - Clauzel"
 
     # WHEN
-    stations = StationDao().list_stations({"name": name})
+    stations = StationDao().list_stations(name=a_name)
 
     # THEN
     assert stations is not None
+    for s in stations:
+        assert isinstance(s, StationInformation)
 
 
 def test_list_stations_fail():
@@ -135,10 +137,10 @@ def test_list_stations_fail():
     recherche effectuée car le nom n'existe pas"""
 
     # GIVEN
-    name = "afakenameverylongthatistoolong"
+    a_name = "afakenameverylongthatistoolong"
 
     # WHEN
-    stations = StationDao().list_stations({"name": name})
+    stations = StationDao().list_stations(name=a_name)
 
     # THEN
     assert stations is None

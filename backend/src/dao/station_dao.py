@@ -182,12 +182,6 @@ class StationDAO:
         contact_phone: str = None,
         capacity: int = None,
         is_charging_station: bool = None,
-        station_state: str = None,
-        operational_capacity: int = None,
-        num_bikes_available: int = None,
-        vehicule_types_available: int = None,
-        num_docks_available: int = None,
-        vehicule_docks_available: int = None,
         nb_pages: int = None
     ) -> list[StationInformation]:
         """

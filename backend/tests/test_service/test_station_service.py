@@ -141,7 +141,7 @@ def test_list_stations_with_params():
     StationDAO().list_stations = MagicMock(return_value=stations[3])
 
     # WHEN
-    res = StationService().list_stations({"name": "Toudouze - Clauzel"})
+    res = StationService().list_stations(name="Toudouze - Clauzel")
 
     # THEN
     assert len(res) == 1

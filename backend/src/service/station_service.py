@@ -48,14 +48,49 @@ class StationService:
         """
         return StationDAO().get_by_id(station_id)
 
-    def list_stations(self, query_params: dict) -> list[StationInformation]:
+    def list_stations(
+        self,
+        station_id: str = None,
+        name: str = None,
+        short_name: str = None,
+        lat: int = None,
+        lon: int = None,
+        address: str = None,
+        is_virtual_station: bool = None,
+        contact_phone: str = None,
+        capacity: int = None,
+        is_charging_station: bool = None,
+        nb_pages: int = None
+    ) -> list[StationInformation]:
         """
         Liste les stations selon des critères de recherche.
 
         Parameters
         ----------
-        query_params : dict
-            Critères de filtrage et/ou de pagination.
+        station_id: str = None
+            Identifiant de stations
+        name: str = None
+            Nom de station
+        short_name: str = None
+            Nom raccourci de station
+        lat: int = None
+            Latitude de station
+        lon: int = None
+            Longitude de station
+        address: str = None
+            Adresse de station
+        is_virtual_station: bool = None
+            Si True, lister les stations virtuelles
+            Si False, lister les stations non virtuelles
+        contact_phone: str = None
+            Contact téléphonique de station
+        capacity: int = None
+            Capacité totale de la station
+        is_charging_station: bool = None
+            Si True, lister les stations avec bornes de charge
+            Si False, ne pas lister les stations avec bornes de charge
+        nb_pages: int = None
+            Nombre de pages de stations à créer
 
         Returns
         -------
@@ -63,7 +98,19 @@ class StationService:
             Liste des stations correspondant aux critères.
             Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
-        return StationDAO().list_stations(query_params)
+        return StationDAO().list_stations(
+            station_id,
+            name,
+            short_name,
+            lat,
+            lon,
+            address,
+            is_virtual_station,
+            contact_phone,
+            capacity,
+            is_charging_station,
+            nb_pages
+        )
 
     def get_station_current_status(self, station_id: str) -> dict:
         """
