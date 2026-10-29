@@ -28,8 +28,10 @@ class StationStatus:
         Date et heure du dernier rapport d'état reçu.
     vehicle_types_available : dict[str, int] | None
         Dictionnaire du nombre de véhicules disponibles par type de véhicule. Nullable.
+        Format : {"mechanical": int, "electric": int}
     vehicle_docks_available : dict[str, int] | None
         Dictionnaire du nombre de bornes disponibles par type de véhicule. Nullable.
+        Format : {"mechanical": int, "electric": int}
     station_state : StationState | str
         État global de la station (StationState.FULL, StationState.EMPTY, StationState.FUNCTIONAL).
     """
