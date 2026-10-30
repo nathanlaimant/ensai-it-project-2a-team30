@@ -5,7 +5,7 @@ from psycopg2.extras import Json, execute_values
 
 from business_object.station_status import StationStatus
 from utils.db_connection import DbConnection
-from utils.log_utils import get_logger, log
+from utils.log_utils import get_logger
 
 logger = get_logger(__name__)
 
@@ -16,7 +16,6 @@ class StationStatusDAO:
     def __init__(self, db_connection: DbConnection):
         self._db_connection = db_connection
 
-    @log
     def bulk_insert_status(self, records: list[StationStatus]) -> int:
         """
         Insère en masse une liste d'enregistrements de statut de stations.
@@ -34,6 +33,7 @@ class StationStatusDAO:
         if not records:
             return 0
 
+        logger.info(f"Bulk inserting {len(records)} station status records.")
         query = """
             INSERT INTO station_status (
                 station_id,
@@ -46,7 +46,7 @@ class StationStatusDAO:
                 vehicle_types_available,
                 vehicle_docks_available,
                 station_state
-            ) VALUES %
+            ) VALUES %s
             ON CONFLICT (station_id, last_reported) DO NOTHING
             RETURNING station_status_id;
         """
@@ -67,20 +67,24 @@ class StationStatusDAO:
             for r in records
         ]
 
+        res = 0
         try:
             with self._db_connection.get_connection() as conn:
-                with conn.cursor() as cursor:
-                    inserted_ids = execute_values(
-                        cur=cursor,
-                        sql=query,
-                        argslist=data,
-                        template=None,
-                        page_size=1000,
-                        fetch=True,
-                    )
-                    res = len(inserted_ids)
+                with conn:
+                    with conn.cursor() as cursor:
+                        inserted_ids = execute_values(
+                            cur=cursor,
+                            sql=query,
+                            argslist=data,
+                            template=None,
+                            page_size=1000,
+                            fetch=True,
+                        )
+                        res = len(inserted_ids)
         except Exception as e:
             logger.error(e)
+
+        logger.info(f"Successfully inserted {res} station status records.")
         return res
 
     def get_latest_status(self, station_id: str) -> StationStatus | None:
@@ -97,6 +101,7 @@ class StationStatusDAO:
         StationStatus | None
             Dernier statut connu de la station, ou None si introuvable.
         """
+        row = None
         try:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
@@ -114,17 +119,17 @@ class StationStatusDAO:
 
         if row:
             return StationStatus(
-                station_status_id=row[0],
-                station_id=row[1],
-                num_bikes_available=row[2],
-                num_bikes_disabled=row[3],
-                num_docks_available=row[4],
-                num_docks_disabled=row[5],
-                operational_capacity=row[6],
-                last_reported=row[7],
-                vehicle_types_available=row[8],
-                vehicle_docks_available=row[9],
-                station_state=row[10],
+                station_status_id=row["station_status_id"],
+                station_id=row["station_id"],
+                num_bikes_available=row["num_bikes_available"],
+                num_bikes_disabled=row["num_bikes_disabled"],
+                num_docks_available=row["num_docks_available"],
+                num_docks_disabled=row["num_docks_disabled"],
+                operational_capacity=row["operational_capacity"],
+                last_reported=row["last_reported"],
+                vehicle_types_available=row["vehicle_types_available"],
+                vehicle_docks_available=row["vehicle_docks_available"],
+                station_state=row["station_state"],
             )
         return None
 
@@ -151,6 +156,7 @@ class StationStatusDAO:
             Renvoie une liste vide si la station est introuvable ou si les bornes chronologiques
             ne sont pas disponibles dans la base de données.
         """
+        res = None
         try:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
@@ -171,17 +177,17 @@ class StationStatusDAO:
         if res:
             for row in res:
                 station_status = StationStatus(
-                    station_status_id=row[0],
-                    station_id=row[1],
-                    num_bikes_available=row[2],
-                    num_bikes_disabled=row[3],
-                    num_docks_available=row[4],
-                    num_docks_disabled=row[5],
-                    operational_capacity=row[6],
-                    last_reported=row[7],
-                    vehicle_types_available=row[8],
-                    vehicle_docks_available=row[9],
-                    station_state=row[10],
+                    station_status_id=row["station_status_id"],
+                    station_id=row["station_id"],
+                    num_bikes_available=row["num_bikes_available"],
+                    num_bikes_disabled=row["num_bikes_disabled"],
+                    num_docks_available=row["num_docks_available"],
+                    num_docks_disabled=row["num_docks_disabled"],
+                    operational_capacity=row["operational_capacity"],
+                    last_reported=row["last_reported"],
+                    vehicle_types_available=row["vehicle_types_available"],
+                    vehicle_docks_available=row["vehicle_docks_available"],
+                    station_state=row["station_state"],
                 )
                 station_statuses.append(station_status)
         return station_statuses
@@ -207,6 +213,7 @@ class StationStatusDAO:
             Renvoie un dictionnaire vide si aucune station n'est trouvée ou si les bornes
             chronologiques ne sont pas disponibles dans la base de données.
         """
+        res = None
         try:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
@@ -226,17 +233,17 @@ class StationStatusDAO:
         if res:
             for row in res:
                 station_status = StationStatus(
-                    station_status_id=row[0],
-                    station_id=row[1],
-                    num_bikes_available=row[2],
-                    num_bikes_disabled=row[3],
-                    num_docks_available=row[4],
-                    num_docks_disabled=row[5],
-                    operational_capacity=row[6],
-                    last_reported=row[7],
-                    vehicle_types_available=row[8],
-                    vehicle_docks_available=row[9],
-                    station_state=row[10],
+                    station_status_id=row["station_status_id"],
+                    station_id=row["station_id"],
+                    num_bikes_available=row["num_bikes_available"],
+                    num_bikes_disabled=row["num_bikes_disabled"],
+                    num_docks_available=row["num_docks_available"],
+                    num_docks_disabled=row["num_docks_disabled"],
+                    operational_capacity=row["operational_capacity"],
+                    last_reported=row["last_reported"],
+                    vehicle_types_available=row["vehicle_types_available"],
+                    vehicle_docks_available=row["vehicle_docks_available"],
+                    station_state=row["station_state"],
                 )
                 history[station_status.station_id].append(station_status)
         return history

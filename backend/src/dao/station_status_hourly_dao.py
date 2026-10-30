@@ -4,7 +4,7 @@ from psycopg2.extras import execute_values
 
 from business_object.station_status_hourly import StationStatusHourly
 from utils.db_connection import DbConnection
-from utils.log_utils import get_logger, log
+from utils.log_utils import get_logger
 
 logger = get_logger(__name__)
 
@@ -15,8 +15,7 @@ class StationStatusHourlyDAO:
     def __init__(self, db_connection: DbConnection):
         self._db_connection = db_connection
 
-    @log
-    def bulk_insert_hourly_stats(self, records: list[StationStatusHourly]) -> int:
+    def bulk_upsert_hourly_stats(self, records: list[StationStatusHourly]) -> int:
         """
         Insert en masse les données d'une station sur une heure.
 
@@ -33,6 +32,7 @@ class StationStatusHourlyDAO:
         if not records:
             return 0
 
+        logger.info(f"Bulk upserting {len(records)} station hourly status records.")
         query = """
             INSERT INTO station_status_hourly (
                 station_id,
@@ -46,7 +46,7 @@ class StationStatusHourlyDAO:
                 empty_events_cnt,
                 full_events_cnt,
                 reliability_score
-            ) VALUES %
+            ) VALUES %s
             ON CONFLICT (station_id, bucket_hour)
             DO UPDATE SET
                 sample_count = EXCLUDED.sample_count,
@@ -78,20 +78,24 @@ class StationStatusHourlyDAO:
             for r in records
         ]
 
+        res = 0
         try:
             with self._db_connection.get_connection() as conn:
-                with conn.cursor() as cursor:
-                    upserted = execute_values(
-                        cur=cursor,
-                        sql=query,
-                        argslist=data,
-                        template=None,
-                        page_size=1000,
-                        fetch=True,
-                    )
-                    res = len(upserted)
+                with conn:
+                    with conn.cursor() as cursor:
+                        upserted = execute_values(
+                            cur=cursor,
+                            sql=query,
+                            argslist=data,
+                            template=None,
+                            page_size=1000,
+                            fetch=True,
+                        )
+                        res = len(upserted)
         except Exception as e:
             logger.error(e)
+
+        logger.info(f"Successfully upserted {res} station hourly status records.")
         return res
 
     def get_latest_hourly_status(self, station_id: str) -> StationStatusHourly | None:
@@ -109,6 +113,7 @@ class StationStatusHourlyDAO:
             Dernier enregistrement d'agrégation horaire de la station.
             Renvoie None si la station n'est pas identifiable.
         """
+        row = None
         try:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
@@ -127,17 +132,17 @@ class StationStatusHourlyDAO:
 
         if row:
             return StationStatusHourly(
-                station_id=row[0],
-                bucket_hour=row[1],
-                sample_count=row[2],
-                avg_operational_capacity=row[3],
-                avg_num_bikes_available=row[4],
-                avg_num_docks_available=row[5],
-                empty_duration_sec=row[6],
-                full_duration_sec=row[7],
-                empty_events_cnt=row[8],
-                full_events_cnt=row[9],
-                reliability_score=row[10],
+                station_id=row["station_id"],
+                bucket_hour=row["bucket_hour"],
+                sample_count=row["sample_count"],
+                avg_operational_capacity=row["avg_operational_capacity"],
+                avg_num_bikes_available=row["avg_num_bikes_available"],
+                avg_num_docks_available=row["avg_num_docks_available"],
+                empty_duration_sec=row["empty_duration_sec"],
+                full_duration_sec=row["full_duration_sec"],
+                empty_events_cnt=row["empty_events_cnt"],
+                full_events_cnt=row["full_events_cnt"],
+                reliability_score=row["reliability_score"],
             )
         return None
 
@@ -159,9 +164,10 @@ class StationStatusHourlyDAO:
         -------
         list of StationStatusHourly
             Liste des agrégations horaires de la station sur la période demandée.
-            Renvoie une liste vide si la station n'est pas identifiable ou si les brones chronologiques
+            Renvoie une liste vide si la station n'est pas identifiable ou si les bornes chronologiques
             ne sont pas présentes dans la base de données.
         """
+        res = None
         try:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
@@ -181,17 +187,17 @@ class StationStatusHourlyDAO:
         if res:
             for row in res:
                 station_status = StationStatusHourly(
-                    station_id=row[0],
-                    bucket_hour=row[1],
-                    sample_count=row[2],
-                    avg_operational_capacity=row[3],
-                    avg_num_bikes_available=row[4],
-                    avg_num_docks_available=row[5],
-                    empty_duration_sec=row[6],
-                    full_duration_sec=row[7],
-                    empty_events_cnt=row[8],
-                    full_events_cnt=row[9],
-                    reliability_score=row[10],
+                    station_id=row["station_id"],
+                    bucket_hour=row["bucket_hour"],
+                    sample_count=row["sample_count"],
+                    avg_operational_capacity=row["avg_operational_capacity"],
+                    avg_num_bikes_available=row["avg_num_bikes_available"],
+                    avg_num_docks_available=row["avg_num_docks_available"],
+                    empty_duration_sec=row["empty_duration_sec"],
+                    full_duration_sec=row["full_duration_sec"],
+                    empty_events_cnt=row["empty_events_cnt"],
+                    full_events_cnt=row["full_events_cnt"],
+                    reliability_score=row["reliability_score"],
                 )
                 station_statuses.append(station_status)
         return station_statuses
@@ -217,9 +223,13 @@ class StationStatusHourlyDAO:
             Liste des statistiques journalières agrégées de la station.
             Renvoie une liste vide si la station n'est pas identifiable ou que les bornes chronologiques
             ne sont pas présentes dans la base de données.
+            Les cles : stat_date, station_id, sample_count, avg_operational_capacity,
+            avg_num_bikes_available, avg_num_docks_available, empty_duration_sec, full_duration,
+            empty_events_cnt, full_events_cnt, avg_reliability_score
         """
         start_datetime = datetime.combine(start_date, time.min)
         end_datetime = datetime.combine(end_date, time.max)
+        res = None
         try:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
@@ -243,10 +253,9 @@ class StationStatusHourlyDAO:
                         ORDER BY stat_date ASC;
                     """
                     cursor.execute(query, (station_id, start_datetime, end_datetime))
-                    cols = [desc[0] for desc in cursor.description]
                     res = cursor.fetchall()
             if res:
-                return [dict(zip(cols, row, strict=True)) for row in res]
+                return [dict(row) for row in res]
         except Exception as e:
             logger.error(e)
         return []
