@@ -1,6 +1,8 @@
+from psycopg2.extras import Json
+
 from business_object.station_information import StationInformation
 from utils.db_connection import DbConnection
-from utils.log_utils import get_logger
+from utils.log_utils import get_logger, log
 
 logger = get_logger(__name__)
 
@@ -11,6 +13,7 @@ class StationDAO:
     def __init__(self, db_connection: DbConnection):
         self._db_connection = db_connection
 
+    @log
     def upsert_station_info(self, station: StationInformation) -> bool:
         """
         Crée ou met à jour les informations d'une station.
@@ -25,43 +28,81 @@ class StationDAO:
         bool
             True si l'opération a réussi.
         """
-        res = None
+        if not station:
+            return False
 
+        query = """
+            INSERT INTO station_information (
+                station_id,
+                name,
+                short_name,
+                lat,
+                lon,
+                address,
+                is_virtual_station,
+                station_area,
+                contact_phone,
+                capacity,
+                is_charging_station
+            ) VALUES (
+                %(station_id)s,
+                %(name)s,
+                %(short_name)s,
+                %(lat)s,
+                %(lon)s,
+                %(address)s,
+                %(is_virtual_station)s,
+                %(station_area)s,
+                %(contact_phone)s,
+                %(capacity)s,
+                %(is_charging_station)s
+            )
+            ON CONFLICT (station_id)
+            DO UPDATE SET
+                name = EXCLUDED.name,
+                short_name = EXCLUDED.short_name,
+                lat = EXCLUDED.lat,
+                lon = EXCLUDED.lon,
+                address = EXCLUDED.address,
+                is_virtual_station = EXCLUDED.is_virtual_station,
+                station_area = EXCLUDED.station_area,
+                contact_phone = EXCLUDED.contact_phone,
+                capacity = EXCLUDED.capacity,
+                is_charging_station = EXCLUDED.is_charging_station
+            RETURNING station_id;
+        """
+
+        params = {
+            "station_id": station.station_id,
+            "name": station.name,
+            "short_name": station.short_name,
+            "lat": station.lat,
+            "lon": station.lon,
+            "address": station.address,
+            "is_virtual_station": station.is_virtual_station,
+            "station_area": (
+                Json(station.station_area) if station.station_area else None
+            ),
+            "contact_phone": station.contact_phone,
+            "capacity": station.capacity,
+            "is_charging_station": station.is_charging_station,
+        }
+
+        res = None
         try:
-            with DbConnection().connection as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "INSERT INTO station_information(station_id, name, short_name, lat, lon,"
-                        "address, is_virtual_station, station_area, contact_phone, capacity,"
-                        "is_charging_station) VALUES"
-                        "(%(station_id)s, %(name)s, %(short_name)s, %(lat)s, %(lon)s, %(address)s,"
-                        "%(is_virtual_station)s, %(station_area)s, %(contact_phone)s, %(capacity)s,"
-                        " %(is_charging_station)s) "
-                        "RETURNING station_id;",
-                        {
-                            "station_id": station.station_id,
-                            "name": station.name,
-                            "short_name": station.short_name,
-                            "lat": station.lat,
-                            "lon": station.lon,
-                            "address": station.address,
-                            "is_virtual_station": station.is_virtual_station,
-                            "station_area": station.station_area,
-                            "contact_phone": station.contact_phone,
-                            "capacity": station.capacity,
-                            "is_charging_station": station.is_charging_station
-                        },
-                    )
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(query, params)
                     res = cursor.fetchone()
+                conn.commit()
         except Exception as e:
             logger.error(e)
-            raise
+            return False
 
-        created = False
         if res:
-            station.station_id = res["station_id"]
-            created = True
-        return created
+            station.station_id = res["station_id"] if isinstance(res, dict) else res[0]
+            return True
+        return False
 
     def get_by_id(self, station_id: str) -> StationInformation:
         """
@@ -78,8 +119,8 @@ class StationDAO:
             Informations de la station correspondante, ou None si introuvable.
         """
         try:
-            with DbConnection().connection as connection:
-                with connection.cursor() as cursor:
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
                     cursor.execute(
                         "SELECT *                            "
                         "  FROM station_information          "
@@ -104,7 +145,7 @@ class StationDAO:
                 station_area=res["station_area"],
                 contact_phone=res["contact_phone"],
                 capacity=res["capacity"],
-                is_charging_station=res["is_charging_station"]
+                is_charging_station=res["is_charging_station"],
             )
         return station
 
@@ -133,8 +174,8 @@ class StationDAO:
         t = 0.01745329251994  # nombre de radian dans 1°
 
         try:
-            with DbConnection().connection as connection:
-                with connection.cursor() as cursor:
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
                     cursor.execute(
                         "SELECT *"
                         "FROM station_information"
@@ -143,8 +184,8 @@ class StationDAO:
                             "lat_dep": lat,
                             "lon_dep": lon,
                             "radius_meters": radius_meters,
-                            "t": t
-                        }
+                            "t": t,
+                        },
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -166,7 +207,7 @@ class StationDAO:
                     station_area=res[i]["station_area"],
                     contact_phone=res[i]["contact_phone"],
                     capacity=res[i]["capacity"],
-                    is_charging_station=res[i]["is_charging_station"]
+                    is_charging_station=res[i]["is_charging_station"],
                 )
         return stations_list
 
@@ -182,7 +223,7 @@ class StationDAO:
         contact_phone: str = None,
         capacity: int = None,
         is_charging_station: bool = None,
-        nb_pages: int = None
+        nb_pages: int = None,
     ) -> list[StationInformation]:
         """
         Liste les stations selon des critères de recherche.
@@ -224,8 +265,8 @@ class StationDAO:
         res = None
 
         try:
-            with DbConnection().connection as connection:
-                with connection.cursor() as cursor:
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
                     cursor.execute(
                         "SELECT *"
                         "FROM station_information"
@@ -249,8 +290,8 @@ class StationDAO:
                             "is_virtual_station": is_virtual_station,
                             "contact_phone": contact_phone,
                             "capacity": capacity,
-                            "is_charging_station": is_charging_station
-                        }
+                            "is_charging_station": is_charging_station,
+                        },
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -272,11 +313,11 @@ class StationDAO:
                     station_area=res[i]["station_area"],
                     contact_phone=res[i]["contact_phone"],
                     capacity=res[i]["capacity"],
-                    is_charging_station=res[i]["is_charging_station"]
+                    is_charging_station=res[i]["is_charging_station"],
                 )
             if isinstance(nb_pages, int) and nb_pages > 1:
                 sous_liste = []
                 for k in range(nb_pages):
-                    sous_liste[k] = stations_list[k * nb_pages:(k+1) * nb_pages - 1]
+                    sous_liste[k] = stations_list[k * nb_pages : (k + 1) * nb_pages - 1]
                 stations_list = sous_liste
         return stations_list
