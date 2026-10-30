@@ -91,10 +91,10 @@ class StationDAO:
         res = None
         try:
             with self._db_connection.get_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(query, params)
-                    res = cursor.fetchone()
-                conn.commit()
+                with conn:
+                    with conn.cursor() as cursor:
+                        cursor.execute(query, params)
+                        res = cursor.fetchone()
         except Exception as e:
             logger.error(e)
             return False

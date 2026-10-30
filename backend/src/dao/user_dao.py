@@ -1,6 +1,7 @@
-from business_object.user import User
-from utils.db_connection import DBConnection
 import psycopg2
+
+from business_object.user import User
+from utils.db_connection import DbConnection
 
 
 class UserDAO:
@@ -30,7 +31,9 @@ class UserDAO:
         affectations = [f"{cle} = %({cle})s" for cle in updates]
         affectations.append("updated_at = now()")
 
-        requete = f'UPDATE "user" SET {", ".join(affectations)} WHERE user_id = %(user_id)s'
+        requete = (
+            f'UPDATE "user" SET {", ".join(affectations)} WHERE user_id = %(user_id)s'
+        )
 
         valeurs = {**updates, "user_id": user_id}
         return requete, valeurs
@@ -96,7 +99,11 @@ class UserDAO:
             'FROM "user"'
         )
 
-        conditions = [f"{cle} = %({cle})s" for cle in query_params if cle in self.filtres_autorises]
+        conditions = [
+            f"{cle} = %({cle})s"
+            for cle in query_params
+            if cle in self.filtres_autorises
+        ]
         if conditions:
             requete += " WHERE " + " AND ".join(conditions)
 
