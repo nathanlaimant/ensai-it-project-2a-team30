@@ -99,5 +99,5 @@ class BaseIngestionStrategy[T](ABC):
             records = self.parse_payload(raw_data)
             count = await self.persist(records)
             logger.info(f"{self.feed_name}: {count} records ingested.")
-        except Exception as e:
-            logger.error(f"Error during {self.feed_name} ingestion: {e}")
+        except Exception:
+            logger.exception("Error during %s ingestion", self.feed_name)

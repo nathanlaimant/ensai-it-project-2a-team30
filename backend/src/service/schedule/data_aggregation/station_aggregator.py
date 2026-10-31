@@ -225,7 +225,7 @@ class StationAggregator:
             hourly_records.append(hourly_obj)
 
         # 4. Bulk Insert
-        inserted_records = self.station_hourly_dao.bulk_insert_hourly_stats(
+        inserted_records = self.station_hourly_dao.bulk_upsert_hourly_stats(
             hourly_records
         )
 

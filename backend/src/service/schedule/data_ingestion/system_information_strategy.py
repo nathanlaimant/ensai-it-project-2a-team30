@@ -102,4 +102,11 @@ class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
         int
             Nombre d'entités effectivement persistées.
         """
-        return len(entities)  # TODO
+        if not entities:
+            return 0
+
+        persisted_count = 0
+        for entity in entities:
+            if self.dao.upsert_system_info(entity):
+                persisted_count += 1
+        return persisted_count

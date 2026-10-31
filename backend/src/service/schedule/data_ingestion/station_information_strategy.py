@@ -108,4 +108,11 @@ class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
         int
             Nombre d'entités effectivement persistées.
         """
-        raise NotImplementedError
+        if not entities:
+            return 0
+
+        persisted_count = 0
+        for entity in entities:
+            if self.dao.upsert_station_info(entity):
+                persisted_count += 1
+        return persisted_count

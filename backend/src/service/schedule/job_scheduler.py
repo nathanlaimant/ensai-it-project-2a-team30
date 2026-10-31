@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
@@ -11,7 +13,10 @@ from service.schedule.data_ingestion.station_status_strategy import (
 from service.schedule.data_ingestion.system_information_strategy import (
     SystemInformationStrategy,
 )
+from utils.log_utils import get_logger, log
 from utils.settings import Settings
+
+logger = get_logger(__name__)
 
 
 class JobScheduler:
@@ -52,12 +57,16 @@ class JobScheduler:
 
         self.station_aggregator = station_aggregator
 
+    @log
     def setup_jobs(self):
         """
         Enregistre l'ensemble des tâches planifiées dans le scheduler.
 
         Chaque tâche est ajoutée avec un déclencheur à intervalle fixe
         (`IntervalTrigger`), dont la période est lue dans `self.settings`.
+        Les tâches sont exécutées immédiatement au démarrage du scheduler,
+        sauf l'ingestion des statuts de stations après 5 minutes et
+        l'agrégation après 10 minutes.
         Les options `coalesce=True` et `max_instances=1` garantissent
         qu'une tâche n'est jamais exécutée en parallèle d'elle-même et
         que les exécutions manquées ne s'accumulent pas.
@@ -79,6 +88,7 @@ class JobScheduler:
                 seconds=self.settings.system_information_interval_seconds
             ),
             id="job_system_information",
+            next_run_time=datetime.now(),
             replace_existing=True,
             coalesce=True,
             max_instances=1,
@@ -89,6 +99,7 @@ class JobScheduler:
                 seconds=self.settings.station_information_interval_seconds
             ),
             id="job_station_information",
+            next_run_time=datetime.now(),
             replace_existing=True,
             coalesce=True,
             max_instances=1,
@@ -99,6 +110,7 @@ class JobScheduler:
                 seconds=self.settings.station_status_interval_seconds
             ),
             id="job_station_status",
+            next_run_time=datetime.now() + timedelta(minutes=3),
             replace_existing=True,
             coalesce=True,
             max_instances=1,
@@ -109,11 +121,13 @@ class JobScheduler:
                 seconds=self.settings.station_aggregation_interval_seconds
             ),
             id="job_station_aggregation",
+            next_run_time=datetime.now() + timedelta(minutes=5),
             replace_existing=True,
             coalesce=True,
             max_instances=1,
         )
 
+    @log
     def start(self):
         """
         Démarre le scheduler après avoir enregistré les tâches planifiées.
@@ -125,6 +139,7 @@ class JobScheduler:
         self.setup_jobs()
         self.scheduler.start()
 
+    @log
     def shutdown(self):
         """
         Arrête le scheduler sans attendre la fin des tâches en cours.
