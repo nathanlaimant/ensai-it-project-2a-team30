@@ -15,7 +15,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse
 from psycopg2 import Error as PsycopgError
 
-from controller import admin_controller, auth_and_user_controller
+from controller import admin_controller, auth_and_user_controller, favorite_station_controller
 from dependencies.job import get_job_scheduler
 from dependencies.utils import get_db, get_http_client
 from utils.log_utils import LogMiddleware, get_logger, initialize_logs
@@ -87,6 +87,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 app.include_router(admin_controller.router)
 app.include_router(auth_and_user_controller.router)
+app.include_router(favorite_station_controller.router)
 
 
 @app.get("/", include_in_schema=False)

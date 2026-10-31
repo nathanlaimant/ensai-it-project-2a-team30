@@ -44,6 +44,22 @@ def test_add_favorite_station_failure(favorite_dao):
     assert not added
 
 
+def test_list_favorites_returns_dao_result(favorite_dao):
+    """La liste et ses paramètres sont transmis tels quels au DAO."""
+
+    # GIVEN
+    query_params = {"user_id": 1}
+    favorite_dao.list_favorites.return_value = None
+    service = FavoriteStationService(favorite_dao)
+
+    # WHEN
+    favorites = service.list_favorites(query_params)
+
+    # THEN
+    assert favorites is None
+    favorite_dao.list_favorites.assert_called_once_with(query_params)
+
+
 
 def test_remove_favorite_station_ok(favorite_dao):
     """Le retrait est transmis au DAO et son résultat est renvoyé."""
