@@ -10,6 +10,10 @@ handlers:
     filename: logs/backend.log
     when: midnight
     encoding: utf8
+  console:
+    class: logging.StreamHandler
+    formatter: simple
+    stream: ext://sys.stdout
 loggers:
   simpleLogger:
     level: INFO
@@ -17,4 +21,5 @@ loggers:
     propagate: no
 root:
   level: INFO
+  # handlers: [file, console]
   handlers: [file]

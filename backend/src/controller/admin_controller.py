@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from dependencies.authentication import get_current_user
+from dependencies.authentication import get_current_admin
 from dependencies.service import get_user_service
 from schema.common_model import MessageResponse
 from schema.user_model import UserResponse
@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 async def list_users(
     payload: dict,
     user_service: UserService = Depends(get_user_service),
-    admin_id: int = Depends(get_current_user),
+    admin_id: int = Depends(get_current_admin),
 ) -> list[UserResponse]:
     """
     Liste les utilisateurs selon des critères de recherche.
@@ -44,7 +44,7 @@ async def list_users(
 def activate_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
-    admin_id: int = Depends(get_current_user),
+    admin_id: int = Depends(get_current_admin),
 ) -> MessageResponse:
     """
     Active le compte d'un utilisateur.
@@ -70,7 +70,7 @@ def activate_user(
 def deactivate_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
-    admin_id: int = Depends(get_current_user),
+    admin_id: int = Depends(get_current_admin),
 ) -> MessageResponse:
     """
     Désactive le compte d'un utilisateur.

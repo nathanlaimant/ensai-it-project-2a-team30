@@ -16,6 +16,7 @@ dependencies = [
     "uvicorn",
     "httpx",
     "apscheduler",
+    "haversine",
 ]
 
 # Dependencies used only for development, not for runtime

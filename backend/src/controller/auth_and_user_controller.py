@@ -69,6 +69,9 @@ async def logout(
     str
         Message de confirmation de déconnexion.
     """
+    # TODO: Le processus :
+    # - supprimer le jeton d'accès du cache
+    # - supprimer le jeton d'accès de la base de données
     raise NotImplementedError
 
 

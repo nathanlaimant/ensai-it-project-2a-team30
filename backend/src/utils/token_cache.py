@@ -5,10 +5,10 @@ class InMemTokenCache:
     """Cache en mémoire simple pour stocker des jetons d'authentification."""
 
     def __init__(self) -> None:
-        self.__cache: dict[str, int] = {}
+        self.__cache: dict[str, tuple[int, str]] = {}
         self.__lock = Lock()
 
-    def set(self, token: str, user_id: int) -> None:
+    def set(self, token: str, user_and_role: tuple[int, str]) -> None:
         """
         Enregistre un jeton dans le cache, associé à un identifiant utilisateur.
 
@@ -16,17 +16,17 @@ class InMemTokenCache:
         ----------
         token : str
             Jeton à stocker dans le cache.
-        user_id : int
-            Identifiant de l'utilisateur associé au jeton.
+        user_and_role : tuple[int, str]
+            Tuple contenant l'identifiant de l'utilisateur et son rôle.
 
         Returns
         -------
         None
         """
         with self.__lock:
-            self.__cache[token] = user_id
+            self.__cache[token] = user_and_role
 
-    def get(self, token: str) -> int | None:
+    def get(self, token: str) -> tuple[int, str] | None:
         """
         Récupère l'identifiant utilisateur associé à un jeton donné.
 
@@ -37,9 +37,8 @@ class InMemTokenCache:
 
         Returns
         -------
-        int | None
-            L'identifiant utilisateur associé si le jeton existe dans le
-            cache, sinon None.
+        tuple[int, str] | None
+            Le tuple contenant l'identifiant utilisateur et son rôle si le jeton existe dans le cache, sinon None.
         """
         with self.__lock:
             return self.__cache.get(token)

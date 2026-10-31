@@ -13,6 +13,7 @@ import uvicorn
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse
+from psycopg2 import Error as PsycopgError
 
 from controller import admin_controller, auth_and_user_controller
 from dependencies.job import get_job_scheduler
@@ -118,6 +119,30 @@ async def hello_name(name: str):
     """
     logger.info("Display Hello")
     return {"message": f"Hello {name}"}
+
+
+@app.get("/db", tags=["Misc"])
+async def db_connectivity_check():
+    """
+    Vérifie la connectivité à la base de données.
+
+    Returns
+    -------
+    dict
+        Dictionnaire contenant le message de succès ou d'erreur.
+    """
+    logger.info("Check database connectivity")
+    try:
+        with get_db().get_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+    except PsycopgError:
+        logger.exception("Database connectivity check failed")
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"message": "Database unavailable"},
+        )
+    return {"message": "Database connected"}
 
 
 # Run the FastAPI application
