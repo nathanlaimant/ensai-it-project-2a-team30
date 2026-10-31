@@ -1,4 +1,5 @@
 import hashlib
+import secrets
 
 
 def hash_password(password: str, salt: str = "") -> str:
@@ -21,3 +22,16 @@ def hash_password(password: str, salt: str = "") -> str:
     password_bytes = password.encode("utf-8") + salt.encode("utf-8")
     hash_object = hashlib.sha256(password_bytes)
     return hash_object.hexdigest()
+
+
+def generate_user_token() -> str:
+    """
+    Génère un jeton d'accès de l'utilisateur unique.
+
+    Returns
+    -------
+    str
+        Un jeton d'accès aléatoire.
+    """
+    prefix = "vls30_"
+    return f"{prefix}{secrets.token_urlsafe(32)}"

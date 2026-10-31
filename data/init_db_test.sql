@@ -107,3 +107,4 @@ CREATE TABLE veloscope_test.user_favorite_station (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_station_status_station_reported ON veloscope_test.station_status (station_id, last_reported);
 CREATE INDEX IF NOT EXISTS idx_station_hourly_bucket ON veloscope_test.station_status_hourly (bucket_hour DESC);
 CREATE INDEX IF NOT EXISTS idx_fav_station ON veloscope_test.user_favorite_station (station_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_access_token ON veloscope_test."user" (access_token);
