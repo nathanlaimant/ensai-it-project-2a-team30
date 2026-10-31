@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from datetime import UTC, datetime
 from typing import Any
 
@@ -42,6 +43,10 @@ class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
         """
         Classifie un type de véhicule en 'electric' ou 'mechanical'.
 
+        Prend en charge un large éventail de dénominations françaises, anglaises
+        et internationales (vélos électriques, VAE, e-bikes, trottinettes,
+        scooters, mopeds, modèles spécifiques Voi, Pony, Vélib, Lime, Tier, Dott, etc.).
+
         Parameters
         ----------
         type_id_or_name : Any
@@ -50,18 +55,43 @@ class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
         Returns
         -------
         str
-            "electric" si le type correspond à un vélo électrique, sinon "mechanical".
+            "electric" si le type correspond à un véhicule électrique ou motorisé,
+            sinon "mechanical".
         """
         if not type_id_or_name:
             return "mechanical"
 
-        name = str(type_id_or_name).strip().lower()
+        # Normalize and remove accents (e.g.: "électrique" -> "electrique", "mécanique" -> "mecanique")
+        raw_str = str(type_id_or_name).strip().lower()
+        normalized = unicodedata.normalize("NFKD", raw_str)
+        name = "".join(c for c in normalized if not unicodedata.combining(c))
 
-        if "non-electric" in name or "non_electric" in name or "non electric" in name:
+        # 1. Detect non-electric patterns (e.g., "non-electric", "non elec", "sans assistance", "unassisted", etc.)
+        if re.search(
+            r"(?:^|[^a-z0-9])(non[-_ ]?elec[a-z]*|not[-_ ]?elec[a-z]*|nonelec[a-z]*|sans[-_ ]?assistance|pas[-_ ]?elec[a-z]*|unassisted)(?:$|[^a-z0-9])",
+            name,
+        ):
             return "mechanical"
 
+        # 2. Detect electric / motorized patterns
         if re.search(
-            r"(?:^|[^a-z0-9])(e[-_]?bikes?|pedelecs?|vae|booster|elec[a-z]*|[eé]lectr[a-z]*)(?:$|[^a-z0-9])",
+            r"(?:^|[^a-z0-9])("
+            r"elec[a-z]*|"  # electric, electrique, electrical, etc.
+            r"e[-_]?(?:bikes?|velos?|bicycles?|cycles?|scooters?|trott?inettes?|"  # e-bike, e-scooter, e-trottinette, etc.
+            r"mopeds?|cargos?|ponys?|rides?|rad|fahrrad)|"  # e-cargo, e-pony, etc.
+            r"pedelecs?|epedelecs?|"  # pedelec
+            r"vaes?|"  # VAE (Vélo à Assistance Électrique)
+            r"boosters?|"  # booster (Vélib)
+            r"scooters?|trott?inettes?|kickscooters?|mopeds?|"  # trottinettes, shared scooters
+            r"patinettes?|patinetes?|monopattin[oi]|"  # other kinds of trottinettes
+            r"batter(?:y|ies)|"  # battery powered
+            r"motor[a-z]*|"  # motorized
+            r"(?:power[-_ ]?)?assist[a-z]*|"  # Power assist, assisted
+            r"voi[-_ ]?(?:scooter|bike|ebike)|"  # Voi specific fleet
+            r"tier[-_ ]?(?:scooter|bike|ebike)|"  # Tier specific fleet
+            r"dott[-_ ]?(?:scooter|bike|ebike)|"  # Dott specific fleet
+            r"lime[-_ ]?(?:s|scooter|bike|ebike)"  # Lime specific fleet
+            r")(?:$|[^a-z0-9])",
             name,
         ):
             return "electric"
@@ -220,30 +250,32 @@ class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
         if num_docks_available is None:
             num_docks_available = json_dict.get("numDocksAvailable")
 
+        # temporary unused TODO
+        vehicle_docks_available = None
         # 4. vehicle_docks_available (GBFS: vehicle_docks_available, etc.)
-        raw_vehicle_docks = (
-            json_dict.get("vehicle_docks_available")
-            or json_dict.get("vehicleDocksAvailable")
-            or json_dict.get("num_docks_available_types")
-            or json_dict.get("numDocksAvailableTypes")
-        )
+        # raw_vehicle_docks = (
+        #     json_dict.get("vehicle_docks_available")
+        #     or json_dict.get("vehicleDocksAvailable")
+        #     or json_dict.get("num_docks_available_types")
+        #     or json_dict.get("numDocksAvailableTypes")
+        # )
         # 4.1. parse into 2 fixed types
-        vehicle_docks_available = StationStatusStrategy._parse_vehicle_docks(
-            raw_vehicle_docks,
-            default=(
-                int(num_docks_available) if num_docks_available is not None else None
-            ),
-        )
+        # vehicle_docks_available = StationStatusStrategy._parse_vehicle_docks(
+        #     raw_vehicle_docks,
+        #     default=(
+        #         int(num_docks_available) if num_docks_available is not None else None
+        #     ),
+        # )
         # 4.2. recompute num_docks_available, using the sum of vehicle docks
-        if num_docks_available is None and raw_vehicle_docks:
-            if isinstance(raw_vehicle_docks, list):
-                num_docks_available = sum(
-                    int(item.get("count", 0))
-                    for item in raw_vehicle_docks
-                    if isinstance(item, dict) and "count" in item
-                )
-        elif num_docks_available is not None:
-            num_docks_available = int(num_docks_available)
+        # if num_docks_available is None and raw_vehicle_docks:
+        #     if isinstance(raw_vehicle_docks, list):
+        #         num_docks_available = sum(
+        #             int(item.get("count", 0))
+        #             for item in raw_vehicle_docks
+        #             if isinstance(item, dict) and "count" in item
+        #         )
+        # elif num_docks_available is not None:
+        #     num_docks_available = int(num_docks_available)
 
         # 5. num_bikes_disabled
         num_bikes_disabled = json_dict.get("num_bikes_disabled")
@@ -259,9 +291,15 @@ class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
         operational_capacity = num_bikes_available + (num_docks_available or 0)
 
         # 8. classify station_state
-        if num_docks_available is not None and num_docks_available == 0:
+        # some boolean flags
+        # is_installed = json_dict.get("is_installed")
+        is_renting = json_dict.get("is_renting")
+        is_returning = json_dict.get("is_returning")
+        if (num_docks_available is not None and num_docks_available == 0) or (
+            is_returning is not None and not is_returning
+        ):
             station_state = StationState.FULL
-        elif num_bikes_available == 0:
+        elif num_bikes_available == 0 or (is_renting is not None and not is_renting):
             station_state = StationState.EMPTY
         else:
             station_state = StationState.FUNCTIONAL
