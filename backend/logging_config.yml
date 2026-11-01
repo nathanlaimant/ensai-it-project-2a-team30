@@ -2,7 +2,7 @@ version: 1
 formatters:
   simple:
     format: "%(asctime)s %(name)-25s %(levelname)-7s - %(message)s"
-    datefmt: "%d/%m/%Y %H:%M:%S"
+    datefmt: "%d/%m/%Y %H:%M:%S %z"
 handlers:
   file:
     class: logging.handlers.TimedRotatingFileHandler
