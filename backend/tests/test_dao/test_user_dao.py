@@ -1,23 +1,11 @@
-import os
-from unittest.mock import patch
-
 import psycopg2
 import pytest
-from utils.reset_database import ResetDatabase
 
 from business_object.user import User
 from dao.user_dao import UserDao
 
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_environment():
-    """Initialisation de la base de données pour les tests"""
-    with patch.dict(os.environ, {"SCHEMA": "project_test_dao"}):
-        ResetDatabase().run(test_dao=True)
-        yield
-
-
 # Tests de signup()
+
 
 def test_signup_ok():
     """Création de l'utilisateur réussie"""
@@ -167,7 +155,7 @@ def test_update_user_ok():
 
 def test_update_user_fail():
     """Mise à jour de l'utilisateur impossible car l'id n'est pas reconnu.
-    
+
     La mise à jour ne fonctionne pas non plus lorsqu'un des attributs de User à
     changer n'a pas le bon type ou est le même que le précédent ou qu'il correspond
     à celui d'un autre utilisateur.
