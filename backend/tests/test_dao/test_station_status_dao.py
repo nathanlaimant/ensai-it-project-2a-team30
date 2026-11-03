@@ -87,7 +87,7 @@ def setup_test_environment(db_connection, initiate_stations):
 
 @pytest.fixture
 def sample_statuses():
-    """Génère une liste fraîche et isolée d'objets StationStatus pour chaque test."""
+    """Génère une liste isolée d'objets StationStatus pour chaque test."""
     return [
         StationStatus(
             station_id="245557155",

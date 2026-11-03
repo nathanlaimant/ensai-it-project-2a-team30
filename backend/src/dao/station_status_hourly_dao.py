@@ -32,7 +32,28 @@ class StationStatusHourlyDAO:
         if not records:
             return 0
 
-        logger.info(f"Bulk upserting {len(records)} station hourly status records.")
+        data = [
+            (
+                r.station_id,
+                r.bucket_hour,
+                r.sample_count,
+                r.avg_operational_capacity,
+                r.avg_num_bikes_available,
+                r.avg_num_docks_available,
+                r.empty_duration_sec,
+                r.full_duration_sec,
+                r.empty_events_cnt,
+                r.full_events_cnt,
+                r.reliability_score,
+            )
+            for r in records
+            if r is not None
+        ]
+
+        if not data:
+            return 0
+
+        logger.info(f"Bulk upserting {len(data)} station hourly status records.")
         query = """
             INSERT INTO station_status_hourly (
                 station_id,
@@ -60,23 +81,6 @@ class StationStatusHourlyDAO:
                 reliability_score = EXCLUDED.reliability_score
             RETURNING station_id, bucket_hour;
         """
-
-        data = [
-            (
-                r.station_id,
-                r.bucket_hour,
-                r.sample_count,
-                r.avg_operational_capacity,
-                r.avg_num_bikes_available,
-                r.avg_num_docks_available,
-                r.empty_duration_sec,
-                r.full_duration_sec,
-                r.empty_events_cnt,
-                r.full_events_cnt,
-                r.reliability_score,
-            )
-            for r in records
-        ]
 
         res = 0
         try:
