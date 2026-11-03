@@ -161,3 +161,35 @@ async def get_station_history(
             status_code=404, detail="Station (id={station_id}) non trouvée."
         )
     return history
+
+
+@router.get("/", response_model=list[dict], tags=["Stations"])
+async def get_nearby_recommendations(
+    payload: dict,
+    reco_service=Depends(get_station_service)
+) -> Any:
+    """
+    Recommande des stations à proximité d'une position donnée.
+
+    Parameters
+    ----------
+    lat: int
+        Latitude de l'adresse données
+
+    longitude: int
+        Longitude de l'adresse données
+
+    radius_meters: int
+        Rayon envisagé pour la recherche de stations
+
+    Returns
+    -------
+    list of dict
+        Liste des stations recommandées, avec leurs informations
+        pertinentes (distance, disponibilité, etc.).
+    """
+    logger.info("Proposition de stations à proximité")
+    recos = reco_service.get_nearby_recommendations(payload)
+    if not recos:
+        raise HTTPException()
+    return recos
