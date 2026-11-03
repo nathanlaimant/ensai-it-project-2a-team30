@@ -337,7 +337,7 @@ class UserDAO:
             params["is_active"] = is_active
 
         query = """
-            SELECT user_id, username, password_hash, email, role, is_active
+            SELECT user_id, username, password_hashed, email, role, is_active
             FROM "user"
         """
         if conditions:
@@ -356,7 +356,7 @@ class UserDAO:
         # 4. Exécution de la requête avec gestion d'erreurs
         res = None
         try:
-            with DBConnection().connection as conn:
+            with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute(query, params)
                     res = cursor.fetchall()

@@ -66,10 +66,10 @@ stations = [
         contact_phone=None,
         capacity=5,
         is_charging_station=None,
-    ),
+    )
 ]
 
-status = [
+statuses = [
     StationStatus(
         station_id="245557155",
         num_bikes_available=2,
@@ -156,7 +156,7 @@ def test_bulk_insert_status_ok(station_status_dao):
     number_status = len(statuses)
 
     # WHEN
-    updates_made = station_status_dao.bulk_insert_status(status)
+    updates_made = station_status_dao.bulk_insert_status(statuses)
 
     # THEN
     assert updates_made == number_status
@@ -170,7 +170,7 @@ def test_bulk_insert_status_fail(station_status_dao):
     number_status = len(statuses)
 
     # WHEN
-    updates_made = station_status_dao.bulk_insert_status(status[:1])
+    updates_made = station_status_dao.bulk_insert_status(statuses[:1])
 
     # THEN
     assert updates_made != number_status
@@ -181,8 +181,8 @@ def test_get_latest_status_ok(station_status_dao):
     """Mise à jour de la station réussie"""
 
     # GIVEN
-    station_status_dao.bulk_insert_status(status)
-    id_station = status[1].station_id
+    station_status_dao.bulk_insert_status(statuses)
+    id_station = statuses[1].station_id
 
     # WHEN
     result = station_status_dao.get_latest_status(id_station)
@@ -210,8 +210,8 @@ def test_get_status_history_ok(station_status_dao):
     """Nous réussissons à obtenir l'historique du statut d'une station sur une période donnée"""
 
     # GIVEN
-    station_status_dao.bulk_insert_status(status)
-    target_station_id = status[2].station_id
+    station_status_dao.bulk_insert_status(statuses)
+    target_station_id = statuses[2].station_id
     start_time = datetime.fromisoformat("2026-11-01 00:00:00+00:00")
     end_time = datetime.fromisoformat("2026-11-01 02:00:00+00:00")
 

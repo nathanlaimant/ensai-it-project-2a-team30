@@ -1,9 +1,7 @@
 from pathlib import Path
 
-import psycopg2
 import pytest
 
-from business_object.station_information import StationInformation
 from dao.favorite_station_dao import FavoriteStationDAO
 from utils.db_connection import DbConnection
 from utils.settings import Settings
@@ -36,49 +34,57 @@ def test_add_favorite_ok(favorite_station_dao):
 
 
 def test_add_favorite_for_unknown_user(favorite_station_dao):
-    #given
+    # GIVEN
     station_id = "19179944124"
     user_id = 2
-    #WHEN 
+
+    # WHEN
     fav = favorite_station_dao.add_favorite(user_id, station_id)
-    #then
+
+    # THEN
     assert fav is False
 
 def test_add_favorite_for_unknown_station(favorite_station_dao):
-    #given
+    # GIVEN
     station_id = "1954223"
     user_id = 21
-    #WHEN 
+
+    # WHEN
     fav = favorite_station_dao.add_favorite(user_id, station_id)
-    # / THEN
+
+    # THEN
     assert fav is False
 
 def test_list_favorites(favorite_station_dao):
-    # given
+    # GIVEN
     user_id = 21
     station_id = "19179944124"
     favorite_station_dao.add_favorite(user_id, station_id)
 
-    #WHEN 
+    # WHEN
     favorites = favorite_station_dao.list_favorites({"user_id": user_id})
-    #Then
+
+    # THEN
     assert len(favorites) > 0
 
+
 def test_count_favorites_from_database(favorite_station_dao):
-    #given  
+    # GIVEN
     station_id = "19179944124"
-    #WHEN / THEN
+
+    # WHEN / THEN
     assert favorite_station_dao.count_favorites([station_id]) == {station_id: 1}
 
 
 def test_remove_favorite(favorite_station_dao):
-    #given
+    # GIVEN
     station_id = "19179944124"
     user_id = 22
-    
     fav = favorite_station_dao.add_favorite(user_id, station_id)
-    #When
+
+    # WHEN
     fav = favorite_station_dao.remove_favorite(user_id, station_id)
-    #Then
+
+    # THEN
     assert fav is True
  
