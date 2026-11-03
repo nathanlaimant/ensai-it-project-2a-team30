@@ -1,5 +1,5 @@
-import os
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
@@ -10,6 +10,9 @@ from dao.station_dao import StationDAO
 from dao.station_status_dao import StationStatusDAO
 from utils.db_connection import DbConnection
 from utils.settings import Settings
+
+test_env_path = Path(__file__).resolve().parents[1] / ".test_env"
+
 
 stations = [
     StationInformation(
@@ -121,17 +124,7 @@ status = [
 @pytest.fixture(scope="session")
 def db_connection():
     """Provides a connection pool to the test database schema."""
-    settings = Settings(
-        postgres_host=os.getenv("POSTGRES_HOST", "localhost"),
-        postgres_port=int(os.getenv("POSTGRES_PORT", 5432)),
-        postgres_database=os.getenv("POSTGRES_DB", "defaultdb"),
-        postgres_user=os.getenv("POSTGRES_USER", "postgres"),
-        postgres_password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        postgres_schema=os.getenv("SCHEMA", "project_test_dao"),
-        system_information_feed_url="http://mock",
-        station_information_feed_url="http://mock",
-        station_status_feed_url="http://mock",
-    )
+    settings = Settings(_env_file=".test_env")
     return DbConnection(settings)
 
 
