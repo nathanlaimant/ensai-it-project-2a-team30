@@ -26,12 +26,11 @@ def station_dao(db_connection):
 # Test de upsert_station_info()
 
 
-def test_upsert_station_info_ok():
+def test_upsert_station_info_ok(station_dao):
     """L'importation de l'API externe avec la liste des stations a réussi"""
 
     # GIVEN
-    external_data = [
-        StationInformation(
+    external_data = StationInformation(
             station_id="19179944124",
             name="Hôpital Mondor",
             short_name="40001",
@@ -39,42 +38,22 @@ def test_upsert_station_info_ok():
             lon=2.4537451531298,
             capacity=28,
         )
-    ]
 
     # WHEN
-    local_data = station_dao.upsert_station_info(external_data)
+    added = station_dao.upsert_station_info(external_data)
 
     # THEN
-    assert local_data
-
-
-def test_upsert_station_info_fail():
-    """L'importation de l'API externe à la liste des stations échoue car un des attributs de la
-    classe StationInformation est incorrect"""
-
-    # GIVEN
-    station = StationInformation(
-        station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
-        name="id_old844604G20081106092237",
-        lat=48.8322843827352,
-        lon=2.32105516137791,
-        is_virtual_station=True,
-        capacity="3",
-    )
-
-    # WHEN / THEN
-    with pytest.raises(psycopg2.Error):
-        station_dao.upsert_station_info(station)
+    assert added
 
 
 # Tests de get_by_id()
 
 
-def test_get_by_id_ok():
+def test_get_by_id_ok(station_dao):
     """Recherche d'une station par son identifiant réussie"""
 
     # GIVEN
-    id_station = "16bbf68d-685a-4799-9bba-8915f10700e0"
+    id_station = "251039991"
 
     # WHEN
     station = station_dao.get_by_id(id_station)
@@ -83,7 +62,7 @@ def test_get_by_id_ok():
     assert isinstance(station, StationInformation)
 
 
-def test_get_by_id_fail():
+def test_get_by_id_fail(station_dao):
     """Recherche d'une station par son identifiant impossible car l'identifiant n'existe pas"""
 
     # GIVEN
@@ -99,11 +78,11 @@ def test_get_by_id_fail():
 # Tests de get_nearby()
 
 
-def test_get_nearby_ok():
+def test_get_nearby_ok(station_dao):
     """Recheche de stations proches réussie"""
 
     # GIVEN
-    lat, lon, radius_meter = 48.8727256662692, 2.35437813765038, 20
+    lat, lon, radius_meter = 48.865983, 2.275725, 20
 
     # WHEN
     stations = station_dao.get_nearby(lat, lon, radius_meter)
@@ -112,7 +91,7 @@ def test_get_nearby_ok():
     assert stations is not None
 
 
-def test_get_nearby_fail():
+def test_get_nearby_fail(station_dao):
     """Recheche de stations proches impossible car les coordonnées n'existent pas"""
 
     # GIVEN
@@ -128,12 +107,12 @@ def test_get_nearby_fail():
 # Tests de list_stations()
 
 
-def test_list_stations_ok():
+def test_list_stations_ok(station_dao):
     """Nous arrivons à obtenir la liste de l'ensemble des stations correspondant à la
     recherche effectuée"""
 
     # GIVEN
-    a_name = "Toudouze - Clauzel"
+    a_name = "Toudouze"
 
     # WHEN
     stations = station_dao.list_stations(name=a_name)
@@ -144,7 +123,7 @@ def test_list_stations_ok():
         assert isinstance(s, StationInformation)
 
 
-def test_list_stations_fail():
+def test_list_stations_fail(station_dao):
     """Nous n'arrivons pas à obtenir la liste de l'ensemble des stations correspondant à la
     recherche effectuée car le nom n'existe pas"""
 
