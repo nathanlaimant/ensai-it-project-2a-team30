@@ -26,9 +26,9 @@ def db_connection():
 
 
 @pytest.fixture
-def user_service(user_):
+def user_service(db_connection):
     """Retourne un UserService utilisant le vrai UserDAO de test."""
-    return UserService(user_dao)
+    return UserService(db_connection)
 
 
 def test_signup(user_service, user_dao):
