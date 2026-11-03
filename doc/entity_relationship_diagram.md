@@ -1,13 +1,14 @@
-# ERD
+# ERD (Entity-Relationship Diagram)
 
-La table SystemInformation n'est reliée à aucune autre table car :
+La table `system_information` n'est reliée à aucune autre table car :
 
-- Métadonnées globales (singleton) : Cette table stocke des informations générales décrivant le réseau dans son ensemble (nom du service, contacts, fuseau horaire, URL). Elle n'a vocation à contenir qu'un enregistrement unique représentant l'opérateur.
-- Périmètre mono-réseau (absence de multi-tenant) : L'application étant dédiée à la gestion d'un unique réseau de vélos en libre-service, propager une clé étrangère system_id vers chaque station ou entité opérationnelle introduirait une redondance inutile dans le schéma relationnel.
+- **Métadonnées globales (singleton)** : Cette table stocke des informations générales décrivant le réseau dans son ensemble (nom du service, contacts, fuseau horaire, URL). Elle n'a vocation à contenir qu'un enregistrement unique représentant l'opérateur.
+- **Périmètre mono-réseau (absence de multi-tenant)** : L'application étant dédiée à la gestion d'un unique réseau de vélos en libre-service, propager une clé étrangère `system_id` vers chaque station ou entité opérationnelle introduirait une redondance inutile dans le schéma relationnel.
 
 ```mermaid
 erDiagram
- direction LR
+    direction LR
+
     %% ═══════════════════════════════════════════════
     %% SYSTEM INFORMATION
     %% ═══════════════════════════════════════════════
@@ -79,22 +80,22 @@ erDiagram
         real reliability_score
     }
 
-    station_status_hourly }o--|| station_information : "has"
+    station_information ||--o{ station_status_hourly : "has"
 
     %% ═══════════════════════════════════════════════
-    %% USER
+    %% USER & FAVORITES
     %% ═══════════════════════════════════════════════
 
     user {
         integer user_id PK
-        text username 
+        text username
         text password_hashed
         text email
         text role
         boolean is_active
         timestamptz created_at
         timestamptz updated_at
-        text access_token
+        text access_token "Nullable"
     }
 
     user_favorite_station {
@@ -104,5 +105,5 @@ erDiagram
     }
 
     user ||--o{ user_favorite_station : "favorites"
-    user_favorite_station }o--|| station_information : "is favorited by"
+    station_information ||--o{ user_favorite_station : "is favorited by"
 ```

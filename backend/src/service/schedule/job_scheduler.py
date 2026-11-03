@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 
 from service.schedule.data_aggregation.station_aggregator import StationAggregator
 from service.schedule.data_ingestion.station_information_strategy import (
@@ -27,8 +27,7 @@ class JobScheduler:
     Parameters
     ----------
     settings : Settings
-        Configuration de l'application, notamment les intervalles (en
-        secondes) de chaque tâche planifiée.
+        Configuration de l'application.
     system_information_strategy : SystemInformationStrategy
         Stratégie d'ingestion du flux d'informations système.
     station_information_strategy : StationInformationStrategy
@@ -62,21 +61,16 @@ class JobScheduler:
         """
         Enregistre l'ensemble des tâches planifiées dans le scheduler.
 
-        Chaque tâche est ajoutée avec un déclencheur à intervalle fixe
-        (`IntervalTrigger`), dont la période est lue dans `self.settings`.
-        Les tâches sont exécutées immédiatement au démarrage du scheduler,
-        sauf l'ingestion des statuts de stations après 5 minutes et
-        l'agrégation après 10 minutes.
+        Chaque tâche est ajoutée avec un déclencheur cron (`CronTrigger`) pour
+        garantir un alignement régulier et prévisible sur l'horloge système :
+        - `job_system_information` : chaque heure à la minute 00 (exécuté immédiatement au démarrage).
+        - `job_station_information` : chaque heure à la minute 00 (exécuté immédiatement au démarrage).
+        - `job_station_status` : toutes les 5 minutes (:00, :05, :10, ...) (démarrage immédiat).
+        - `job_station_aggregation` : chaque heure à la minute 05 pour consolider l'heure écoulée.
+
         Les options `coalesce=True` et `max_instances=1` garantissent
         qu'une tâche n'est jamais exécutée en parallèle d'elle-même et
         que les exécutions manquées ne s'accumulent pas.
-
-        Les tâches planifiées sont :
-        - `job_system_information` : ingestion du flux d'informations système.
-        - `job_station_information` : ingestion du flux d'informations de stations.
-        - `job_station_status` : ingestion du flux de statuts de stations.
-        - `job_station_aggregation` : agrégation horaire des statistiques
-          de stations.
 
         Returns
         -------
@@ -84,9 +78,7 @@ class JobScheduler:
         """
         self.scheduler.add_job(
             self.system_information_strategy.execute,
-            trigger=IntervalTrigger(
-                seconds=self.settings.system_information_interval_seconds
-            ),
+            trigger=CronTrigger(minute=0),
             id="job_system_information",
             next_run_time=datetime.now(),
             replace_existing=True,
@@ -95,9 +87,7 @@ class JobScheduler:
         )
         self.scheduler.add_job(
             self.station_information_strategy.execute,
-            trigger=IntervalTrigger(
-                seconds=self.settings.station_information_interval_seconds
-            ),
+            trigger=CronTrigger(minute=0),
             id="job_station_information",
             next_run_time=datetime.now(),
             replace_existing=True,
@@ -106,22 +96,17 @@ class JobScheduler:
         )
         self.scheduler.add_job(
             self.station_status_strategy.execute,
-            trigger=IntervalTrigger(
-                seconds=self.settings.station_status_interval_seconds
-            ),
+            trigger=CronTrigger(minute="*/5"),
             id="job_station_status",
-            next_run_time=datetime.now() + timedelta(minutes=3),
+            next_run_time=datetime.now(),
             replace_existing=True,
             coalesce=True,
             max_instances=1,
         )
         self.scheduler.add_job(
             self.station_aggregator.aggregate_hourly_stats,
-            trigger=IntervalTrigger(
-                seconds=self.settings.station_aggregation_interval_seconds
-            ),
+            trigger=CronTrigger(minute=5),
             id="job_station_aggregation",
-            next_run_time=datetime.now() + timedelta(minutes=5),
             replace_existing=True,
             coalesce=True,
             max_instances=1,

@@ -11,136 +11,133 @@ from dao.station_status_dao import StationStatusDAO
 from utils.db_connection import DbConnection
 from utils.settings import Settings
 
-test_env_path = Path(__file__).resolve().parents[1] / ".test_env"
-
-
-stations = [
-    StationInformation(
-        station_id="245557155",
-        name="Bischheim Gare",
-        short_name="62000",
-        lat=48.611639,
-        lon=7.742056,
-        address=None,
-        is_virtual_station=False,
-        station_area=None,
-        contact_phone=None,
-        capacity=5,
-        is_charging_station=None,
-    ),
-    StationInformation(
-        station_id="245557947",
-        name="Bischheim Espace Européen",
-        short_name="62001",
-        lat=48.616361,
-        lon=7.720056,
-        address=None,
-        is_virtual_station=False,
-        station_area=None,
-        contact_phone=None,
-        capacity=10,
-        is_charging_station=None,
-    ),
-    StationInformation(
-        station_id="245559919",
-        name="Entzheim Gare",
-        short_name="62003",
-        lat=48.547222,
-        lon=7.628056,
-        address=None,
-        is_virtual_station=False,
-        station_area=None,
-        contact_phone=None,
-        capacity=10,
-        is_charging_station=None,
-    ),
-    StationInformation(
-        station_id="245564614",
-        name="Geispolsheim Gare",
-        short_name="62004",
-        lat=48.521222,
-        lon=7.684944,
-        address=None,
-        is_virtual_station=False,
-        station_area=None,
-        contact_phone=None,
-        capacity=5,
-        is_charging_station=None,
-    ),
-]
-
-status = [
-    StationStatus(
-        station_id="245557155",
-        num_bikes_available=2,
-        num_bikes_disabled=None,
-        num_docks_available=3,
-        num_docks_disabled=None,
-        operational_capacity=5,
-        last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
-        vehicle_types_available={"electric": 0, "mechanical": 2},
-        vehicle_docks_available=None,
-        station_state=StationState.FUNCTIONAL,
-    ),
-    StationStatus(
-        station_id="245557947",
-        num_bikes_available=2,
-        num_bikes_disabled=None,
-        num_docks_available=8,
-        num_docks_disabled=None,
-        operational_capacity=10,
-        last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
-        vehicle_types_available={"electric": 0, "mechanical": 2},
-        vehicle_docks_available=None,
-        station_state=StationState.FUNCTIONAL,
-    ),
-    StationStatus(
-        station_id="245559919",
-        num_bikes_available=3,
-        num_bikes_disabled=None,
-        num_docks_available=7,
-        num_docks_disabled=None,
-        operational_capacity=10,
-        last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
-        vehicle_types_available={"electric": 0, "mechanical": 3},
-        vehicle_docks_available=None,
-        station_state=StationState.FUNCTIONAL,
-    ),
-    StationStatus(
-        station_id="245564614",
-        num_bikes_available=5,
-        num_bikes_disabled=None,
-        num_docks_available=0,
-        num_docks_disabled=None,
-        operational_capacity=5,
-        last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
-        vehicle_types_available={"electric": 0, "mechanical": 5},
-        vehicle_docks_available=None,
-        station_state=StationState.FULL,
-    ),
-]
+test_env_path = Path(__file__).resolve().parents[2] / ".test_env"
 
 
 @pytest.fixture(scope="session")
 def db_connection():
-    """Provides a connection pool to the test database schema."""
-    settings = Settings(_env_file=".test_env")
+    """Fournit un pool de connexion à la base de données de test."""
+    settings = Settings(
+        _env_file=test_env_path if test_env_path.exists() else ".test_env"
+    )
     return DbConnection(settings)
 
 
-@pytest.fixture(autouse=True)
-def setup_test_environment(db_connection):
-    """
-    Cleans up and seeds required parent stations before tests run.
-    """
+@pytest.fixture(scope="session")
+def initiate_stations(db_connection):
+    """Insère les stations pour toute la session de tests."""
+    initial_stations = [
+        StationInformation(
+            station_id="245557155",
+            name="Bischheim Gare",
+            short_name="62000",
+            lat=48.611639,
+            lon=7.742056,
+            address=None,
+            is_virtual_station=False,
+            station_area=None,
+            contact_phone=None,
+            capacity=5,
+            is_charging_station=None,
+        ),
+        StationInformation(
+            station_id="245557947",
+            name="Bischheim Espace Européen",
+            short_name="62001",
+            lat=48.616361,
+            lon=7.720056,
+            address=None,
+            is_virtual_station=False,
+            station_area=None,
+            contact_phone=None,
+            capacity=10,
+            is_charging_station=None,
+        ),
+    ]
+
     with db_connection.get_connection() as conn:
         with conn:
             with conn.cursor() as cur:
                 cur.execute("DELETE FROM station_status;")
                 cur.execute("DELETE FROM station_information;")
-                station_dao = StationDAO(db_connection)
-                for st in stations:
-                    station_dao.upsert_station_info(st)
+
+    station_dao = StationDAO(db_connection)
+    for st in initial_stations:
+        station_dao.upsert_station_info(st)
+
+    yield initial_stations
+
+    with db_connection.get_connection() as conn:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM station_status;")
+                cur.execute("DELETE FROM station_information;")
+
+
+@pytest.fixture(autouse=True)
+def setup_test_environment(db_connection, initiate_stations):
+    """
+    Nettoie uniquement la table station_status avant chaque test.
+    """
+    with db_connection.get_connection() as conn:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM station_status;")
+
+
+@pytest.fixture
+def sample_statuses():
+    """Génère une liste fraîche et isolée d'objets StationStatus pour chaque test."""
+    return [
+        StationStatus(
+            station_id="245557155",
+            num_bikes_available=2,
+            num_bikes_disabled=None,
+            num_docks_available=3,
+            num_docks_disabled=None,
+            operational_capacity=5,
+            last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
+            vehicle_types_available={"electric": 0, "mechanical": 2},
+            vehicle_docks_available=None,
+            station_state=StationState.FUNCTIONAL,
+        ),
+        StationStatus(
+            station_id="245557947",
+            num_bikes_available=2,
+            num_bikes_disabled=None,
+            num_docks_available=8,
+            num_docks_disabled=None,
+            operational_capacity=10,
+            last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
+            vehicle_types_available={"electric": 0, "mechanical": 2},
+            vehicle_docks_available=None,
+            station_state=StationState.FUNCTIONAL,
+        ),
+        StationStatus(
+            station_id="245557155",
+            num_bikes_available=3,
+            num_bikes_disabled=None,
+            num_docks_available=7,
+            num_docks_disabled=None,
+            operational_capacity=10,
+            last_reported=datetime.fromisoformat("2026-11-01 00:34:24+00:00"),
+            vehicle_types_available={"electric": 0, "mechanical": 3},
+            vehicle_docks_available=None,
+            station_state=StationState.FUNCTIONAL,
+        ),
+        StationStatus(
+            station_id="245557155",
+            num_bikes_available=5,
+            num_bikes_disabled=None,
+            num_docks_available=0,
+            num_docks_disabled=None,
+            operational_capacity=5,
+            last_reported=datetime.fromisoformat("2026-11-01 00:04:24+00:00"),
+            vehicle_types_available={"electric": 0, "mechanical": 5},
+            vehicle_docks_available=None,
+            station_state=StationState.FULL,
+        ),
+    ]
 
 
 @pytest.fixture
@@ -149,97 +146,154 @@ def station_status_dao(db_connection):
 
 
 # Tests de bulk_insert_status()
-def test_bulk_insert_status_ok(station_status_dao):
+def test_bulk_insert_status_ok(station_status_dao, sample_statuses):
     """Insertions du nouveau statut des stations réussies"""
-
     # GIVEN
-    number_status = len(statuses)
-
+    number_status = len(sample_statuses)
     # WHEN
-    updates_made = station_status_dao.bulk_insert_status(status)
-
+    updates_made = station_status_dao.bulk_insert_status(sample_statuses)
     # THEN
     assert updates_made == number_status
 
 
-def test_bulk_insert_status_fail(station_status_dao):
-    """Insertion du nouveau statut des stations incomplète car toutes les stations
-    à mettre à jour n'ont pas été intégrées en argument de la fonction"""
-
+def test_bulk_insert_status_fail_none(station_status_dao):
+    """Insertion retourne 0 car l'entrée est None"""
     # GIVEN
-    number_status = len(statuses)
-
+    none_input = None
     # WHEN
-    updates_made = station_status_dao.bulk_insert_status(status[:1])
-
+    updates_made = station_status_dao.bulk_insert_status(none_input)
     # THEN
-    assert updates_made != number_status
+    assert updates_made == 0
+
+
+def test_bulk_insert_status_fail_none_record(station_status_dao, sample_statuses):
+    """
+    Insertion retourne n-1 car l'un des enregistrements est None,
+    cet enregistrement est ignoré et les autres sont insérés
+    """
+    # GIVEN
+    sample_statuses.append(None)
+    number_status = len(sample_statuses)
+    # WHEN
+    updates_made = station_status_dao.bulk_insert_status(sample_statuses)
+    # THEN
+    assert updates_made == number_status - 1
+
+
+def test_bulk_insert_status_fail_none_attr(station_status_dao, sample_statuses):
+    """
+    Insertion retourne 0 car l'un des attributs d'un enregistrement est None,
+    l'insertion est completement annulée
+    """
+    # GIVEN
+    sample_statuses[0].operational_capacity = None
+    # WHEN
+    updates_made = station_status_dao.bulk_insert_status(sample_statuses)
+    # THEN
+    assert updates_made == 0
 
 
 # Tests de get_latest_status()
-def test_get_latest_status_ok(station_status_dao):
-    """Mise à jour de la station réussie"""
-
+def test_get_latest_status_ok(station_status_dao, sample_statuses):
+    """
+    Il y a 3 statuts à 3 moments différents pour une station.
+    Requête réussie pour obtenir le dernier.
+    """
     # GIVEN
-    station_status_dao.bulk_insert_status(status)
-    id_station = status[1].station_id
-
+    station_status_dao.bulk_insert_status(sample_statuses)
+    id_station = sample_statuses[0].station_id
     # WHEN
     result = station_status_dao.get_latest_status(id_station)
-
     # THEN
     assert result is not None
     assert result.station_id == id_station
+    assert result.last_reported == sample_statuses[0].last_reported
 
 
-def test_get_latest_status_fail(station_status_dao):
-    """Mise à jour de la station impossible car l'identifiant n'existe pas"""
-
+def test_get_latest_status_fail(station_status_dao, sample_statuses):
+    """Requête retourne None car l'identifiant n'existe pas"""
     # GIVEN
+    station_status_dao.bulk_insert_status(sample_statuses)
     id_station = "fakeid"
-
     # WHEN
     result = station_status_dao.get_latest_status(id_station)
-
     # THEN
     assert result is None
 
 
-# Tests de get_status_history()
-def test_get_status_history_ok(station_status_dao):
-    """Nous réussissons à obtenir l'historique du statut d'une station sur une période donnée"""
-
+# Tests de get_one_station_history()
+def test_get_one_station_history_ok(station_status_dao, sample_statuses):
+    """Requête réussie pour obtenir l'historique du statut d'une station sur une période donnée"""
     # GIVEN
-    station_status_dao.bulk_insert_status(status)
-    target_station_id = status[2].station_id
-    start_time = datetime.fromisoformat("2026-11-01 00:00:00+00:00")
-    end_time = datetime.fromisoformat("2026-11-01 02:00:00+00:00")
-
+    station_status_dao.bulk_insert_status(sample_statuses)
+    target_station_id = sample_statuses[0].station_id
+    start_time = datetime.fromisoformat("2026-11-01 00:24:24+00:00")
+    end_time = datetime.fromisoformat("2026-11-01 00:44:24+00:00")
     # WHEN
-    status_history = station_status_dao.get_status_history(
+    status_history = station_status_dao.get_one_station_history(
         target_station_id, start_time, end_time
     )
-
     # THEN
     assert status_history
-    for s in status_history:
-        assert s.station_id == target_station_id
-        assert start_time <= s.last_reported <= end_time
+    assert len(status_history) == 1
+    assert status_history[0].station_id == target_station_id
+    assert start_time <= status_history[0].last_reported <= end_time
 
 
-def test_get_status_history_fail(station_status_dao):
-    """Nous échouons à obtenir l'historique du statut d'une station car son identifiant n'est
-    pas reconnu"""
-
+def test_get_status_history_fail_fakeid(station_status_dao, sample_statuses):
+    """Requête retourne [] car l'identifiant n'existe pas"""
     # GIVEN
+    station_status_dao.bulk_insert_status(sample_statuses)
     station_id = "fakeid"
-    start_time = datetime.fromisoformat("2026-11-01 00:00:00+00:00")
-    end_time = datetime.fromisoformat("2026-11-01 02:00:00+00:00")
-
+    start_time = datetime.fromisoformat("2026-11-01 00:24:24+00:00")
+    end_time = datetime.fromisoformat("2026-11-01 00:44:24+00:00")
     # WHEN
-    status_history = station_status_dao.get_status_history(
+    status_history = station_status_dao.get_one_station_history(
         station_id, start_time, end_time
     )
-
     # THEN
     assert status_history == []
+
+
+def test_get_status_history_fail_nothing(station_status_dao, sample_statuses):
+    """Requête retourne [] car il n'y a pas de statut pour la station dans la période donnée"""
+    # GIVEN
+    station_status_dao.bulk_insert_status(sample_statuses)
+    target_station_id = sample_statuses[0].station_id
+    start_time = datetime.fromisoformat("2026-11-02 00:24:24+00:00")
+    end_time = datetime.fromisoformat("2026-11-02 00:44:24+00:00")
+    # WHEN
+    status_history = station_status_dao.get_one_station_history(
+        target_station_id, start_time, end_time
+    )
+    # THEN
+    assert status_history == []
+
+
+# Tests de get_all_station_history()
+def test_get_all_station_history_ok(station_status_dao, sample_statuses):
+    """Requête réussie pour obtenir l'historique du statut de toutes les stations sur une période donnée"""
+    # GIVEN
+    station_status_dao.bulk_insert_status(sample_statuses)
+    start_time = datetime.fromisoformat("2026-11-01 00:24:24+00:00")
+    end_time = datetime.fromisoformat("2026-11-01 01:14:24+00:00")
+    # WHEN
+    status_history = station_status_dao.get_all_station_history(start_time, end_time)
+    # THEN
+    assert status_history
+    assert len(status_history) == 2
+    for statuses in status_history.values():
+        for status in statuses:
+            assert start_time <= status.last_reported <= end_time
+
+
+def test_get_all_station_history_fail_nothing(station_status_dao, sample_statuses):
+    """Requête retourne {} car il n'y a pas de statut pour les stations dans la période donnée"""
+    # GIVEN
+    station_status_dao.bulk_insert_status(sample_statuses)
+    start_time = datetime.fromisoformat("2026-11-02 00:24:24+00:00")
+    end_time = datetime.fromisoformat("2026-11-02 00:44:24+00:00")
+    # WHEN
+    status_history = station_status_dao.get_all_station_history(start_time, end_time)
+    # THEN
+    assert status_history == {}
