@@ -2,10 +2,11 @@ import os
 from typing import Any, Optional
 import requests
 
+
 class APIClient:
     """
     Client HTTP générique pour consommer une API REST.
- 
+
     Parameters
     ----------
     base_url : str, optional
@@ -15,6 +16,7 @@ class APIClient:
         Délai maximal, en secondes, avant qu'une requête n'échoue par
         timeout. Par défaut 10.
     """
+
     def __init__(self, base_url: str = None, timeout: int = 10):
         default_url = os.getenv("API_BASE_URL", "http://localhost:5000")
         self.base_url = (base_url or default_url).rstrip("/")
@@ -24,12 +26,12 @@ class APIClient:
     def _build_url(self, endpoint: str) -> str:
         """
         Construit l'URL complète d'un endpoint à partir de l'URL de base.
- 
+
         Parameters
         ----------
         endpoint : str
             Chemin de l'endpoint à appeler (avec ou sans `/` initial).
- 
+
         Returns
         -------
         str
@@ -46,7 +48,7 @@ class APIClient:
     ) -> Any:
         """
         Envoie une requête HTTP GET à l'API.
- 
+
         Parameters
         ----------
         endpoint : str
@@ -55,7 +57,7 @@ class APIClient:
             Paramètres de requête (query string) à transmettre.
         headers : dict, optional
             En-têtes HTTP à transmettre.
- 
+
         Returns
         -------
         Any
@@ -63,7 +65,9 @@ class APIClient:
             réponse ne contient pas de corps.
         """
         url = self._build_url(endpoint)
-        response = self.session.get(url, params=params, headers=headers, timeout=self.timeout)
+        response = self.session.get(
+            url, params=params, headers=headers, timeout=self.timeout
+        )
         response.raise_for_status()
         return response.json() if response.content else {}
 
@@ -75,7 +79,7 @@ class APIClient:
     ) -> Any:
         """
         Envoie une requête HTTP POST à l'API.
- 
+
         Parameters
         ----------
         endpoint : str
@@ -84,7 +88,7 @@ class APIClient:
             Corps de la requête, envoyé au format JSON.
         headers : dict, optional
             En-têtes HTTP à transmettre.
- 
+
         Returns
         -------
         Any
@@ -92,7 +96,9 @@ class APIClient:
             réponse ne contient pas de corps.
         """
         url = self._build_url(endpoint)
-        response = self.session.post(url, json=data, headers=headers, timeout=self.timeout)
+        response = self.session.post(
+            url, json=data, headers=headers, timeout=self.timeout
+        )
         response.raise_for_status()
         return response.json() if response.content else {}
 
@@ -104,7 +110,7 @@ class APIClient:
     ) -> Any:
         """
         Envoie une requête HTTP PUT à l'API.
- 
+
         Parameters
         ----------
         endpoint : str
@@ -113,7 +119,7 @@ class APIClient:
             Corps de la requête, envoyé au format JSON.
         headers : dict, optional
             En-têtes HTTP à transmettre.
- 
+
         Returns
         -------
         Any
@@ -121,7 +127,9 @@ class APIClient:
             réponse ne contient pas de corps.
         """
         url = self._build_url(endpoint)
-        response = self.session.put(url, json=data, headers=headers, timeout=self.timeout)
+        response = self.session.put(
+            url, json=data, headers=headers, timeout=self.timeout
+        )
         response.raise_for_status()
         return response.json() if response.content else {}
 
@@ -132,14 +140,14 @@ class APIClient:
     ) -> int:
         """
         Envoie une requête HTTP DELETE à l'API.
- 
+
         Parameters
         ----------
         endpoint : str
             Chemin de l'endpoint à appeler.
         headers : dict, optional
             En-têtes HTTP à transmettre.
- 
+
         Returns
         -------
         int
@@ -149,3 +157,25 @@ class APIClient:
         response = self.session.delete(url, headers=headers, timeout=self.timeout)
         response.raise_for_status()
         return response.status_code
+
+    def login(self, username: str, password: str) -> requests.Response:
+        """Appelle la route /login du contrôleur."""
+        return self.post(
+            "/login",
+            {"username": username, "password": password},
+        )
+
+    def signup(self, username: str, email: str, password: str) -> requests.Response:
+        """Appelle la route /signup du contrôleur."""
+        return self.post(
+            "/auth/signup",
+            {"username": username, "email": email, "password": password},
+        )
+
+    def logout(self) -> requests.Response:
+        """Appelle la route /logout avec le token en header."""
+        return self.post("/logout")
+
+    def get_user_info(self) -> requests.Response:
+        """Récupère les informations du profil via /user/info."""
+        return self.get("/user/info")
