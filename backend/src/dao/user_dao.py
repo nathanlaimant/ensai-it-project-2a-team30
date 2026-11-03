@@ -245,45 +245,146 @@ class UserDAO:
                     )
         return None
 
-    def list_users(self, query_params: dict) -> list[User]:
+    def list_users(
+        self,
+        user_id: int | dict | None = None,
+        username: str | None = None,
+        email: str | None = None,
+        role: str | None = None,
+        is_active: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        nb_pages: int | None = None,
+    ) -> list[User]:
         """
         Liste les utilisateurs selon des critères de recherche.
+        Tous les arguments de la méthode sont optionnels.
 
         Parameters
         ----------
-        query_params : dict
-            Critères de filtrage et/ou de pagination.
+        user_id : int | dict, optional
+            Identifiant de l'utilisateur, ou dictionnaire de filtres complet.
+        username : str, optional
+            Nom d'utilisateur (recherche partielle insensible à la casse).
+        email : str, optional
+            Adresse e-mail (recherche partielle insensible à la casse).
+        role : str, optional
+            Rôle recherché ('ADMIN' ou 'USER').
+        is_active : bool, optional
+            Si True, liste les comptes actifs ; si False, les inactifs.
+        limit : int, optional
+            Nombre maximal d'utilisateurs à renvoyer.
+        offset : int, optional
+            Décalage pour la pagination.
+        nb_pages : int, optional
+            Nombre de pages pour découper la liste retournée.
 
         Returns
         -------
         list of User
             Liste des utilisateurs correspondant aux critères.
-            Ne renvoie rien si l'un des critères de recherche n'est pas dans le bon format.
+            Renvoie une liste vide si un critère n'est pas dans le bon format.
         """
-        if not self._valider(query_params):
+        if isinstance(user_id, dict):
+            params_dict = user_id
+            user_id = params_dict.get("user_id")
+            username = params_dict.get("username")
+            email = params_dict.get("email")
+            role = params_dict.get("role")
+            is_active = params_dict.get("is_active")
+            limit = params_dict.get("limit")
+            offset = params_dict.get("offset")
+            nb_pages = params_dict.get("nb_pages")
+
+        if user_id is not None and (isinstance(user_id, bool) or not isinstance(user_id, int) or user_id <= 0):
+            return []
+        if username is not None and not isinstance(username, str):
+            return []
+        if email is not None and not isinstance(email, str):
+            return []
+        if role is not None and (not isinstance(role, str) or role not in ("ADMIN", "USER")):
+            return []
+        if is_active is not None and not isinstance(is_active, bool):
+            return []
+        if limit is not None and (isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0):
+            return []
+        if offset is not None and (isinstance(offset, bool) or not isinstance(offset, int) or offset < 0):
+            return []
+        if nb_pages is not None and (isinstance(nb_pages, bool) or not isinstance(nb_pages, int) or nb_pages <= 0):
             return []
 
-        requete, valeurs = self._construire_requete(query_params)
+        conditions = []
+        params = {}
 
-        with self._db_connection.get_connection() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(requete, valeurs)
-                lignes = cursor.fetchall()
+        if user_id is not None:
+            conditions.append("user_id = %(user_id)s")
+            params["user_id"] = user_id
 
-        return [
-            User(
-                user_id=ligne["user_id"],
-                username=ligne["username"],
-                password_hashed=ligne["password_hashed"],
-                email=ligne["email"],
-                role=ligne["role"],
-                is_active=ligne["is_active"],
-                created_at=ligne["created_at"],
-                updated_at=ligne["updated_at"],
-                access_token=ligne["access_token"],
-            )
-            for ligne in lignes
-        ]
+        if username is not None:
+            conditions.append("username ILIKE %(username)s")
+            params["username"] = f"%{username}%"
+
+        if email is not None:
+            conditions.append("email ILIKE %(email)s")
+            params["email"] = f"%{email}%"
+
+        if role is not None:
+            conditions.append("role = %(role)s")
+            params["role"] = role
+
+        if is_active is not None:
+            conditions.append("is_active = %(is_active)s")
+            params["is_active"] = is_active
+
+        query = """
+            SELECT user_id, username, password_hash, email, role, is_active
+            FROM "user"
+        """
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        query += " ORDER BY user_id"
+
+        if limit is not None:
+            query += " LIMIT %(limit)s"
+            params["limit"] = limit
+
+        if offset is not None:
+            query += " OFFSET %(offset)s"
+            params["offset"] = offset
+
+        # 4. Exécution de la requête avec gestion d'erreurs
+        res = None
+        try:
+            with DBConnection().connection as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(query, params)
+                    res = cursor.fetchall()
+        except Exception as e:
+            # Remplacer par votre logger si importé (ex: logger.error(e))
+            print(f"Erreur SQL dans list_users : {e}")
+            raise
+
+        users_list = []
+        if res:
+            for row in res:
+                users_list.append(
+                    User(
+                        user_id=row["user_id"],
+                        username=row["username"],
+                        password_hashed=row["password_hashed"],
+                        email=row["email"],
+                        role=row["role"],
+                        is_active=row["is_active"],
+                    )
+                )
+
+            if isinstance(nb_pages, int) and nb_pages > 1:
+                taille_page = max(1, len(users_list) // nb_pages)
+                decoupage = [users_list[i : i + taille_page] for i in range(0, len(users_list), taille_page)]
+                return decoupage[:nb_pages]
+
+        return users_list
 
     def update_user(self, user_id: int, updates: dict) -> bool:
         """
