@@ -33,7 +33,27 @@ class StationStatusDAO:
         if not records:
             return 0
 
-        logger.info(f"Bulk inserting {len(records)} station status records.")
+        data = [
+            (
+                r.station_id,
+                r.num_bikes_available,
+                r.num_bikes_disabled,
+                r.num_docks_available,
+                r.num_docks_disabled,
+                r.operational_capacity,
+                r.last_reported,
+                Json(r.vehicle_types_available) if r.vehicle_types_available else None,
+                Json(r.vehicle_docks_available) if r.vehicle_docks_available else None,
+                r.station_state,
+            )
+            for r in records
+            if r is not None
+        ]
+
+        if not data:
+            return 0
+
+        logger.info(f"Bulk inserting {len(data)} station status records.")
         query = """
             INSERT INTO station_status (
                 station_id,
@@ -50,22 +70,6 @@ class StationStatusDAO:
             ON CONFLICT (station_id, last_reported) DO NOTHING
             RETURNING station_status_id;
         """
-
-        data = [
-            (
-                r.station_id,
-                r.num_bikes_available,
-                r.num_bikes_disabled,
-                r.num_docks_available,
-                r.num_docks_disabled,
-                r.operational_capacity,
-                r.last_reported,
-                Json(r.vehicle_types_available) if r.vehicle_types_available else None,
-                Json(r.vehicle_docks_available) if r.vehicle_docks_available else None,
-                r.station_state,
-            )
-            for r in records
-        ]
 
         res = 0
         try:
