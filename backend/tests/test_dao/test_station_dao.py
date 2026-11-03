@@ -1,23 +1,11 @@
-import os
-from unittest.mock import patch
-
-import psycopg3
+import psycopg2
 import pytest
-from utils.reset_database import ResetDatabase
 
 from business_object.station_information import StationInformation
 from dao.station_dao import StationDao
 
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_environment():
-    """Initialisation de la base de données pour les tests"""
-    with patch.dict(os.environ, {"SCHEMA": "project_test_dao"}):
-        ResetDatabase().run(test_dao=True)
-        yield
-
-
 # Test de upsert_station_info()
+
 
 def test_upsert_station_info_ok():
     """L'importation de l'API externe avec la liste des stations a réussi"""
@@ -54,7 +42,7 @@ def test_upsert_station_info_fail():
     )
 
     # WHEN / THEN
-    with pytest.raises(psycopg3.Error):
+    with pytest.raises(psycopg2.Error):
         StationDao().upsert_station_info(station)
 
 

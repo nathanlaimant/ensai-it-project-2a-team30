@@ -1,11 +1,6 @@
-import os
-from unittest.mock import patch
 from datetime import datetime, timedelta
 
-import psycopg3
-import pytest
-from utils.reset_database import ResetDatabase
-
+from business_object.station_information import StationInformation
 from business_object.station_status import StationStatus
 from dao.station_status_dao import StationStatusDao
 
@@ -39,7 +34,7 @@ stations = [
     ),
     StationInformation(
         station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
-        name="id_old844604G20081106092237,
+        name="id_old844604G20081106092237",
         is_virtual_station=True,
         lat=48.8322843827352,
         lon=2.32105516137791,
@@ -48,7 +43,7 @@ stations = [
 ]
 
 # Trouver des station_status_id
-status = [
+statuses = [
     StationStatus(
         station_status_id=1,
         station_id="16bbf68d-685a-4799-9bba-8915f10700e0",
@@ -96,24 +91,16 @@ status = [
 ]
 
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_environment():
-    """Initialisation de la base de données pour les tests"""
-    with patch.dict(os.environ, {"SCHEMA": "project_test_dao"}):
-        ResetDatabase().run(test_dao=True)
-        yield
-
-
 # Tests de bulk_insert_status()
 
 def test_bulk_insert_status_ok():
     """Insertions du nouveau statut des stations réussies"""
 
     # GIVEN
-    number_status = len(status)
+    number_status = len(statuses)
 
     # WHEN
-    updates_made = StationStatusDao().bulk_insert_status(status)
+    updates_made = StationStatusDao().bulk_insert_status(statuses)
 
     # THEN
     assert len(updates_made) == number_status
@@ -124,10 +111,10 @@ def test_bulk_insert_status_fail():
     à mettre à jour n'ont pas été intégrées en argument de la fonction"""
 
     # GIVEN
-    number_status = len(status)
+    number_status = len(statuses)
 
     # WHEN
-    updates_made = StationStatusDao().bulk_insert_status(status[-1])
+    updates_made = StationStatusDao().bulk_insert_status(statuses[-1])
 
     # THEN
     assert len(updates_made) != number_status
@@ -139,7 +126,7 @@ def test_get_latest_status_ok():
     """Mise à jour de la station réussie"""
 
     # GIVEN
-    id_station = status[1].station_id
+    id_station = statuses[1].station_id
 
     # WHEN
     status = StationStatusDao().get_latest_status(id_station)
@@ -168,7 +155,7 @@ def test_get_status_history_ok():
     """Nous réussissons à obtenir l'historique du statut d'une station sur une période donnée"""
 
     # GIVEN
-    station_id = status[2].station_id
+    station_id = statuses[2].station_id
     start_time, end_time = 1, 1
 
     # WHEN
@@ -178,6 +165,7 @@ def test_get_status_history_ok():
     for s in status_history:
         assert s.station_id == station_id
         assert (end_time >= s.last_reported and start_time <= s.last_reported)
+
 
 def test_get_status_history_fail():
     """Nous échouons à obtenir l'historique du statut d'une station car son identifiant n'est
