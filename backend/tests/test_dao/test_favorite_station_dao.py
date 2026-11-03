@@ -41,6 +41,7 @@ def favorite_dao_context(request: FixtureRequest):
         finally:
             db_connection.close()
 
+    request.addfinalizer(cleanup)
     remove_test_data()
 
     station = StationInformation(
@@ -57,7 +58,9 @@ def favorite_dao_context(request: FixtureRequest):
         is_charging_station=False,
     )
     assert station_dao.upsert_station_info(station)
-    assert station_dao.get_by_id(TEST_STATION_ID).station_id == TEST_STATION_ID
+    saved_station = station_dao.get_by_id(TEST_STATION_ID)
+    assert saved_station is not None
+    assert saved_station.station_id == TEST_STATION_ID
 
     with db_connection.get_connection() as connection:
         with connection:
