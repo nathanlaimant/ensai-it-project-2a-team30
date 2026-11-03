@@ -4,7 +4,7 @@ import psycopg2
 import pytest
 
 from business_object.station_information import StationInformation
-from dao.station_dao import StationDao
+from dao.station_dao import StationDAO
 from utils.db_connection import DbConnection
 from utils.settings import Settings
 
@@ -20,7 +20,7 @@ def db_connection():
 
 @pytest.fixture
 def station_dao(db_connection):
-    return StationDao(db_connection)
+    return StationDAO(db_connection)
 
 
 # Test de upsert_station_info()
@@ -42,7 +42,7 @@ def test_upsert_station_info_ok():
     ]
 
     # WHEN
-    local_data = StationDao().upsert_station_info(external_data)
+    local_data = station_dao.upsert_station_info(external_data)
 
     # THEN
     assert local_data
@@ -64,7 +64,7 @@ def test_upsert_station_info_fail():
 
     # WHEN / THEN
     with pytest.raises(psycopg2.Error):
-        StationDao().upsert_station_info(station)
+        station_dao.upsert_station_info(station)
 
 
 # Tests de get_by_id()
@@ -77,7 +77,7 @@ def test_get_by_id_ok():
     id_station = "16bbf68d-685a-4799-9bba-8915f10700e0"
 
     # WHEN
-    station = StationDao().get_by_id(id_station)
+    station = station_dao.get_by_id(id_station)
 
     # THEN
     assert isinstance(station, StationInformation)
@@ -90,7 +90,7 @@ def test_get_by_id_fail():
     id_station = "fakeid"
 
     # WHEN
-    station = StationDao().get_by_id(id_station)
+    station = station_dao.get_by_id(id_station)
 
     # THEN
     assert station is None
@@ -106,7 +106,7 @@ def test_get_nearby_ok():
     lat, lon, radius_meter = 48.8727256662692, 2.35437813765038, 20
 
     # WHEN
-    stations = StationDao().get_nearby(lat, lon, radius_meter)
+    stations = station_dao.get_nearby(lat, lon, radius_meter)
 
     # THEN
     assert stations is not None
@@ -119,7 +119,7 @@ def test_get_nearby_fail():
     lat, lon, radius_meter = 5425.65, -65.09, 20
 
     # WHEN
-    stations = StationDao().get_nearby(lat, lon, radius_meter)
+    stations = station_dao.get_nearby(lat, lon, radius_meter)
 
     # THEN
     assert stations is None
@@ -136,7 +136,7 @@ def test_list_stations_ok():
     a_name = "Toudouze - Clauzel"
 
     # WHEN
-    stations = StationDao().list_stations(name=a_name)
+    stations = station_dao.list_stations(name=a_name)
 
     # THEN
     assert stations is not None
@@ -152,7 +152,7 @@ def test_list_stations_fail():
     a_name = "afakenameverylongthatistoolong"
 
     # WHEN
-    stations = StationDao().list_stations(name=a_name)
+    stations = station_dao.list_stations(name=a_name)
 
     # THEN
     assert stations is None

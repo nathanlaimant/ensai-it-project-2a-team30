@@ -8,7 +8,8 @@ class User:
     Parameters
     ----------
     user_id : int | None
-        Identifiant unique de l'utilisateur. Non-nullable, mais peut être None si l'objet n'a pas été persistée.
+        Identifiant unique de l'utilisateur. Non-nullable, mais peut être None si l'objet n'a pas
+        été persistée.
     username : str
         Nom d'utilisateur affiché.
     password_hashed : str
@@ -23,7 +24,7 @@ class User:
         Date et heure de création du compte.
     updated_at : datetime
         Date et heure de la dernière mise à jour du compte.
-    access_token : str
+    access_token : str | None
         Jeton d'accès courant associé à l'utilisateur.
     """
 
@@ -33,10 +34,10 @@ class User:
         password_hashed: str,
         email: str,
         role: str,
-        is_active: bool,
-        created_at: datetime,
-        updated_at: datetime,
-        access_token: str,
+        is_active: bool = True,
+        created_at: datetime = datetime.now,
+        updated_at: datetime = datetime.now,
+        access_token: str | None = None,
         user_id: int | None = None,
     ):
         self.user_id = user_id

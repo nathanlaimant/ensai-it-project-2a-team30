@@ -1,9 +1,9 @@
-postgres_host=
-postgres_port=
-postgres_database=
-postgres_user=
-postgres_password=
-postgres_schema=
+postgres_host=postgresql-cnpg-896557-rw.user-nathanlaimant
+postgres_port=5432
+postgres_database=defaultdb
+postgres_user=user-nathanlaimant
+postgres_password=ik49h0o2rnecpp8xgv8u
+postgres_schema=veloscope_test
 
 system_information_feed_url=http://mock
 station_information_feed_url=http://mock
