@@ -39,7 +39,7 @@ stations = [
     ),
     StationInformation(
         station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
-        name="id_old844604G20081106092237,
+        name="id_old844604G20081106092237",
         is_virtual_station=True,
         lat=48.8322843827352,
         lon=2.32105516137791,
