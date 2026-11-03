@@ -86,7 +86,7 @@ class FavoriteStationDAO:
                             s.short_name,
                             s.lat,
                             s.lon,
-                            s.adress AS address,
+                            s.address AS address,
                             s.is_virtual_station,
                             s.station_area,
                             s.contact_phone,

@@ -31,15 +31,15 @@ class StationInformation:
     def __init__(
         self,
         name: str,
-        short_name: str | None,
         lat: float,
         lon: float,
-        address: str | None,
-        is_virtual_station: bool | None,
-        station_area: dict | None,
-        contact_phone: str | None,
-        capacity: int | None,
-        is_charging_station: bool | None,
+        short_name: str | None = None,
+        address: str | None = None,
+        is_virtual_station: bool | None = None,
+        station_area: dict | None = None,
+        contact_phone: str | None = None,
+        capacity: int | None = None,
+        is_charging_station: bool | None = None,
         station_id: str | None = None,
     ):
         self.station_id = station_id

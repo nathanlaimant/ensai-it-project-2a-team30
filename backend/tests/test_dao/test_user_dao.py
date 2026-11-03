@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import psycopg2
 import pytest
 
 from business_object.user import User
@@ -157,7 +156,7 @@ def test_update_user_ok(user_dao):
 
     # GIVEN
     new_email = "thenewemail@email.fr"
-    user_id = 2
+    user_id = 20
 
     # WHEN
     update_ok = user_dao.update_user(user_id=user_id, updates={"email": new_email})
@@ -191,10 +190,10 @@ def test_delete_user_ok(user_dao):
     """Suppression d'un utilisateur réussie"""
 
     # GIVEN
-    user = User(username="myusername", password="averycoolpasswordtouse", email="myemail@email.fr")
+    user_id = 23
 
     # WHEN
-    delete_ok = user_dao.delete_user(user)
+    delete_ok = user_dao.delete_user(user_id)
 
     # THEN
     assert delete_ok
@@ -204,10 +203,10 @@ def test_delete_user_fail(user_dao):
     """Suppression d'un utilisateur impossible car il n'existe pas"""
 
     # GIVEN
-    user = User(username="nousername", password="averycoolpasswordtouse", email="myemail@email.fr")
+    user_id = 5645657678
 
     # WHEN
-    delete_ok = user_dao.delete_user(user)
+    delete_ok = user_dao.delete_user(user_id)
 
     # THEN
     assert not delete_ok

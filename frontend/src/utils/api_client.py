@@ -179,3 +179,7 @@ class APIClient:
     def get_user_info(self) -> requests.Response:
         """Récupère les informations du profil via /user/info."""
         return self.get("/user/info")
+
+    def get_stations(self, params: dict | None = None) -> requests.Response:
+        """Récupère les stations auprès de l'API avec d'éventuels filtres."""
+        return self.get("/stations", params=params)
