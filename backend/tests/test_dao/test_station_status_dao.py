@@ -1,112 +1,175 @@
-from datetime import datetime, timedelta
+import os
+from datetime import datetime
+
+import pytest
 
 from business_object.station_information import StationInformation
+from business_object.station_state import StationState
 from business_object.station_status import StationStatus
-from dao.station_status_dao import StationStatusDao
+from dao.station_dao import StationDAO
+from dao.station_status_dao import StationStatusDAO
+from utils.db_connection import DbConnection
+from utils.settings import Settings
 
-first_date_counted = datetime.datetime(year=1970, month=1, day=1, hour=0, minute=0, second=0)
-
-# Pour ne passer par la fonction StationDao().get_by_id()
 stations = [
     StationInformation(
-        station_id="16bbf68d-685a-4799-9bba-8915f10700e0",
-        is_virtual_station=True,
-        lat=48.8727256662692,
-        lon=2.35437813765038,
-        name="id_38206",
-        capacity=3
+        station_id="245557155",
+        name="Bischheim Gare",
+        short_name="62000",
+        lat=48.611639,
+        lon=7.742056,
+        address=None,
+        is_virtual_station=False,
+        station_area=None,
+        contact_phone=None,
+        capacity=5,
+        is_charging_station=None,
     ),
     StationInformation(
-        station_id="b42cb6d7-0558-4589-ad71-63e374fdb784",
-        name="id_34235",
-        is_virtual_station=True,
-        lat=48.8266089252496,
-        lon=2.33467058582095,
-        capacity=3
+        station_id="245557947",
+        name="Bischheim Espace Européen",
+        short_name="62001",
+        lat=48.616361,
+        lon=7.720056,
+        address=None,
+        is_virtual_station=False,
+        station_area=None,
+        contact_phone=None,
+        capacity=10,
+        is_charging_station=None,
     ),
     StationInformation(
-        station_id="5770705c-cbb1-4baa-a1ca-eb40540b2f40",
-        name="17 RUE DU VIEUX COLOMBIER",
-        is_virtual_station=True,
-        lat=48.851759,
-        lon=2.3306,
-        capacity=3
+        station_id="245559919",
+        name="Entzheim Gare",
+        short_name="62003",
+        lat=48.547222,
+        lon=7.628056,
+        address=None,
+        is_virtual_station=False,
+        station_area=None,
+        contact_phone=None,
+        capacity=10,
+        is_charging_station=None,
     ),
     StationInformation(
-        station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
-        name="id_old844604G20081106092237",
-        is_virtual_station=True,
-        lat=48.8322843827352,
-        lon=2.32105516137791,
-        capacity=3
-    )
+        station_id="245564614",
+        name="Geispolsheim Gare",
+        short_name="62004",
+        lat=48.521222,
+        lon=7.684944,
+        address=None,
+        is_virtual_station=False,
+        station_area=None,
+        contact_phone=None,
+        capacity=5,
+        is_charging_station=None,
+    ),
 ]
 
-# Trouver des station_status_id
-statuses = [
+status = [
     StationStatus(
-        station_status_id=1,
-        station_id="16bbf68d-685a-4799-9bba-8915f10700e0",
-        num_bikes_available=0,
-        operational_capacity=stations[0].capacity,
-        is_installed=True,
-        is_renting=True,
-        is_returning=True,
-        last_reported=first_date_counted + timedelta(seconds=1790760336),
-        station_state="EMPTY"
+        station_id="245557155",
+        num_bikes_available=2,
+        num_bikes_disabled=None,
+        num_docks_available=3,
+        num_docks_disabled=None,
+        operational_capacity=5,
+        last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
+        vehicle_types_available={"electric": 0, "mechanical": 2},
+        vehicle_docks_available=None,
+        station_state=StationState.FUNCTIONAL,
     ),
     StationStatus(
-        station_status_id=2,
-        station_id="b42cb6d7-0558-4589-ad71-63e374fdb784",
-        num_bikes_available=0,
-        operational_capacity=stations[1].capacity,
-        is_installed=True,
-        is_renting=True,
-        is_returning=True,
-        last_reported=first_date_counted + timedelta(seconds=1790676268),
-        station_state="EMPTY"
+        station_id="245557947",
+        num_bikes_available=2,
+        num_bikes_disabled=None,
+        num_docks_available=8,
+        num_docks_disabled=None,
+        operational_capacity=10,
+        last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
+        vehicle_types_available={"electric": 0, "mechanical": 2},
+        vehicle_docks_available=None,
+        station_state=StationState.FUNCTIONAL,
     ),
     StationStatus(
-        station_status_id=3,
-        station_id="5770705c-cbb1-4baa-a1ca-eb40540b2f40",
-        num_bikes_available=0,
-        operational_capacity=stations[2].capacity,
-        is_installed=True,
-        is_renting=True,
-        is_returning=True,
-        last_reported=first_date_counted + timedelta(seconds=1790247765),
-        station_state="EMPTY"
+        station_id="245559919",
+        num_bikes_available=3,
+        num_bikes_disabled=None,
+        num_docks_available=7,
+        num_docks_disabled=None,
+        operational_capacity=10,
+        last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
+        vehicle_types_available={"electric": 0, "mechanical": 3},
+        vehicle_docks_available=None,
+        station_state=StationState.FUNCTIONAL,
     ),
     StationStatus(
-        station_status_id=4,
-        station_id="74a3f9a1-70b0-4d9a-a1d1-bbb5c6948840",
-        num_bikes_available=0,
-        operational_capacity=stations[3].capacity,
-        is_installed=True,
-        is_renting=True,
-        is_returning=True,
-        last_reported=first_date_counted + timedelta(seconds=1790751940),
-        station_state="EMPTY"
-    )
+        station_id="245564614",
+        num_bikes_available=5,
+        num_bikes_disabled=None,
+        num_docks_available=0,
+        num_docks_disabled=None,
+        operational_capacity=5,
+        last_reported=datetime.fromisoformat("2026-11-01 01:04:24+00:00"),
+        vehicle_types_available={"electric": 0, "mechanical": 5},
+        vehicle_docks_available=None,
+        station_state=StationState.FULL,
+    ),
 ]
+
+
+@pytest.fixture(scope="session")
+def db_connection():
+    """Provides a connection pool to the test database schema."""
+    settings = Settings(
+        postgres_host=os.getenv("POSTGRES_HOST", "localhost"),
+        postgres_port=int(os.getenv("POSTGRES_PORT", 5432)),
+        postgres_database=os.getenv("POSTGRES_DB", "defaultdb"),
+        postgres_user=os.getenv("POSTGRES_USER", "postgres"),
+        postgres_password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+        postgres_schema=os.getenv("SCHEMA", "project_test_dao"),
+        system_information_feed_url="http://mock",
+        station_information_feed_url="http://mock",
+        station_status_feed_url="http://mock",
+    )
+    return DbConnection(settings)
+
+
+@pytest.fixture(autouse=True)
+def setup_test_environment(db_connection):
+    """
+    Cleans up and seeds required parent stations before tests run.
+    """
+    with db_connection.get_connection() as conn:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM station_status;")
+                cur.execute("DELETE FROM station_information;")
+                station_dao = StationDAO(db_connection)
+                for st in stations:
+                    station_dao.upsert_station_info(st)
+
+
+@pytest.fixture
+def station_status_dao(db_connection):
+    return StationStatusDAO(db_connection)
 
 
 # Tests de bulk_insert_status()
-
-def test_bulk_insert_status_ok():
+def test_bulk_insert_status_ok(station_status_dao):
     """Insertions du nouveau statut des stations réussies"""
 
     # GIVEN
     number_status = len(statuses)
 
     # WHEN
-    updates_made = StationStatusDao().bulk_insert_status(statuses)
+    updates_made = station_status_dao.bulk_insert_status(status)
 
     # THEN
-    assert len(updates_made) == number_status
+    assert updates_made == number_status
 
 
-def test_bulk_insert_status_fail():
+def test_bulk_insert_status_fail(station_status_dao):
     """Insertion du nouveau statut des stations incomplète car toutes les stations
     à mettre à jour n'ont pas été intégrées en argument de la fonction"""
 
@@ -114,69 +177,76 @@ def test_bulk_insert_status_fail():
     number_status = len(statuses)
 
     # WHEN
-    updates_made = StationStatusDao().bulk_insert_status(statuses[-1])
+    updates_made = station_status_dao.bulk_insert_status(status[:1])
 
     # THEN
-    assert len(updates_made) != number_status
+    assert updates_made != number_status
 
 
 # Tests de get_latest_status()
-
-def test_get_latest_status_ok():
+def test_get_latest_status_ok(station_status_dao):
     """Mise à jour de la station réussie"""
 
     # GIVEN
-    id_station = statuses[1].station_id
+    station_status_dao.bulk_insert_status(status)
+    id_station = status[1].station_id
 
     # WHEN
-    status = StationStatusDao().get_latest_status(id_station)
+    result = station_status_dao.get_latest_status(id_station)
 
     # THEN
-    assert status is not None
-    assert status.station_id == id_station
+    assert result is not None
+    assert result.station_id == id_station
 
 
-def test_get_latest_status_fail():
+def test_get_latest_status_fail(station_status_dao):
     """Mise à jour de la station impossible car l'identifiant n'existe pas"""
 
     # GIVEN
     id_station = "fakeid"
 
     # WHEN
-    status = StationStatusDao().get_latest_status(id_station)
+    result = station_status_dao.get_latest_status(id_station)
 
     # THEN
-    assert status is None
+    assert result is None
 
 
 # Tests de get_status_history()
-
-def test_get_status_history_ok():
+def test_get_status_history_ok(station_status_dao):
     """Nous réussissons à obtenir l'historique du statut d'une station sur une période donnée"""
 
     # GIVEN
-    station_id = statuses[2].station_id
-    start_time, end_time = 1, 1
+    station_status_dao.bulk_insert_status(status)
+    target_station_id = status[2].station_id
+    start_time = datetime.fromisoformat("2026-11-01 00:00:00+00:00")
+    end_time = datetime.fromisoformat("2026-11-01 02:00:00+00:00")
 
     # WHEN
-    status_history = StationStatusDao().get_status_history(station_id, start_time, end_time)
+    status_history = station_status_dao.get_status_history(
+        target_station_id, start_time, end_time
+    )
 
     # THEN
+    assert status_history
     for s in status_history:
-        assert s.station_id == station_id
-        assert (end_time >= s.last_reported and start_time <= s.last_reported)
+        assert s.station_id == target_station_id
+        assert start_time <= s.last_reported <= end_time
 
 
-def test_get_status_history_fail():
+def test_get_status_history_fail(station_status_dao):
     """Nous échouons à obtenir l'historique du statut d'une station car son identifiant n'est
     pas reconnu"""
 
     # GIVEN
     station_id = "fakeid"
-    start_time, end_time = 1, 1
+    start_time = datetime.fromisoformat("2026-11-01 00:00:00+00:00")
+    end_time = datetime.fromisoformat("2026-11-01 02:00:00+00:00")
 
     # WHEN
-    status_history = StationStatusDao().get_status_history(station_id, start_time, end_time)
+    status_history = station_status_dao.get_status_history(
+        station_id, start_time, end_time
+    )
 
     # THEN
-    assert status_history is None
+    assert status_history == []

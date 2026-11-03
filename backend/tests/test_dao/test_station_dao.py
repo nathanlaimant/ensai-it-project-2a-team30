@@ -1,8 +1,36 @@
+import os
+from unittest.mock import patch
+
 import psycopg2
 import pytest
 
 from business_object.station_information import StationInformation
 from dao.station_dao import StationDao
+from utils.db_connection import DbConnection
+from utils.settings import Settings
+
+
+@pytest.fixture(scope="session")
+def db_connection():
+    """Provides a connection pool to the test database schema."""
+    settings = Settings(
+        postgres_host=os.getenv("POSTGRES_HOST", "localhost"),
+        postgres_port=int(os.getenv("POSTGRES_PORT", 5432)),
+        postgres_database=os.getenv("POSTGRES_DB", "defaultdb"),
+        postgres_user=os.getenv("POSTGRES_USER", "postgres"),
+        postgres_password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+        postgres_schema=os.getenv("SCHEMA", "project_test_dao"),
+        system_information_feed_url="http://mock",
+        station_information_feed_url="http://mock",
+        station_status_feed_url="http://mock",
+    )
+    return DbConnection(settings)
+
+
+@pytest.fixture
+def station_dao(db_connection):
+    return StationDao(db_connection)
+
 
 # Test de upsert_station_info()
 
@@ -11,14 +39,16 @@ def test_upsert_station_info_ok():
     """L'importation de l'API externe avec la liste des stations a réussi"""
 
     # GIVEN
-    external_data = [StationInformation(
-        station_id="19179944124",
-        name="Hôpital Mondor",
-        short_name="40001",
-        lat=48.798922410229,
-        lon=2.4537451531298,
-        capacity=28
-    )]
+    external_data = [
+        StationInformation(
+            station_id="19179944124",
+            name="Hôpital Mondor",
+            short_name="40001",
+            lat=48.798922410229,
+            lon=2.4537451531298,
+            capacity=28,
+        )
+    ]
 
     # WHEN
     local_data = StationDao().upsert_station_info(external_data)
@@ -38,7 +68,7 @@ def test_upsert_station_info_fail():
         lat=48.8322843827352,
         lon=2.32105516137791,
         is_virtual_station=True,
-        capacity="3"
+        capacity="3",
     )
 
     # WHEN / THEN
@@ -47,6 +77,7 @@ def test_upsert_station_info_fail():
 
 
 # Tests de get_by_id()
+
 
 def test_get_by_id_ok():
     """Recherche d'une station par son identifiant réussie"""
@@ -76,6 +107,7 @@ def test_get_by_id_fail():
 
 # Tests de get_nearby()
 
+
 def test_get_nearby_ok():
     """Recheche de stations proches réussie"""
 
@@ -103,6 +135,7 @@ def test_get_nearby_fail():
 
 
 # Tests de list_stations()
+
 
 def test_list_stations_ok():
     """Nous arrivons à obtenir la liste de l'ensemble des stations correspondant à la
