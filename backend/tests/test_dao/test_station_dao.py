@@ -72,7 +72,7 @@ def test_upsert_station_info_fail():
     )
 
     # WHEN / THEN
-    with pytest.raises(psycopg3.Error):
+    with pytest.raises(psycopg2.Error):
         StationDao().upsert_station_info(station)
 
 

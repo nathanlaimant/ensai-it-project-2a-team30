@@ -160,7 +160,7 @@ def test_bulk_insert_status_ok(station_status_dao):
     """Insertions du nouveau statut des stations réussies"""
 
     # GIVEN
-    number_status = len(status)
+    number_status = len(statuses)
 
     # WHEN
     updates_made = station_status_dao.bulk_insert_status(status)
@@ -174,7 +174,7 @@ def test_bulk_insert_status_fail(station_status_dao):
     à mettre à jour n'ont pas été intégrées en argument de la fonction"""
 
     # GIVEN
-    number_status = len(status)
+    number_status = len(statuses)
 
     # WHEN
     updates_made = station_status_dao.bulk_insert_status(status[:1])

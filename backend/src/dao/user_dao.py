@@ -20,7 +20,7 @@ class UserDAO:
     champs_modifiables = {
         "username": str,
         "email": str,
-        "password_hash": str,
+        "password_hashed": str,
         "role": str,
         "is_active": bool,
         "access_token": (str, type(None)),  # nullable
@@ -53,7 +53,7 @@ class UserDAO:
             if not isinstance(valeur, self.champs_modifiables[cle]):
                 return False
 
-            if cle in ("username", "email", "password_hash") and not valeur.strip():
+            if cle in ("username", "email", "password_hashed") and not valeur.strip():
                 return False
 
             if cle == "role" and valeur not in self.roles_valides:
@@ -94,7 +94,7 @@ class UserDAO:
     def _construire_requete(self, query_params: dict) -> tuple[str, dict]:
         """Construit la requête SQL et ses valeurs à partir de paramètres validés."""
         requete = (
-            "SELECT user_id, username, password_hash, email, role, "
+            "SELECT user_id, username, password_hashed, email, role, "
             "is_active, created_at, updated_at, access_token "
             'FROM "user"'
         )
@@ -133,17 +133,17 @@ class UserDAO:
         bool
             True si la création a réussi.
         """
-        with DBConnection().connection as conn:
+        with self._db_connection.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     """
-                    INSERT INTO "user" (username, password_hash, email, role)
-                    VALUES (%(username)s, %(password_hash)s, %(email)s, %(role)s)
+                    INSERT INTO "user" (username, password_hashed, email, role)
+                    VALUES (%(username)s, %(password_hashed)s, %(email)s, %(role)s)
                     RETURNING user_id;
                     """,
                     {
                         "username": user.username,
-                        "password_hash": pwd,
+                        "password_hashed": user.password_hashed,
                         "email": user.email,
                         "role": user.role,
                     },
@@ -169,20 +169,16 @@ class UserDAO:
         User
             Instance de l'utilisateur correspondant, ou None si introuvable.
         """
-        player = None
-        try:
-            with self._db_connection.get_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(
-                        "SELECT * FROM users WHERE id = %(user_id)s",
-                        {"user_id": user_id},
-                    )
-                    result = cursor.fetchone()
-                    if result:
-                        player = User(**result)
-        except Exception as e:
-            raise
-        return player
+        with self._db_connection.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    'SELECT * FROM "user" WHERE user_id = %(user_id)s',
+                    {"user_id": user_id},
+                )
+                result = cursor.fetchone()
+                if result:
+                    return User(**result)
+        return None
 
     def get_by_username(self, username: str) -> User:
         """
@@ -198,7 +194,7 @@ class UserDAO:
         User
             Instance de l'utilisateur correspondant, ou None si introuvable.
         """
-        with DBConnection().connection as conn:
+        with self._db_connection.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     """SELECT * FROM "user" WHERE username = %(username)s;""",
@@ -209,7 +205,7 @@ class UserDAO:
                     return User(
                         user_id=result["user_id"],
                         username=result["username"],
-                        password_hashed=result["password_hash"],
+                        password_hashed=result["password_hashed"],
                         email=result["email"],
                         role=result["role"],
                         is_active=result["is_active"],
@@ -234,7 +230,7 @@ class UserDAO:
         User
             Instance de l'utilisateur correspondant, ou None si introuvable.
         """
-        with DBConnection().connection as conn:
+        with self._db_connection.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     """SELECT * FROM "user" WHERE access_token = %(token)s;""",
@@ -245,7 +241,7 @@ class UserDAO:
                     return User(
                         user_id=result["user_id"],
                         username=result["username"],
-                        password_hashed=result["password_hash"],
+                        password_hashed=result["password_hashed"],
                         email=result["email"],
                         role=result["role"],
                         is_active=result["is_active"],
@@ -275,7 +271,7 @@ class UserDAO:
 
         requete, valeurs = self._construire_requete(query_params)
 
-        with DBConnection().connection as connection:
+        with self._db_connection.get_connection() as connection:
             with connection.cursor() as cursor:
                 cursor.execute(requete, valeurs)
                 lignes = cursor.fetchall()
@@ -284,7 +280,7 @@ class UserDAO:
             User(
                 user_id=ligne["user_id"],
                 username=ligne["username"],
-                password_hashed=ligne["password_hash"],
+                password_hashed=ligne["password_hashed"],
                 email=ligne["email"],
                 role=ligne["role"],
                 is_active=ligne["is_active"],
@@ -317,7 +313,7 @@ class UserDAO:
         requete, valeurs = self._construire_update(user_id, updates)
 
         try:
-            with DBConnection().connection as connection:
+            with self._db_connection.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(requete, valeurs)
                     nb_lignes = cursor.rowcount
@@ -345,7 +341,7 @@ class UserDAO:
         requete = 'DELETE FROM "user" WHERE user_id = %(user_id)s'
 
         try:
-            with DBConnection().connection as connection:
+            with self._db_connection.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(requete, {"user_id": user_id})
                     nb_lignes = cursor.rowcount

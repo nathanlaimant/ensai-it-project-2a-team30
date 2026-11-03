@@ -1,111 +1,143 @@
-from unittest.mock import MagicMock
-
 import pytest
+from _pytest.fixtures import FixtureRequest
 
 from business_object.station_information import StationInformation
 from dao.favorite_station_dao import FavoriteStationDAO
+from dao.station_dao import StationDAO
+from utils.db_connection import DbConnection
+from utils.settings import get_settings
+
+TEST_STATION_ID = "favorite-dao-test-station"
+TEST_USERNAME = "favorite-dao-test-user"
+TEST_EMAIL = "favorite-dao-test@example.test"
 
 
 @pytest.fixture
-def favorite_station_dao():
-    """Prépare un DAO et un curseur simulé pour les tests."""
-    db_connection = MagicMock()
-    connection = MagicMock()
-    cursor = MagicMock()
-    db_connection.get_connection.return_value.__enter__.return_value = connection
-    connection.cursor.return_value.__enter__.return_value = cursor
-    return FavoriteStationDAO(db_connection), cursor
+def favorite_dao_context(request: FixtureRequest):
+    settings = get_settings().model_copy(update={"postgres_schema": "veloscope_test"})
+    db_connection = DbConnection(settings)
+    station_dao = StationDAO(db_connection)
+    favorite_dao = FavoriteStationDAO(db_connection)
+
+    def remove_test_data():
+        with db_connection.get_connection() as connection:
+            with connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        'DELETE FROM "user" WHERE username = %(username)s',
+                        {"username": TEST_USERNAME},
+                    )
+                    cursor.execute(
+                        """
+                        DELETE FROM station_information
+                        WHERE station_id = %(station_id)s
+                        """,
+                        {"station_id": TEST_STATION_ID},
+                    )
+
+    def cleanup():
+        try:
+            remove_test_data()
+        finally:
+            db_connection.close()
+
+    request.addfinalizer(cleanup)
+    remove_test_data()
+
+    station = StationInformation(
+        station_id=TEST_STATION_ID,
+        name="Favorite DAO integration test",
+        short_name=None,
+        lat=48.8566,
+        lon=2.3522,
+        address="",
+        is_virtual_station=False,
+        station_area=None,
+        contact_phone=None,
+        capacity=10,
+        is_charging_station=False,
+    )
+    assert station_dao.upsert_station_info(station)
+    saved_station = station_dao.get_by_id(TEST_STATION_ID)
+    assert saved_station is not None
+    assert saved_station.station_id == TEST_STATION_ID
+
+    with db_connection.get_connection() as connection:
+        with connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO "user" (username, password_hashed, email, role)
+                    VALUES (%(username)s, 'test-hash', %(email)s, 'USER')
+                    RETURNING user_id
+                    """,
+                    {"username": TEST_USERNAME, "email": TEST_EMAIL},
+                )
+                user_id = cursor.fetchone()["user_id"]
+
+    return favorite_dao, station_dao, user_id, TEST_STATION_ID
 
 
-# Tests de add_favorite()
+def test_add_favorite_and_reject_duplicate(favorite_dao_context):
+    favorite_dao, _, user_id, station_id = favorite_dao_context
 
-def test_add_favorite_ok(favorite_station_dao):
-    """Réussite de l'ajout de la station à la liste des favoris"""
-
-    # GIVEN
-    dao, cursor = favorite_station_dao
-    user_id, station_id = 1, "station-1"
-    cursor.fetchone.return_value = {"station_id": station_id}
-
-    # WHEN
-    added = dao.add_favorite(user_id, station_id)
-
-    # THEN
-    assert added
+    assert favorite_dao.add_favorite(user_id, station_id)
+    assert not favorite_dao.add_favorite(user_id, station_id)
 
 
-def test_add_favorite_already_favorite(favorite_station_dao):
-    """La station est déjà présente dans la liste des favoris"""
+def test_add_favorite_for_unknown_user(favorite_dao_context):
+    favorite_dao, _, user_id, station_id = favorite_dao_context
 
-    # GIVEN
-    dao, cursor = favorite_station_dao
-    user_id, station_id = 1, "station-1"
-    cursor.fetchone.return_value = None
-
-    # WHEN
-    added = dao.add_favorite(user_id, station_id)
-
-    # THEN
-    assert not added
+    assert not favorite_dao.add_favorite(user_id + 10_000_000, station_id)
 
 
+def test_add_favorite_for_unknown_station(favorite_dao_context):
+    favorite_dao, _, user_id, _ = favorite_dao_context
 
-# Tests de count_favorites()
-
-def test_count_favorites_multiple_stations(favorite_station_dao):
-    """Nous arrivons à savoir combien d'utilisateurs ont mis les stations dans leur
-    liste des stations favorites"""
-
-    # GIVEN
-    dao, cursor = favorite_station_dao
-    station_ids = ["station-1", "station-2", "station-3"]
-    cursor.fetchall.return_value = [
-        {"station_id": "station-1", "favorite_count": 2},
-        {"station_id": "station-2", "favorite_count": 0},
-        {"station_id": "station-3", "favorite_count": 3},
-    ]
-
-    # WHEN
-    counts = dao.count_favorites(station_ids)
-
-    # THEN
-    assert isinstance(counts, dict) and len(counts) == 3
-    assert counts[station_ids[0]] == 2
-    assert counts[station_ids[1]] == 0
-    assert counts[station_ids[2]] == 3
+    assert not favorite_dao.add_favorite(user_id, "unknown-station")
 
 
-# Tests de remove_favorite()
+def test_list_favorites_from_database(favorite_dao_context):
+    favorite_dao, station_dao, user_id, station_id = favorite_dao_context
+    station = station_dao.get_by_id(station_id)
+    assert station is not None
+    assert favorite_dao.add_favorite(user_id, station_id)
 
-def test_remove_favorite_ok(favorite_station_dao):
-    """Nous réussissons à retirer la station de la liste des stations favorites
-    de l'utilisateur donné"""
+    favorites = favorite_dao.list_favorites({"user_id": user_id})
 
-    # GIVEN
-    dao, cursor = favorite_station_dao
-    user_id, station_id = 1, "station-1"
-    cursor.fetchone.return_value = {"station_id": station_id}
-
-    # WHEN
-    removed = dao.remove_favorite(user_id, station_id)
-
-    # THEN
-    assert removed
+    assert len(favorites) == 1
+    assert favorites[0].station_id == station.station_id
+    assert favorites[0].name == station.name
 
 
-def test_remove_favorite_not_favorite(favorite_station_dao):
-    """Nous ne pouvons pas retirer la station de la liste des favoris de l'utilisateur
-    car celle-ci n'en fait pas partie"""
+def test_list_favorites_for_unknown_user(favorite_dao_context):
+    favorite_dao, _, user_id, _ = favorite_dao_context
 
-    # GIVEN
-    dao, cursor = favorite_station_dao
-    user_id, station_id = 1, "station-1"
-    cursor.fetchone.return_value = None
-
-    # WHEN
-    removed = dao.remove_favorite(user_id, station_id)
-
-    # THEN
-    assert not removed
+    assert favorite_dao.list_favorites({"user_id": user_id + 10_000_000}) is None
 
 
+def test_count_favorites_from_database(favorite_dao_context):
+    favorite_dao, _, user_id, station_id = favorite_dao_context
+    assert favorite_dao.add_favorite(user_id, station_id)
+
+    assert favorite_dao.count_favorites([station_id]) == {station_id: 1}
+
+
+def test_count_favorites_for_unknown_station(favorite_dao_context):
+    favorite_dao, _, _, _ = favorite_dao_context
+
+    assert favorite_dao.count_favorites(["unknown-station"]) is None
+
+
+def test_count_favorites_for_empty_input(favorite_dao_context):
+    favorite_dao, _, _, _ = favorite_dao_context
+
+    assert favorite_dao.count_favorites([]) == {}
+
+
+def test_remove_favorite(favorite_dao_context):
+    favorite_dao, _, user_id, station_id = favorite_dao_context
+    assert favorite_dao.add_favorite(user_id, station_id)
+
+    assert favorite_dao.remove_favorite(user_id, station_id)
+    assert not favorite_dao.remove_favorite(user_id, station_id)

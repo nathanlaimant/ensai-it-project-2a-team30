@@ -192,7 +192,7 @@ async def update_user_info(
                 detail=f"{field} must be a non-empty string.",
             )
         if field == "password":
-            updates["password_hash"] = hash_password(value)
+            updates["password_hashed"] = hash_password(value)
         else:
             updates[field] = value.strip()
 
