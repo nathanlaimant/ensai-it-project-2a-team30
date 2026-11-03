@@ -1,209 +1,82 @@
+from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
+import pytest
+
 from business_object.user import User
-from dao.user_dao import UserDao
+from dao.user_dao import UserDAO
 from service.user_service import UserService
-
-user_list = [
-  User(),
-  User(),
-  User()
-]
+from utils.security import hash_password
 
 
-# Tests de singup()
+@pytest.fixture
+def user_dao():
+    return MagicMock(spec=UserDAO)
 
-def test_signup_ok():
-    """L'inscription d'un nouvel utilisateur est réussie"""
 
-    # GIVEN
-    username, email, password = "ausername", "anemail@email.fr", "acoolpassword"
-    UserDao().create_user(User(username=username, email=email, password=password)) = MagicMock(
-        return_value=True
+@pytest.fixture
+def user_service(user_dao):
+    return UserService(user_dao)
+
+
+def make_user(**overrides):
+    values = {
+        "user_id": 1,
+        "username": "alice",
+        "password_hashed": hash_password("secret"),
+        "email": "alice@example.org",
+        "role": "USER",
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+        "access_token": "old-token",
+    }
+    values.update(overrides)
+    return User(**values)
+
+
+def test_signup_creates_user_with_hashed_password(user_service, user_dao):
+    user_dao.create_user.return_value = True
+
+    assert user_service.signup(
+        {"username": " alice ", "email": " alice@example.org ", "password": "secret"}
     )
 
-    # WHEN
-    signed_up = UserService(
-        {
-            "username": username,
-            "email": email,
-            "password": password
-        }
+    created_user = user_dao.create_user.call_args.args[0]
+    assert created_user.username == "alice"
+    assert created_user.email == "alice@example.org"
+    assert created_user.password_hashed == hash_password("secret")
+
+
+def test_signup_rejects_invalid_data(user_service, user_dao):
+    assert not user_service.signup(
+        {"username": "alice", "email": "alice@example.org", "password": " "}
     )
-
-    # THEN
-    assert signed_up
+    user_dao.create_user.assert_not_called()
 
 
-def test_signup_fail():
-    """L'inscription d'u nouvel utilisateur échoue car un des éléments
-    n'a pas le bon format"""
+def test_login_rejects_unknown_user(user_service, user_dao):
+    user_dao.get_by_username.return_value = None
 
-    # GIVEN
-    username, email, password = "ausername", 1312, "acoolpassword"
-    UserDao().create_user(User(username=username, email=email, password=password)) = MagicMock(
-        return_value=False
-    )
-
-    # WHEN
-    signed_up = UserService(
-        {
-            "username": username,
-            "email": email,
-            "password": password
-        }
-    )
-
-    # THEN
-    assert not signed_up
+    assert user_service.login("alice", hash_password("secret")) is None
 
 
-# Tests de login()
+def test_logout_clears_user_token(user_service, user_dao):
+    user_dao.get_by_id.return_value = make_user()
+    user_dao.update_user.return_value = True
 
-def test_login_ok():
-    """L'identification est réussie"""
-
-    # GIVEN
-    username, password_hashed = "", ""
-    UserDao().get_by_username(username) = MagicMock(
-        return_value=User()
-    )
-
-    # WHEN
-    token = UserService().login(username, password_hashed)
-
-    # THEN
-    assert isinstance(token, str)
+    assert user_service.logout(1)
+    user_dao.update_user.assert_called_once_with(1, {"access_token": None})
 
 
-def test_login_wrong_info():
-    """L'identification échoue car le système ne reconnaît pas les informations fournies"""
+def test_list_users_and_update_user_delegate_to_dao(user_service, user_dao):
+    query_params = {"username": "alice", "limit": 1}
+    updates = {"email": "new@example.org"}
+    users = [make_user()]
+    user_dao.list_users.return_value = users
+    user_dao.update_user.return_value = True
 
-    # GIVEN
-    username, password_hashed = "", ""
-    UserDao().get_by_username(username) = MagicMock(
-        return_value=None
-    )
-
-    # WHEN
-    token = UserService().login(username, password_hashed)
-
-    # THEN
-    assert token is None
-
-
-# Tests de logout()
-
-def test_logout_ok():
-    """La déconnexion est réussie"""
-
-    # GIVEN
-    id = 1
-    UserDao().get_by_id(id) = MagicMock(return_value=User())
-
-    # WHEN
-    logged_out = UserService().logout(id)
-
-    # THEN
-    assert logged_out
-
-
-def test_logout_wrong_id():
-    """La déconnexion échoue car l'identifiant donné n'est pas reconnu"""
-
-    # GIVEN
-    id = 6566898089
-    UserDao().get_by_id(id) = MagicMock(return_value=None)
-
-    # WHEN
-    logged_out = UserService().logout(id)
-
-    # THEN
-    assert not logged_out
-
-
-# Tests de list_users()
-
-def test_list_users_no_params():
-    """Nous obtenons la liste des utilisateurs sans paramètres de tri"""
-
-    # GIVEN
-    UserDao().list_users() = MagicMock(return_value=user_list)
-
-    # WHEN
-    list = UserService().list_users()
-
-    # THEN
-    assert len(list) == len(user_list)
-    for u in list:
-        assert isinstance(u, User)
-
-
-def test_list_users_with_params():
-    """Nous obtenons la liste des utilisateurs avec un paramètre de tri"""
-
-    # GIVEN
-    ex_username = "m"
-    UserDao().list_users(query_params={"username": ex_username}) = MagicMock(return_value=user_list[2])
-
-    # WHEN
-    list = UserService().list_users(query_params={"username": ex_username})
-
-    # THEN
-    assert len(list) == 1
-    for u in list:
-        assert isinstance(u, User)
-
-
-def test_list_users_wrong_param():
-    """Nous n'obtenons pas de liste d'utilisateurs car un des paramètres rensignés n'est pas
-    dans le bon format"""
-
-    # GIVEN
-    ex_username = 2
-
-
-# Tests de update_user()
-
-def test_update_user_ok():
-    """La mise à jour d'un utilisateur est réussie"""
-
-    # GIVEN
-    id, update = 1, {"username": "newname"}
-    UserDao().update_user(id, update) = MagicMock(return_value=True)
-
-    # WHEN
-    updated = UserService().update_user(id, update)
-
-    # THEN
-    assert updated
-
-
-def test_update_user_wrong_id():
-    """Impossibilité de mettre à jour l'utilisateur car l'identifiant donné n'est pas
-    reconnu"""
-
-    # GIVEN
-    id, update = 565768, {"username": "newname"}
-    UserDao().update_user(id, update) = MagicMock(return_value=False)
-
-    # WHEN
-    updated = UserService().update_user(id, update)
-
-    # THEN
-    assert not updated
-
-
-def test_update_user_wrong_param():
-    """Impossibilité de mettre à jour l'utilisateur car l'un des paramètres donné n'est
-    pas dans le bon format"""
-
-    # GIVEN
-    id, update = 1, {"username": 3}
-    UserDao().update_user(id, update) = MagicMock(return_value=False)
-
-    # WHEN
-    updated = UserService().update_user(id, update)
-
-    # THEN
-    assert not updated
+    assert user_service.list_users(query_params) is users
+    assert user_service.update_user(1, updates)
+    user_dao.list_users.assert_called_once_with(query_params)
+    user_dao.update_user.assert_called_once_with(1, updates)
