@@ -53,7 +53,7 @@ statuses = [
     num_docks_available=11,
     operational_capacity=34,
     last_reported=debut + timedelta(seconds=1792526423),
-    vehicule_types_available=[{"mechanical": 16}, {"ebike": 7}],
+    vehicle_types_available =[{"mechanical": 16}, {"ebike": 7}],
     station_state="FUNCTIONAL"
   ),
   StationStatus(
@@ -62,7 +62,7 @@ statuses = [
     num_docks_available=7,
     operational_capacity=28,
     last_reported=debut + timedelta(seconds=1792526596),
-    vehicule_types_available=[{"mechanical": 12}, {"ebike": 9}],
+    vehicle_types_available=[{"mechanical": 12}, {"ebike": 9}],
     station_state="FUNCTIONAL"
   ),
   StationStatus(
@@ -71,7 +71,7 @@ statuses = [
     num_docks_available=25,
     operational_capacity=29,
     last_reported=debut + timedelta(seconds=1792526599),
-    vehicule_types_available=[{"mechanical": 1}, {"ebike": 3}],
+    vehicle_types_available=[{"mechanical": 1}, {"ebike": 3}],
     station_state="FUNCTIONAL"
   ),
   StationStatus(
@@ -80,7 +80,7 @@ statuses = [
     num_docks_available=15,
     operational_capacity=21,
     last_reported=debut + timedelta(seconds=1792526434),
-    vehicule_types_available=[{"mechanical": 4}, {"ebike": 2}],
+    vehicle_types_available=[{"mechanical": 4}, {"ebike": 2}],
     station_state="FUNCTIONAL"
   )
 ]

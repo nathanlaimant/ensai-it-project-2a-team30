@@ -1,82 +1,298 @@
 from datetime import datetime, timezone
-from unittest.mock import MagicMock
 
+import psycopg2
 import pytest
+
+from pathlib import Path
+
 
 from business_object.user import User
 from dao.user_dao import UserDAO
+from utils.db_connection import DbConnection
+from utils.settings import Settings
 from service.user_service import UserService
 from utils.security import hash_password
+from business_object.station_information import StationInformation
 
 
-@pytest.fixture
-def user_dao():
-    return MagicMock(spec=UserDAO)
+test_env_path = Path(__file__).resolve().parents[1] / ".test_env"
+
+
+@pytest.fixture(scope="session")
+def db_connection():
+    """Fournit un pool de connexions vers le schéma de test PostgreSQL."""
+    settings = Settings(_env_file=".test_env")
+    return DbConnection(settings)
 
 
 @pytest.fixture
 def user_service(user_dao):
+    """Retourne un UserService utilisant le vrai UserDAO de test."""
     return UserService(user_dao)
 
 
-def make_user(**overrides):
-    values = {
-        "user_id": 1,
-        "username": "alice",
-        "password_hashed": hash_password("secret"),
-        "email": "alice@example.org",
-        "role": "USER",
-        "is_active": True,
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
-        "access_token": "old-token",
+def test_signup(user_service, user_dao):
+    """L'inscription d'un nouvel utilisateur avec des données valides réussit."""
+
+    # GIVEN
+    username = "testuser"
+    dto = {
+        "username": username,
+        "email": f"{username}@example.org",
+        "password": "SecurePass1",
     }
-    values.update(overrides)
-    return User(**values)
+
+    # WHEN
+    result = user_service.signup(dto)
+
+    # THEN
+    assert result is True
+    user = user_dao.get_by_username(username)
+    assert user is not None
+    assert user.username == username
 
 
-def test_signup_creates_user_with_hashed_password(user_service, user_dao):
-    user_dao.create_user.return_value = True
 
-    assert user_service.signup(
-        {"username": " alice ", "email": " alice@example.org ", "password": "secret"}
+def test_signup_rejects_blank_password(user_service, user_dao):
+    """L'inscription échoue si le mot de passe est vide ou composé uniquement d'espaces."""
+
+    # GIVEN
+    dto = {
+        "username": "testuser",
+        "email": "blank@example.org",
+        "password": "   ",
+    }
+
+    # WHEN
+    result = user_service.signup(dto)
+
+    # THEN
+    assert result is False
+
+
+def test_signup_rejects_missing_field(user_service):
+    """L'inscription échoue si un champ obligatoire est absent."""
+
+    # GIVEN
+    dto = {
+        "username": "testuser",
+        # email manquant
+        "password": "SecureP@ss1",
+    }
+
+    # WHEN
+    result = user_service.signup(dto)
+
+    # THEN
+    assert result is False
+
+
+
+def test_login_ok(user_service, user_dao):
+    """La connexion réussit avec des identifiants corrects et retourne un token."""
+
+    # GIVEN 
+    username = "testuser"
+    password = "SecurePPass1"
+    user_service.signup(
+        {"username": username, "email": f"{username}@example.org", "password": password}
     )
 
-    created_user = user_dao.create_user.call_args.args[0]
-    assert created_user.username == "alice"
-    assert created_user.email == "alice@example.org"
-    assert created_user.password_hashed == hash_password("secret")
+    # WHEN
+    token = user_service.login(username, hash_password(password))
+
+    # THEN
+    assert token is not None
+    assert isinstance(token, str)
+    assert len(token) > 0
+    # Le token doit être stocké en base
+    user = user_dao.get_by_username(username)
+    assert user.access_token == token
 
 
-def test_signup_rejects_invalid_data(user_service, user_dao):
-    assert not user_service.signup(
-        {"username": "alice", "email": "alice@example.org", "password": " "}
+def test_login_rejects_unknown_username(user_service):
+    """La connexion échoue si le nom d'utilisateur n'existe pas en base."""
+
+    # GIVEN
+    username = "utilisateur_qui_nexiste_pas_du_tout"
+    password_hashed = hash_password("anypassword")
+
+    # WHEN
+    token = user_service.login(username, password_hashed)
+
+    # THEN
+    assert token is None
+
+
+def test_login_rejects_wrong_password(user_service):
+    """La connexion échoue si le mot de passe haché ne correspond pas."""
+
+    # GIVEN – on suppose que l'utilisateur 'vn' existe (cohérent avec test_user_dao.py)
+    username = "vn"
+    wrong_password_hashed = hash_password("wrongpassword_xxxxxxxxxxx")
+
+    # WHEN
+    token = user_service.login(username, wrong_password_hashed)
+
+    # THEN
+    assert token is None
+
+
+# ---------------------------------------------------------------------------
+# Tests de logout()
+# ---------------------------------------------------------------------------
+
+
+def test_logout_ok(user_service, user_dao):
+    """La déconnexion réussit et efface le token d'accès en base."""
+
+    # GIVEN – création et connexion d'un utilisateur
+    username = "testuser"
+    password = "SecurePPass1"
+    user_service.signup(
+        {"username": username, "email": f"{username}@example.org", "password": password}
     )
-    user_dao.create_user.assert_not_called()
+    token = user_service.login(username, hash_password(password))
+    assert token is not None
+    user = user_dao.get_by_username(username)
+    user_id = user.user_id
+
+    # WHEN
+    result = user_service.logout(user_id)
+
+    # THEN
+    assert result is True
+    user_after = user_dao.get_by_id(user_id)
+    assert user_after.access_token is None
 
 
-def test_login_rejects_unknown_user(user_service, user_dao):
-    user_dao.get_by_username.return_value = None
+def test_logout_fails_for_unknown_user(user_service):
+    """La déconnexion échoue si l'identifiant utilisateur n'existe pas en base."""
 
-    assert user_service.login("alice", hash_password("secret")) is None
+    # GIVEN
+    user_id = 9_999_999
+
+    # WHEN
+    result = user_service.logout(user_id)
+
+    # THEN
+    assert result is False
 
 
-def test_logout_clears_user_token(user_service, user_dao):
-    user_dao.get_by_id.return_value = make_user()
-    user_dao.update_user.return_value = True
+def test_logout_rejects_invalid_id_type(user_service):
+    """La déconnexion échoue si l'identifiant n'est pas un entier valide."""
 
-    assert user_service.logout(1)
-    user_dao.update_user.assert_called_once_with(1, {"access_token": None})
+    # GIVEN
+    user_id = "not_an_int"
+
+    # WHEN
+    result = user_service.logout(user_id)
+
+    # THEN
+    assert result is False
 
 
-def test_list_users_and_update_user_delegate_to_dao(user_service, user_dao):
-    query_params = {"username": "alice", "limit": 1}
-    updates = {"email": "new@example.org"}
-    users = [make_user()]
-    user_dao.list_users.return_value = users
-    user_dao.update_user.return_value = True
+# ---------------------------------------------------------------------------
+# Tests de list_users()
+# ---------------------------------------------------------------------------
 
-    assert user_service.list_users(query_params) is users
-    assert user_service.update_user(1, updates)
-    user_dao.list_users.assert_called_once_with(query_params)
-    user_dao.update_user.assert_called_once_with(1, updates)
+
+def test_list_users_no_params(user_service):
+    """list_users sans paramètre retourne une liste d'instances User non vide."""
+
+    # GIVEN
+    query_params = {}
+
+    # WHEN
+    users = user_service.list_users(query_params)
+
+    # THEN
+    assert isinstance(users, list)
+    assert len(users) >= 1
+    for u in users:
+        assert isinstance(u, User)
+
+
+def test_list_users_filter_by_username(user_service, user_dao):
+    """list_users filtré par username retourne uniquement l'utilisateur correspondant."""
+
+    # GIVEN – création d'un utilisateur connu
+    username = "testuser"
+    user_service.signup(
+        {"username": username, "email": f"{username}@example.org", "password": "SecurePPass1"}
+    )
+
+    # WHEN
+    users = user_service.list_users({"username": username})
+
+    # THEN
+    assert isinstance(users, list)
+    assert len(users) == 1
+    assert users[0].username == username
+
+
+def test_list_users_with_limit(user_service):
+    """list_users avec un paramètre limit retourne au plus N utilisateurs."""
+
+    # GIVEN
+    limit = 2
+
+    # WHEN
+    users = user_service.list_users({"limit": limit})
+
+    # THEN
+    assert isinstance(users, list)
+    assert len(users) <= limit
+
+
+# ---------------------------------------------------------------------------
+# Tests de update_user()
+# ---------------------------------------------------------------------------
+
+
+def test_update_user_ok(user_service, user_dao):
+    """La mise à jour d'un utilisateur existant avec des données valides réussit."""
+
+    # GIVEN – création d'un utilisateur
+    username = "testuser"
+    user_service.signup(
+        {"username": username, "email": f"{username}@example.org", "password": "SecureP@ss1"}
+    )
+    user = user_dao.get_by_username(username)
+    new_email = f"updated_{username}@example.org"
+
+    # WHEN
+    result = user_service.update_user(user.user_id, {"email": new_email})
+
+    # THEN
+    assert result is True
+    updated_user = user_dao.get_by_id(user.user_id)
+    assert updated_user.email == new_email
+
+
+def test_update_user_fails_for_unknown_id(user_service):
+    """La mise à jour échoue si l'identifiant utilisateur n'existe pas en base."""
+
+    # GIVEN
+    user_id = 9_999_998
+    updates = {"email": "ghost@example.org"}
+
+    # WHEN
+    result = user_service.update_user(user_id, updates)
+
+    # THEN
+    assert result is False
+
+
+def test_update_user_fails_for_invalid_field(user_service, user_dao):
+    """La mise à jour échoue si le champ à modifier n'est pas autorisé."""
+
+    # GIVEN – on utilise un utilisateur existant (id=20, cohérent avec test_user_dao.py)
+    user_id = 20
+    updates = {"champ_inexistant": "valeur"}
+
+    # WHEN
+    result = user_service.update_user(user_id, updates)
+
+    # THEN
+    assert result is False
