@@ -20,18 +20,19 @@ def db_connection():
 
 @pytest.fixture
 def favorite_station_dao(db_connection):
-    return StationDAO(db_connection)
+    return FavoriteStationDAO(db_connection)
 
 
+def test_add_favorite_ok(favorite_station_dao):
+    # GIVEN
+    station_id = "251039991"
+    user_id = 24
 
-def test_add_favorite(favorite_station_dao):
-    #Given
-    station_id="19179944124"
-    user_id = 21
+    # WHEN
+    added = favorite_station_dao.add_favorite(user_id, station_id)
 
-    #WHEN / THEN
-    with pytest.raises(psycopg2.Error):
-            favorite_station_dao.add_favorite(user_id, station_id)
+    # THEN
+    assert added
 
 
 def test_add_favorite_for_unknown_user(favorite_station_dao):
@@ -53,10 +54,11 @@ def test_add_favorite_for_unknown_station(favorite_station_dao):
     assert fav is False
 
 def test_list_favorites(favorite_station_dao):
-    #given
+    # given
     user_id = 21
     station_id = "19179944124"
     favorite_station_dao.add_favorite(user_id, station_id)
+
     #WHEN 
     favorites = favorite_station_dao.list_favorites({"user_id": user_id})
     #Then
@@ -66,7 +68,7 @@ def test_count_favorites_from_database(favorite_station_dao):
     #given  
     station_id = "19179944124"
     #WHEN / THEN
-    assert favorite_dao.count_favorites([station_id]) == {station_id: 1}
+    assert favorite_station_dao.count_favorites([station_id]) == {station_id: 1}
 
 
 def test_remove_favorite(favorite_station_dao):

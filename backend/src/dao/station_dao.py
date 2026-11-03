@@ -176,8 +176,8 @@ class StationDAO:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute(
-                        "SELECT *"
-                        "FROM station_information"
+                        "SELECT * "
+                        "FROM station_information "
                         "WHERE 2 * 6371200 * ASIN(SQRT(POWER(SIN(%(t)s * (lat - %(lat_dep)s) / 2), 2) + COS(lat * %(t)s) * COS(%(lat_dep)s * %(t)s) * POWER(SIN(%(t)s * (lon - %(lon_dep)s) / 2),2))) <= %(radius_meters)s;",
                         {
                             "lat_dep": lat,
@@ -186,7 +186,7 @@ class StationDAO:
                             "t": t,
                         },
                     )
-                    res = cursor.fetchone()
+                    res = cursor.fetchall()
         except Exception as e:
             logger.error(e)
             raise
@@ -195,7 +195,7 @@ class StationDAO:
         if res:
             stations_list = []
             for i in range(len(res)):
-                stations_list[i] = StationInformation(
+                stations_list.append(StationInformation(
                     station_id=res[i]["station_id"],
                     name=res[i]["name"],
                     short_name=res[i]["short_name"],
@@ -207,7 +207,7 @@ class StationDAO:
                     contact_phone=res[i]["contact_phone"],
                     capacity=res[i]["capacity"],
                     is_charging_station=res[i]["is_charging_station"],
-                )
+                ))
         return stations_list
 
     def list_stations(
@@ -267,32 +267,32 @@ class StationDAO:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute(
-                        "SELECT *"
-                        "FROM station_information"
-                        "WHERE station_id ILIKE %%(station_id)s%"
-                        "AND name ILIKE %%(name)s%"
-                        "AND short_name ILIKE %%(short_name)s%"
-                        "AND lat = %(lat)s"
-                        "AND lon = %(lon)s"
-                        "AND address ILIKE %%(address)s%"
-                        "AND is_virtual_station = %(is_virtual_station)s"
-                        "AND contact_phone ILIKE %%(contact_phone)s%"
-                        "AND capacity = %(capacity)s"
-                        "AND is_charging_station = %(is_charging_station)s",
+                        "SELECT * "
+                        "FROM station_information "
+                        "WHERE ((%(station_id)s IS NULL) OR (station_id ILIKE %(station_id)s)) "
+                        "AND ((%(name)s IS NULL) OR (name ILIKE %(name)s)) "
+                        "AND ((%(short_name)s IS NULL) OR (short_name ILIKE %(short_name)s)) "
+                        "AND ((%(lat)s IS NULL) OR (lat = %(lat)s)) "
+                        "AND ((%(lon)s IS NULL) OR (lon = %(lon)s)) "
+                        "AND ((%(address)s IS NULL) OR (address ILIKE %(address)s)) "
+                        "AND ((%(is_virtual_station)s IS NULL) OR (is_virtual_station = %(is_virtual_station)s)) "
+                        "AND ((%(contact_phone)s IS NULL) OR (contact_phone ILIKE %(contact_phone)s)) "
+                        "AND ((%(capacity)s IS NULL) OR (capacity = %(capacity)s)) "
+                        "AND ((%(is_charging_station)s IS NULL) OR (is_charging_station = %(is_charging_station)s));",
                         {
-                            "station_id": station_id,
-                            "name": name,
-                            "short_name": short_name,
+                            "station_id": "%" + station_id + "%" if station_id else None,
+                            "name": "%" + name + "%" if name else None,
+                            "short_name": "%" + short_name + "%" if short_name else None,
                             "lat": lat,
                             "lon": lon,
-                            "address": address,
+                            "address": "%" + address + "%" if address else None,
                             "is_virtual_station": is_virtual_station,
-                            "contact_phone": contact_phone,
+                            "contact_phone": "%" + contact_phone + "%" if contact_phone else None,
                             "capacity": capacity,
                             "is_charging_station": is_charging_station,
                         },
                     )
-                    res = cursor.fetchone()
+                    res = cursor.fetchall()
         except Exception as e:
             logger.error(e)
             raise
@@ -301,7 +301,7 @@ class StationDAO:
         if res:
             stations_list = []
             for i in range(len(res)):
-                stations_list[i] = StationInformation(
+                stations_list.append(StationInformation(
                     station_id=res[i]["station_id"],
                     name=res[i]["name"],
                     short_name=res[i]["short_name"],
@@ -313,10 +313,10 @@ class StationDAO:
                     contact_phone=res[i]["contact_phone"],
                     capacity=res[i]["capacity"],
                     is_charging_station=res[i]["is_charging_station"],
-                )
+                ))
             if isinstance(nb_pages, int) and nb_pages > 1:
                 sous_liste = []
                 for k in range(nb_pages):
-                    sous_liste[k] = stations_list[k * nb_pages : (k + 1) * nb_pages - 1]
+                    sous_liste[k] = stations_list[k * nb_pages: (k + 1) * nb_pages - 1]
                 stations_list = sous_liste
         return stations_list
