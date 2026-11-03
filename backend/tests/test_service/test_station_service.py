@@ -3,11 +3,13 @@ from unittest.mock import MagicMock
 
 from business_object.station_information import StationInformation
 from business_object.station_status import StationStatus
+from business_object.station_status_hourly import StationStatusHourly
 from dao.station_dao import StationDAO
 from dao.station_status_dao import StationStatusDAO
+from dao.station_status_hourly_dao import StationStatusHourlyDAO
 from service.station_service import StationService
 
-debut = datetime(year=1970, month=1, hour=0, minute=0, second=0)
+debut = datetime(year=1970, month=1, day=1)
 
 stations = [
   StationInformation(
@@ -81,6 +83,16 @@ statuses = [
     vehicule_types_available=[{"mechanical": 4}, {"ebike": 2}],
     station_state="FUNCTIONAL"
   )
+]
+
+latest_hour_status = [
+    StationStatusHourly(),
+    StationStatusHourly()
+]
+
+last_day_stats = [
+    [],
+    []
 ]
 
 
@@ -212,3 +224,42 @@ def test_get_station_history_with_params():
 
     # THEN
     assert len(history) == 0
+
+
+# Tests de get°nearby_recommendations():
+
+def test_get_nearby_recommendations_ok():
+    """Nous réussissons à obtenir des recommendations de stations
+    à partir des critères donnés"""
+
+    # GIVEN
+    lat, lon, radius_meters = 48.7757567, 2.4456565, 40
+    StationDAO().get_nearby = MagicMock(return_value=stations)
+    StationStatusDAO().get_latest_status = MagicMock(return_value=statuses)
+    StationStatusHourlyDAO().get_hourly_stats = MagicMock(return_value=latest_hour_status)
+    StationStatusHourlyDAO().get_daily_stats = MagicMock(return_value=last_day_stats)
+
+    # WHEN
+    recos = StationService().get_nearby_recommendations(lat, lon, radius_meters)
+
+    # THEN
+    assert isinstance(recos, list)
+    for r in recos:
+        assert isinstance(r, dict)
+
+
+def test_get_nearby_recommendations_fail():
+    """Nous échouons à obtenir des recommendations de stations à partir
+    des critères donnés car l'un des arguments est impossible'"""
+
+    # GIVEN
+    lat, lon, radius_meters = 1.565657, 67575786.9898, 20
+    StationDAO().get_nearby = MagicMock(return_value=None)
+
+    # WHEN
+    recos = StationService().get_nearby_recommendations(
+        lat, lon, radius_meters
+    )
+
+    # THEN
+    assert recos is None
