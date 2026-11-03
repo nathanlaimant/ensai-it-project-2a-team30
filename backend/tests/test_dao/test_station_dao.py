@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import psycopg2
 import pytest
 
 from business_object.station_information import StationInformation
