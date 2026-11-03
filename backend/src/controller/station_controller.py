@@ -1,5 +1,6 @@
 """Gère les consultations de stations."""
 
+from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -102,7 +103,7 @@ async def get_station_current_status(
     logger.info("Statut le plus récent de la station")
     # Recupère StationStatus le plus récent par le StationStatusDAO.get_latest_status
     # et StationStatusHourly le plus récent par le StationStatusHourlyDAO.get_latest_hourly_status.
-    # Puis, les convertit en StationStatusResponse. Ce classe peut être modifiée si nécessaire !
+    # Puis, les convertit en StationStatusResponse. Cette classe peut être modifiée si nécessaire !
     statut = station_service.get_station_current_status(station_id)
     if not statut:
         raise HTTPException(
@@ -150,12 +151,14 @@ async def get_station_history(
         Erreur 404 si la station n'est pas trouvée.
     """
     logger.info("Historique de la station")
-    # L'idée est qu'on limite les choix de periode à : 1h, 24h, 7 jours et 30 jours.
-    # Si 1h : on recupère seulement les StationStatus, sans score de fiabilité.
-    # Sinon : on recupère seulement les StationStatusHourly.
-    # Puis, les convertit en une liste de StationStatusResponse.
-    # Tu peux revenir à la methode précédente (avec start_time et end_time) si tu veux !
-    history = station_service.get_station_history(station_id, start_time, end_time)
+    end_time = timedelta(hours=1)
+    if period == TimePeriod.vingt_quatre_heures:
+        end_time = timedelta(days=1)
+    elif period == TimePeriod.sept_jours:
+        end_time = timedelta(days=7)
+    elif period == TimePeriod.trente_jours:
+        end_time = timedelta(days=30)
+    history = station_service.get_station_history(station_id, datetime.now, datetime.now - end_time)
     if not history:
         raise HTTPException(
             status_code=404, detail="Station (id={station_id}) non trouvée."
