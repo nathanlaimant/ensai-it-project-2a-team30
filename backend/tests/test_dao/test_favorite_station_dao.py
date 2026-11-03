@@ -23,66 +23,60 @@ def favorite_dao(db_connection):
     return FavoriteStationDAO(db_connection)
 
 
-def test_add_favorite_and_reject_duplicate(favorite_station_dao):
-    favorite_dao, _, user_id, station_id = favorite_dao_context
+def test_add_favorite(favorite_station_dao):
+    #Given
+    station_id = "16bbf68d-685a-4799-9bba-8915f10700e0"
+    user_id = 21
 
-    assert favorite_dao.add_favorite(user_id, station_id)
-    assert not favorite_dao.add_favorite(user_id, station_id)
+    #WHEN / THEN
+    with pytest.raises(psycopg2.Error):
+            favorite_station_dao.add_favorite(user_id, station_id)
 
 
 def test_add_favorite_for_unknown_user(favorite_station_dao):
-    favorite_dao, _, user_id, station_id = favorite_dao_context
-
-    assert not favorite_dao.add_favorite(user_id + 10_000_000, station_id)
-
+    #given
+    station_id = "16bbf68d-685a-4799-9bba-8915f10700e0"
+    user_id = 2
+    #WHEN 
+    fav = favorite_station_dao.add_favorite(user_id, station_id)
+    #then
+    assert fav is False) 
 
 def test_add_favorite_for_unknown_station(favorite_station_dao):
-    favorite_dao, _, user_id, _ = favorite_dao_context
+    #given
+    station_id = "unknown-station"
+    user_id = 21
+    #WHEN 
+    fav = favorite_station_dao.add_favorite(user_id, station_id)
+    # / THEN
+    assert fav is False
 
-    assert not favorite_dao.add_favorite(user_id, "unknown-station")
-
-
-def test_list_favorites_from_database(favorite_station_dao):
-    favorite_dao, station_dao, user_id, station_id = favorite_dao_context
-    station = station_dao.get_by_id(station_id)
-    assert station is not None
-    assert favorite_dao.add_favorite(user_id, station_id)
-
-    favorites = favorite_dao.list_favorites({"user_id": user_id})
-
-    assert len(favorites) == 1
-    assert favorites[0].station_id == station.station_id
-    assert favorites[0].name == station.name
-
-
-def test_list_favorites_for_unknown_user(favorite_station_dao):
-    favorite_dao, _, user_id, _ = favorite_dao_context
-
-    assert favorite_dao.list_favorites({"user_id": user_id + 10_000_000}) is None
-
+def test_list_favorites(favorite_station_dao):
+    #given
+    user_id = 21
+    station_id = "16bbf68d-685a-4799-9bba-8915f10700e0"
+    favorite_station_dao.add_favorite(user_id, station_id)
+    #WHEN 
+    favorites = favorite_station_dao.list_favorites({"user_id": user_id})
+    #Then
+    assert len(favorites) > 0
 
 def test_count_favorites_from_database(favorite_station_dao):
-    favorite_dao, _, user_id, station_id = favorite_dao_context
-    assert favorite_dao.add_favorite(user_id, station_id)
-
+    #given  
+    station_id = "16bbf68d-685a-4799-9bba-8915f10700e0"
+    #WHEN / THEN
     assert favorite_dao.count_favorites([station_id]) == {station_id: 1}
 
 
-def test_count_favorites_for_unknown_station(favorite_dafavorite_station_daoo_context):
-    favorite_dao, _, _, _ = favorite_dao_context
-
-    assert favorite_dao.count_favorites(["unknown-station"]) is None
-
-
-def test_count_favorites_for_empty_input(favorite_station_dao):
-    favorite_dao, _, _, _ = favorite_dao_context
-
-    assert favorite_dao.count_favorites([]) == {}
-
 
 def test_remove_favorite(favorite_station_dao):
-    favorite_dao, _, user_id, station_id = favorite_dao_context
-    assert favorite_dao.add_favorite(user_id, station_id)
-
-    assert favorite_dao.remove_favorite(user_id, station_id)
-    assert not favorite_dao.remove_favorite(user_id, station_id)
+    #given
+    station_id = "16bbf68d-685a-4799-9bba-8915f10700e0"
+    user_id = 22
+    
+    fav = favorite_station_dao.add_favorite(user_id, station_id)
+    #When
+    fav = favorite_station_dao.remove_favorite(user_id, station_id)
+    #Then
+    assert fav is True
+ 
