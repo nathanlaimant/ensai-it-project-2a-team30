@@ -1116,6 +1116,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "apscheduler" },
+    { name = "email-validator" },
     { name = "fastapi" },
     { name = "haversine" },
     { name = "httpx" },
@@ -1147,6 +1148,7 @@ requires-dist = [
     { name = "bandit", marker = "extra == 'dev'" },
     { name = "black", marker = "extra == 'dev'" },
     { name = "coverage", marker = "extra == 'dev'" },
+    { name = "email-validator" },
     { name = "fastapi" },
     { name = "haversine" },
     { name = "httpx" },

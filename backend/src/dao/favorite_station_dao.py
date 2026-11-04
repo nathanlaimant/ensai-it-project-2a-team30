@@ -35,11 +35,11 @@ class FavoriteStationDAO:
                         FROM "user" AS u
                         CROSS JOIN station_information AS s
                         WHERE u.user_id = %(user_id)s
-                          AND s.station_id = %(station_id)s
+                          AND s.station_id::text = %(station_id)s::text
                         ON CONFLICT (user_id, station_id) DO NOTHING
                         RETURNING station_id
                         """,
-                        {"user_id": user_id, "station_id": station_id},
+                        {"user_id": user_id, "station_id": str(station_id)},
                     )
                     added = cursor.fetchone() is not None
                 conn.commit()

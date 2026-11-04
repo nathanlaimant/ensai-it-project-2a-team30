@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-from src.utils.api_client import APIClient
+from utils.api_client import APIClient
 
 st.set_page_config(page_title="Stations - VeloScope", page_icon="🚲", layout="wide")
 

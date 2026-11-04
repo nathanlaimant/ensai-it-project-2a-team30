@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from business_object.user import User
 from dao.user_dao import UserDAO
-from schema.user_model import LoginResponse
+from schema.user_model import LoginResponse, UserSearchRequest
 from utils.security import generate_user_token, hash_password
 from utils.token_cache import app_token_cache
 
@@ -128,13 +128,30 @@ class UserService:
             app_token_cache.delete(user.access_token)
         return True
 
-    def list_users(self, query_params: dict) -> list[User]:
+    def get_user_by_id(self, user_id: int) -> User | None:
+        """
+        Récupère un utilisateur à partir de son identifiant.
+
+        Parameters
+        ----------
+        user_id : int
+            Identifiant de l'utilisateur à récupérer.
+
+        Returns
+        -------
+        User
+            Instance représentant l'utilisateur.
+            Ne renvoie rien si l'identifiant n'existe pas en base.
+        """
+        return self.user_dao.get_by_id(user_id)
+
+    def list_users(self, query_params: UserSearchRequest) -> list[User]:
         """
         Liste les utilisateurs selon des critères de recherche.
 
         Parameters
         ----------
-        query_params : dict
+        query_params : UserSearchRequest
             Critères de filtrage et/ou de pagination.
 
         Returns
@@ -143,7 +160,15 @@ class UserService:
             Liste des utilisateurs correspondant aux critères.
             Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
-        return self.user_dao.list_users(query_params)
+        return self.user_dao.list_users(
+            user_id=query_params.user_id,
+            username=query_params.username,
+            email=query_params.email,
+            role=query_params.role,
+            is_active=query_params.is_active,
+            limit=query_params.size,
+            offset=(query_params.page - 1) * query_params.size,
+        )
 
     def update_user(self, user_id: int, updates: dict) -> bool:
         """

@@ -17,6 +17,7 @@ dependencies = [
     "httpx",
     "apscheduler",
     "haversine",
+    "email-validator",
 ]
 
 # Dependencies used only for development, not for runtime

@@ -108,13 +108,13 @@ async def get_user_info(
     UserResponse
         Instance représentant l'utilisateur authentifié.
     """
-    users = user_service.list_users({"user_id": user_id, "limit": 1})
-    if not users:
+    user = user_service.get_user_by_id(user_id)
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User profile not found.",
         )
-    return UserResponse.model_validate(users[0])
+    return UserResponse.model_validate(user)
 
 
 @router.put("/user/info", response_model=MessageResponse, tags=["Users"])
