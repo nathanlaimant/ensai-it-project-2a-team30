@@ -46,6 +46,7 @@ def test_add_favorite_for_unknown_user(favorite_station_dao):
     # THEN
     assert fav is False
 
+
 def test_add_favorite_for_unknown_station(favorite_station_dao):
     # GIVEN
     station_id = "1954223"
@@ -57,6 +58,7 @@ def test_add_favorite_for_unknown_station(favorite_station_dao):
     # THEN
     assert fav is False
 
+
 def test_list_favorites(favorite_station_dao):
     # GIVEN
     user_id = 2
@@ -64,7 +66,7 @@ def test_list_favorites(favorite_station_dao):
     favorite_station_dao.add_favorite(user_id, station_id)
 
     # WHEN
-    favorites = favorite_station_dao.list_favorites({"user_id": user_id})
+    favorites = favorite_station_dao.list_favorites(user_id)
 
     # THEN
     assert len(favorites) > 0
@@ -89,4 +91,3 @@ def test_remove_favorite(favorite_station_dao):
 
     # THEN
     assert fav is True
- 

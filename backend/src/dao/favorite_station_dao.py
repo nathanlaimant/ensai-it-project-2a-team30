@@ -49,14 +49,20 @@ class FavoriteStationDAO:
                 conn.rollback()
             raise
 
-    def list_favorites(self, query_params: dict) -> list[StationInformation]:
+    def list_favorites(
+        self, user_id: int, page: int = 1, size: int = 10
+    ) -> list[StationInformation] | None:
         """
         Liste les stations favorites d'un utilisateur.
 
         Parameters
         ----------
-        query_params: dict
+        user_id : int
             Identifiant de l'utilisateur.
+        page : int
+            Numéro de la page à récupérer.
+        size : int
+            Nombre de stations par page.
 
         Returns
         -------
@@ -64,8 +70,6 @@ class FavoriteStationDAO:
             Liste des stations favorites de l'utilisateur.
             Ne renvoie rien si l'utilisateur n'est pas reconnu avec son identifiant.
         """
-        user_id = query_params["user_id"]
-
         conn = None
         try:
             with self._db_connection.get_connection() as conn:
@@ -97,8 +101,9 @@ class FavoriteStationDAO:
                           ON s.station_id = f.station_id
                         WHERE f.user_id = %(user_id)s
                         ORDER BY f.created_at DESC, s.station_id
+                        LIMIT %(size)s OFFSET %(offset)s
                         """,
-                        {"user_id": user_id},
+                        {"user_id": user_id, "size": size, "offset": (page - 1) * size},
                     )
                     rows = cursor.fetchall()
                     conn.commit()
@@ -108,7 +113,7 @@ class FavoriteStationDAO:
                 conn.rollback()
             raise
 
-    def count_favorites(self, station_ids: list[str]) -> dict[str, int]:
+    def count_favorites(self, station_ids: list[str]) -> dict[str, int] | None:
         """
         Compte le nombre d'utilisateurs ayant mis chaque station en favori.
 
@@ -119,7 +124,7 @@ class FavoriteStationDAO:
 
         Returns
         -------
-        dict
+        dict | None
             Dictionnaire associant chaque identifiant de station à son
             nombre de favoris.
             Ne renvoie rien si un ou plusieurs identifiants de stations ne sont
@@ -144,9 +149,7 @@ class FavoriteStationDAO:
                         {"station_ids": station_ids},
                     )
                     rows = cursor.fetchall()
-                    counts = {
-                        row["station_id"]: row["favorite_count"] for row in rows
-                    }
+                    counts = {row["station_id"]: row["favorite_count"] for row in rows}
                     if len(counts) != len(set(station_ids)):
                         conn.commit()
                         return None

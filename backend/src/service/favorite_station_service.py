@@ -34,15 +34,19 @@ class FavoriteStationService:
         return self.favorite_dao.add_favorite(user_id, station_id)
 
     def list_favorites(
-        self, query_params: dict
+        self, user_id: int, page: int = 1, size: int = 10
     ) -> list[StationInformation] | None:
         """
         Liste les stations favorites selon des critères de recherche.
 
         Parameters
         ----------
-        query_params: dict
+        user_id : int
             Identifiant de l'utilisateur.
+        page : int
+            Numéro de la page à récupérer.
+        size : int
+            Nombre de stations par page.
 
         Returns
         -------
@@ -50,7 +54,7 @@ class FavoriteStationService:
             Liste des stations favorites correspondant aux critères.
             Ne renvoie rien si l'utilisateur n'est pas reconnu.
         """
-        return self.favorite_dao.list_favorites(query_params)
+        return self.favorite_dao.list_favorites(user_id, page, size)
 
     def remove_favorite_station(self, user_id: int, station_id: str) -> bool:
         """

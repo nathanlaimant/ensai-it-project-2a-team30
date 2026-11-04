@@ -1,6 +1,6 @@
 """Gère les requètes sur les stations favorites."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from business_object.station_information import StationInformation
 from dependencies.authentication import get_current_user
@@ -19,9 +19,10 @@ async def add_favorite(
     station_id: str,
     user_id: int = Depends(get_current_user),
     favorite_service: FavoriteStationService = Depends(get_favorite_station_service),
-) -> str:
+) -> MessageResponse:
     """
     Ajoute une station aux favoris de l'utilisateur courant.
+    **Authentification requise** : Fournir l'header `Authorization: Bearer <access_token>`.
 
     Parameters
     ----------
@@ -30,7 +31,7 @@ async def add_favorite(
 
     Returns
     -------
-    str
+    MessageResponse
         Message de confirmation de l'ajout.
     """
     logger.info(
@@ -41,22 +42,26 @@ async def add_favorite(
             status_code=status.HTTP_409_CONFLICT,
             detail="Impossible d'ajouter cette station aux favoris.",
         )
-    return "Station ajoutée aux favoris."
+    return MessageResponse(message="Station ajoutée aux favoris.")
 
 
-@router.post("/", response_model=list[StationInfoResponse])
+@router.get("/", response_model=list[StationInfoResponse])
 async def list_favorites(
-    payload: dict,
+    page: int = Query(default=1, ge=1),
+    size: int = Query(default=10, ge=1, le=100),
     user_id: int = Depends(get_current_user),
     favorite_service: FavoriteStationService = Depends(get_favorite_station_service),
 ) -> list[StationInformation]:
     """
     Liste les stations favorites de l'utilisateur courant.
+    **Authentification requise** : Fournir l'header `Authorization: Bearer <access_token>`.
 
     Parameters
     ----------
-    payload : dict
-        Critères de filtrage et/ou de pagination.
+    page : int
+        Numéro de la page à récupérer.
+    size : int
+        Nombre de stations par page..
 
     Returns
     -------
@@ -64,8 +69,7 @@ async def list_favorites(
         Liste des stations favorites correspondant aux critères.
     """
     logger.info("Liste des stations favorites de l'utilisateur %s", user_id)
-    query_params = {**payload, "user_id": user_id}
-    favorites = favorite_service.list_favorites(query_params)
+    favorites = favorite_service.list_favorites(user_id, page, size)
     if favorites is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -74,14 +78,15 @@ async def list_favorites(
     return favorites
 
 
-@router.delete("/{station_id}")
+@router.delete("/{station_id}", response_model=MessageResponse)
 async def remove_favorite(
     station_id: str,
     user_id: int = Depends(get_current_user),
     favorite_service: FavoriteStationService = Depends(get_favorite_station_service),
-) -> str:
+) -> MessageResponse:
     """
     Retire une station des favoris de l'utilisateur courant.
+    **Authentification requise** : Fournir l'header `Authorization: Bearer <access_token>`.
 
     Parameters
     ----------
@@ -90,7 +95,7 @@ async def remove_favorite(
 
     Returns
     -------
-    str
+    MessageResponse
         Message de confirmation du retrait.
     """
     logger.info(
@@ -101,4 +106,4 @@ async def remove_favorite(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Cette station n'est pas présente dans les favoris.",
         )
-    return "Station retirée des favoris."
+    return MessageResponse(message="Station retirée des favoris.")
