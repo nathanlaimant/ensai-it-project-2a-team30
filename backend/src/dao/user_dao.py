@@ -1,5 +1,6 @@
 import psycopg2
-
+from typing import Tuple, Type, Union
+from typing import Any
 from business_object.user import User
 from utils.db_connection import DbConnection
 
@@ -17,7 +18,7 @@ class UserDAO:
 
     roles_valides = {"ADMIN", "USER"}
 
-    champs_modifiables = {
+    champs_modifiables: dict[str, type | tuple[type, ...]] = {
         "username": str,
         "email": str,
         "password_hashed": str,
@@ -31,7 +32,9 @@ class UserDAO:
         affectations = [f"{cle} = %({cle})s" for cle in updates]
         affectations.append("updated_at = now()")
 
-        requete = f'UPDATE "user" SET {", ".join(affectations)} WHERE user_id = %(user_id)s'
+        requete = (
+            f'UPDATE "user" SET {", ".join(affectations)} WHERE user_id = %(user_id)s'
+        )
 
         valeurs = {**updates, "user_id": user_id}
         return requete, valeurs
@@ -97,7 +100,11 @@ class UserDAO:
             'FROM "user"'
         )
 
-        conditions = [f"{cle} = %({cle})s" for cle in query_params if cle in self.filtres_autorises]
+        conditions = [
+            f"{cle} = %({cle})s"
+            for cle in query_params
+            if cle in self.filtres_autorises
+        ]
         if conditions:
             requete += " WHERE " + " AND ".join(conditions)
 
@@ -144,6 +151,7 @@ class UserDAO:
                 )
                 res = cursor.fetchone()
                 if res:
+                    conn.commit()
                     user.user_id = res["user_id"]
                     return True
 
@@ -174,7 +182,7 @@ class UserDAO:
                     return User(**result)
         return None
 
-    def get_by_username(self, username: str) -> User:
+    def get_by_username(self, username: str) -> User | None:
         """
         Récupère un utilisateur à partir de son nom d'utilisateur.
 
@@ -210,7 +218,7 @@ class UserDAO:
 
         return None
 
-    def get_by_access_token(self, token: str) -> User:
+    def get_by_access_token(self, token: str) -> User | None:
         """
         Récupère un utilisateur à partir de son jeton d'accès.
 
@@ -296,25 +304,35 @@ class UserDAO:
             offset = params_dict.get("offset")
             nb_pages = params_dict.get("nb_pages")
 
-        if user_id is not None and (isinstance(user_id, bool) or not isinstance(user_id, int) or user_id <= 0):
+        if user_id is not None and (
+            isinstance(user_id, bool) or not isinstance(user_id, int) or user_id <= 0
+        ):
             return []
         if username is not None and not isinstance(username, str):
             return []
         if email is not None and not isinstance(email, str):
             return []
-        if role is not None and (not isinstance(role, str) or role not in ("ADMIN", "USER")):
+        if role is not None and (
+            not isinstance(role, str) or role not in ("ADMIN", "USER")
+        ):
             return []
         if is_active is not None and not isinstance(is_active, bool):
             return []
-        if limit is not None and (isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0):
+        if limit is not None and (
+            isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0
+        ):
             return []
-        if offset is not None and (isinstance(offset, bool) or not isinstance(offset, int) or offset < 0):
+        if offset is not None and (
+            isinstance(offset, bool) or not isinstance(offset, int) or offset < 0
+        ):
             return []
-        if nb_pages is not None and (isinstance(nb_pages, bool) or not isinstance(nb_pages, int) or nb_pages <= 0):
+        if nb_pages is not None and (
+            isinstance(nb_pages, bool) or not isinstance(nb_pages, int) or nb_pages <= 0
+        ):
             return []
 
-        conditions = []
-        params = {}
+        conditions: list[str] = []
+        params: dict[str, Any] = {}
 
         if user_id is not None:
             conditions.append("user_id = %(user_id)s")
@@ -365,26 +383,17 @@ class UserDAO:
             print(f"Erreur SQL dans list_users : {e}")
             raise
 
-        users_list = []
-        if res:
-            for row in res:
-                users_list.append(
-                    User(
-                        user_id=row["user_id"],
-                        username=row["username"],
-                        password_hashed=row["password_hashed"],
-                        email=row["email"],
-                        role=row["role"],
-                        is_active=row["is_active"],
-                    )
-                )
-
-            if isinstance(nb_pages, int) and nb_pages > 1:
-                taille_page = max(1, len(users_list) // nb_pages)
-                decoupage = [users_list[i : i + taille_page] for i in range(0, len(users_list), taille_page)]
-                return decoupage[:nb_pages]
-
-        return users_list
+        return [
+            User(
+                user_id=row["user_id"],
+                username=row["username"],
+                password_hashed=row["password_hashed"],
+                email=row["email"],
+                role=row["role"],
+                is_active=row["is_active"],
+            )
+            for row in res or []
+        ]
 
     def update_user(self, user_id: int, updates: dict) -> bool:
         """
@@ -412,6 +421,7 @@ class UserDAO:
                 with connection.cursor() as cursor:
                     cursor.execute(requete, valeurs)
                     nb_lignes = cursor.rowcount
+                    connection.commit()
         except psycopg2.IntegrityError:
             return False
 
@@ -440,6 +450,7 @@ class UserDAO:
                 with connection.cursor() as cursor:
                     cursor.execute(requete, {"user_id": user_id})
                     nb_lignes = cursor.rowcount
+                    connection.commit()
         except psycopg2.IntegrityError:
             return False
 

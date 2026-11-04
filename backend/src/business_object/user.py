@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 class User:
@@ -35,8 +35,8 @@ class User:
         email: str,
         role: str,
         is_active: bool = True,
-        created_at: datetime = datetime.now,
-        updated_at: datetime = datetime.now,
+        created_at: datetime = datetime.now(UTC),
+        updated_at: datetime = datetime.now(UTC),
         access_token: str | None = None,
         user_id: int | None = None,
     ):

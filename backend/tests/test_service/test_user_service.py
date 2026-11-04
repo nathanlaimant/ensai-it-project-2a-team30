@@ -52,7 +52,6 @@ def test_signup(user_service, user_dao):
     assert user.username == username
 
 
-
 def test_signup_rejects_blank_password(user_service, user_dao):
     """L'inscription échoue si le mot de passe est vide ou composé uniquement d'espaces."""
 
@@ -87,39 +86,36 @@ def test_signup_rejects_missing_field(user_service):
     assert result is False
 
 
-
 def test_login_rejects_wrong_password(user_service):
     """La connexion échoue si le mot de passe haché ne correspond pas."""
 
-    # GIVEN 
+    # GIVEN
     username = "testuser"
     password = "SecurePPass1"
     user_service.signup(
         {"username": username, "email": f"{username}@example.org", "password": password}
     )
-    
+
     # WHEN
-    token = user_service.login(username, wrong_password_hashed)
+    login_response = user_service.login(username, wrong_password_hashed)
 
     # THEN
-    assert token is None
-
+    assert login_response is None
 
 
 def test_logout_ok(user_service, user_dao):
     """La déconnexion réussit et efface le token d'accès en base."""
 
-    # GIVEN 
+    # GIVEN
     username = "testuser"
     password = "SecurePPass1"
     user_service.signup(
         {"username": username, "email": f"{username}@example.org", "password": password}
     )
-    token = user_service.login(username, hash_password(password))
-    assert token is not None
+    login_response = user_service.login(username, hash_password(password))
+    assert login_response is not None
 
-    user = user_dao.get_by_username(username)
-    user_id = user.user_id
+    user_id = login_response.user_id
 
     # WHEN
     result = user_service.logout(user_id)
@@ -154,14 +150,17 @@ def test_logout_rejects_invalid_id_type(user_service):
     assert result is False
 
 
-
 def test_list_users_filter_by_username(user_service, user_dao):
     """list_users filtré par username retourne uniquement l'utilisateur correspondant."""
 
     # GIVEN –
     username = "testuser"
     user_service.signup(
-        {"username": username, "email": f"{username}@example.org", "password": "SecurePPass1"}
+        {
+            "username": username,
+            "email": f"{username}@example.org",
+            "password": "SecurePPass1",
+        }
     )
 
     # WHEN
@@ -171,14 +170,17 @@ def test_list_users_filter_by_username(user_service, user_dao):
     assert len(users) == 1
 
 
-
 def test_update_user_ok(user_service, user_dao):
     """La mise à jour d'un utilisateur existant avec des données valides réussit."""
 
-    # GIVEN 
+    # GIVEN
     username = "testuser"
     user_service.signup(
-        {"username": username, "email": f"{username}@example.org", "password": "SecureP@ss1"}
+        {
+            "username": username,
+            "email": f"{username}@example.org",
+            "password": "SecureP@ss1",
+        }
     )
     user = user_dao.get_by_username(username)
     new_email = f"updated_{username}@example.org"
@@ -188,6 +190,7 @@ def test_update_user_ok(user_service, user_dao):
 
     # THEN
     assert result is True
+
 
 def test_update_user_fails_for_unknown_id(user_service):
     """La mise à jour échoue si l'identifiant utilisateur n'existe pas en base."""
@@ -201,4 +204,3 @@ def test_update_user_fails_for_unknown_id(user_service):
 
     # THEN
     assert result is False
-
