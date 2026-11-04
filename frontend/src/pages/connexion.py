@@ -14,8 +14,6 @@ if "token" not in st.session_state:
 if "username" not in st.session_state:
     st.session_state["username"] = None
 
-client: APIClient = st.session_state["api_client"]
-
 # Déjà connecté : retour à la page principale
 if st.session_state["token"] is not None:
     st.switch_page(PAGE_PRINCIPALE)
@@ -35,21 +33,21 @@ if btn_login:
     else:
         try:
             res = api_client.post("/login", data={"username": login_user, "password": login_pwd})
-        except requests.exceptions.RequestException:
-            st.error("Le serveur est injoignable. Réessayez plus tard.")
+        except requests.exceptions.RequestException as e:
+            if "401" in str(e):
+                st.error("Identifiants incorrects.")
+            else:
+                st.error("Le serveur est injoignable. Réessayez plus tard.")
             st.stop()
 
-        if res.status_code == 200:
-            data = res.json()
-            st.session_state["token"] = data["access_token"]
-            st.session_state["username"] = data["username"]
-            client.set_token(data["access_token"])
-            st.switch_page(PAGE_PRINCIPALE)
-        elif res.status_code == 401:
-            st.error("Identifiants incorrects.")
-        else:
-            try:
-                detail = str(res.json().get("detail", "Erreur lors de la connexion."))
-            except ValueError:
-                detail = "Erreur lors de la connexion."
-            st.error(f"Échec ({res.status_code}) : {detail}")
+        st.write(str(res))
+        st.session_state["token"] = res["access_token"]
+        st.session_state["username"] = res["username"]
+        # api_client.set_token(res["access_token"])
+        st.switch_page(PAGE_PRINCIPALE)
+            
+        try:
+            detail = str(res.json().get("detail", "Erreur lors de la connexion."))
+        except ValueError:
+            detail = "Erreur lors de la connexion."
+        st.error(f"Échec ({res.status_code}) : {detail}")
