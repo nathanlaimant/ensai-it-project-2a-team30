@@ -7,13 +7,15 @@ from dao.user_dao import UserDAO
 from utils.db_connection import DbConnection
 from utils.settings import Settings
 
-test_env_path = Path(__file__).resolve().parents[1] / ".test_env"
+test_env_path = Path(__file__).resolve().parents[2] / ".test_env"
 
 
 @pytest.fixture(scope="session")
 def db_connection():
-    """Provides a connection pool to the test database schema."""
-    settings = Settings(_env_file=".test_env")
+    """Fournit un pool de connexion à la base de données de test."""
+    settings = Settings(
+        _env_file=test_env_path if test_env_path.exists() else ".test_env"
+    )
     return DbConnection(settings)
 
 
