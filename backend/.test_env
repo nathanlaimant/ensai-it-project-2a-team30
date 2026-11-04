@@ -1,8 +1,8 @@
-postgres_host=postgresql-cnpg-998826-rw.user-antop
+postgres_host=postgresql-cnpg-836219-rw.user-nathanlaimant
 postgres_port=5432
 postgres_database=defaultdb
-postgres_user=user-antop
-postgres_password=ttzgw6bbblk8ypfo3x7l
+postgres_user=user-nathanlaimant
+postgres_password=ik49h0o2rnecpp8xgv8u
 postgres_schema=veloscope_test
 
 system_information_feed_url=http://mock
