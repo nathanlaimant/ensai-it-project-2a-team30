@@ -5,6 +5,26 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
+class LoginRequest(BaseModel):
+    """
+    Informations nécessaires à l'authentification
+
+    Parameters
+    ----------
+    username: str
+        Nom d'utilisateur
+    password: str
+        Mot de passe non hashed
+
+    Returns
+    -------
+    LoginRequest
+        Instance représentant les informations nécessaires à l'authentification.
+    """
+
+    username: str
+    password: str
+
 class LoginResponse(BaseModel):
     """
     Informations de session retournées après une authentification réussie.
