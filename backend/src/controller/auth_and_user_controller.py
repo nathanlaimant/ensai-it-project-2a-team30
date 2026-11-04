@@ -79,7 +79,7 @@ async def logout(
 ) -> MessageResponse:
     """
     Déconnecte l'utilisateur actuellement authentifié.
-    Authentification requise : Fournir l'header `Authorization: Bearer <token>`.
+    **Authentification requise** : Fournir l'header `Authorization: Bearer <access_token>`.
 
     Returns
     -------
@@ -101,6 +101,7 @@ async def get_user_info(
 ) -> UserResponse:
     """
     Récupère les informations du profil de l'utilisateur courant.
+    **Authentification requise** : Fournir l'header `Authorization: Bearer <access_token>`.
 
     Returns
     -------
@@ -124,6 +125,7 @@ async def update_user_info(
 ) -> MessageResponse:
     """
     Met à jour les informations du profil de l'utilisateur courant.
+    **Authentification requise** : Fournir l'header `Authorization: Bearer <access_token>`.
 
     Parameters
     ----------
