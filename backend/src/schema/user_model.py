@@ -149,6 +149,9 @@ class UserUpdateRequest(BaseModel):
     email: EmailStr | None = Field(default=None, min_length=1)
     password: str | None = Field(default=None, min_length=1)
 
+    # Interdit les champs supplémentaires non définis dans le modèle
+    model_config = ConfigDict(extra="forbid")
+
     @model_validator(mode="after")
     def validate_at_least_one_field(self) -> UserUpdateRequest:
         if not any(v is not None for v in (self.username, self.email, self.password)):

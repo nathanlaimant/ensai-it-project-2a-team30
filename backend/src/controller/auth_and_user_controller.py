@@ -5,7 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies.authentication import get_current_user
 from dependencies.service import get_user_service
 from schema.common_model import MessageResponse
-from schema.user_model import LoginRequest, LoginResponse, SignupRequest, UserResponse
+from schema.user_model import (
+    LoginRequest,
+    LoginResponse,
+    SignupRequest,
+    UserResponse,
+    UserUpdateRequest,
+)
 from service.user_service import UserService
 from utils.log_utils import get_logger
 from utils.security import hash_password
@@ -119,7 +125,7 @@ async def get_user_info(
 
 @router.put("/user/info", response_model=MessageResponse, tags=["Users"])
 async def update_user_info(
-    payload: dict,
+    payload: UserUpdateRequest,
     user_service: UserService = Depends(get_user_service),
     user_id: int = Depends(get_current_user),
 ) -> MessageResponse:
@@ -129,39 +135,21 @@ async def update_user_info(
 
     Parameters
     ----------
-    payload : dict
+    payload : UserUpdateRequest
         Champs du profil à mettre à jour.
 
     Returns
     -------
-    str
+    MessageResponse
         Message de confirmation de la mise à jour.
     """
-    if not isinstance(payload, dict) or not payload:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="At least one profile field must be provided.",
-        )
-
-    allowed_fields = {"username", "email", "password"}
-    if not set(payload).issubset(allowed_fields):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Only username, email and password can be updated.",
-        )
-
     updates = {}
-    for field, value in payload.items():
-        if not isinstance(value, str) or not value.strip():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"{field} must be a non-empty string.",
-            )
-        if field == "password":
-            updates["password_hashed"] = hash_password(value)
-        else:
-            updates[field] = value.strip()
-
+    if payload.username:
+        updates["username"] = payload.username.strip()
+    if payload.email:
+        updates["email"] = payload.email.strip()
+    if payload.password:
+        updates["password_hashed"] = hash_password(payload.password)
     if not user_service.update_user(user_id, updates):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
