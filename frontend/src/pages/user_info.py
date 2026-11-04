@@ -1,7 +1,10 @@
+from datetime import datetime
+
 import pandas as pd
 import streamlit as st
 from utils.api_client import APIClient
 from utils.log_init import get_page_logger
+from utils.security import hash_password
 
 st.title("Paramètres d'utilisateur")
 
@@ -23,6 +26,23 @@ else:
             logger.info(f"Profil de l'utilisateur {user["username"]} trouvé !")
 
             st.write(f"Nom d'utilisateur : {user["username"]}")
+            new_username = st.text_input("Nouveau nom d'utilisateur :")
+            if new_username:
+                user["username"] = new_username # Update dans la DAO
+                user["updated_at"] = datetime.now
+
+            st.write(f"E-mail : {user["email"]}")
+            new_email = st.text_input("Nouvel email :", type="email")
+            if new_email:
+                user["email"] = new_email
+                user["updated_at"] = datetime.now
+            
+            st.write(f"Mot de passe : {user["password_hashed"]}")
+            new_password = st.text_input("Nouveau mot de passe :", type="password")
+            if new_password:
+                user["password_hashed"] = hash_password(new_password)
+                user["updated_at"] = datetime.now
+            
     except ValueError:
         logger.error(f"Format d'identifiant invalide {user_id}")
         st.error("Format d'identifiant invalide dans l'URL")
