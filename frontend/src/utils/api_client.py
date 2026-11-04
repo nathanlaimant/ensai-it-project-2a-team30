@@ -3,6 +3,9 @@ from typing import Any, Optional
 
 import requests
 
+DEFAULT_TIMEOUT = int(os.getenv("BACKEND_TIMEOUT", 5))
+API_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
+
 
 class APIClient:
     """
@@ -184,3 +187,5 @@ class APIClient:
     def get_stations(self, params: dict | None = None) -> requests.Response:
         """Récupère les stations auprès de l'API avec d'éventuels filtres."""
         return self.get("/stations", params=params)
+
+api_client = APIClient(API_URL)

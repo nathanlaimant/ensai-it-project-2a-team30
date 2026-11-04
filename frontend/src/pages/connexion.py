@@ -1,6 +1,7 @@
 import requests
 import streamlit as st
-from utils.api_client import APIClient
+from utils.api_client import APIClient, api_client
+from utils.security import hash_password
 
 PAGE_PRINCIPALE = "app.py"  # fichier lancé avec "streamlit run"
 
@@ -33,7 +34,7 @@ if btn_login:
         st.warning("Veuillez renseigner votre identifiant et votre mot de passe.")
     else:
         try:
-            res = client.login(login_user.strip(), login_pwd)
+            res = api_client.post("/login", data={"username": login_user, "password": login_pwd})
         except requests.exceptions.RequestException:
             st.error("Le serveur est injoignable. Réessayez plus tard.")
             st.stop()
