@@ -1,5 +1,6 @@
 """Gère les requètes d'authentification et de modifications de comptes utilisateurs."""
 
+import psycopg2
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from dependencies.authentication import get_current_user
@@ -39,7 +40,12 @@ async def signup(
     MessageResponse
         Message de confirmation ou identifiant de l'utilisateur créé.
     """
-    if not user_service.signup(payload.model_dump()):
+    signed_up = False
+    try:
+        signed_up = user_service.signup(payload.model_dump())
+    except psycopg2.IntegrityError:
+        signed_up = False
+    if not signed_up:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Unable to create the account. Username or email may already exist.",

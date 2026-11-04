@@ -1,6 +1,7 @@
-import psycopg2
-from typing import Tuple, Type, Union
 from typing import Any
+
+import psycopg2
+
 from business_object.user import User
 from utils.db_connection import DbConnection
 

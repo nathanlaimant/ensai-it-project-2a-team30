@@ -10,6 +10,8 @@ class MessageResponse(BaseModel):
 
     Parameters
     ----------
+    status : str
+        Statut de l'opération effectuée. Peut être "success" ou "error".
     message : str
         Message décrivant le résultat de l'opération effectuée.
 
@@ -19,6 +21,7 @@ class MessageResponse(BaseModel):
         Instance représentant la confirmation renvoyée.
     """
 
+    status: str = "success"
     message: str
 
 
