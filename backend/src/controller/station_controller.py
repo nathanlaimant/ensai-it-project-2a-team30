@@ -9,9 +9,11 @@ from dependencies.service import get_station_service
 from schema.common_model import TimePeriod
 from schema.station_model import (
     StationInfoResponse,
+    StationRecommendationRequest,
     StationSearchRequest,
     StationStatusResponse,
 )
+from service.station_service import StationService
 from utils.log_utils import get_logger
 
 router = APIRouter(prefix="/station", tags=["Stations"])
@@ -166,23 +168,18 @@ async def get_station_history(
     return history
 
 
-@router.get("/nearby_recos", response_model=list[dict])
+@router.post("/recommendations", response_model=list[dict])
 async def get_nearby_recommendations(
-    payload: dict, reco_service=Depends(get_station_service)
+    payload: StationRecommendationRequest,
+    reco_service: StationService = Depends(get_station_service),
 ) -> Any:
     """
     Recommande des stations à proximité d'une position donnée.
 
     Parameters
     ----------
-    lat: int
-        Latitude de l'adresse données
-
-    longitude: int
-        Longitude de l'adresse données
-
-    radius_meters: int
-        Rayon envisagé pour la recherche de stations
+    payload: StationRecommendationRequest
+        Critères de recherche pour les stations recommandées.
 
     Returns
     -------
@@ -191,7 +188,4 @@ async def get_nearby_recommendations(
         pertinentes (distance, disponibilité, etc.).
     """
     logger.info("Proposition de stations à proximité")
-    recos = reco_service.get_nearby_recommendations(payload)
-    if not recos:
-        raise HTTPException()
-    return recos
+    return reco_service.get_nearby_recommendations(payload)
