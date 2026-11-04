@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from business_object.user import User
 from dao.user_dao import UserDAO
+from schema.user_model import LoginResponse
 from utils.security import generate_user_token, hash_password
 from utils.token_cache import app_token_cache
 
@@ -39,7 +40,10 @@ class UserService:
         username = dto.get("username")
         email = dto.get("email")
         password = dto.get("password")
-        if not all(isinstance(value, str) and value.strip() for value in (username, email, password)):
+        if not all(
+            isinstance(value, str) and value.strip()
+            for value in (username, email, password)
+        ):
             return False
 
         now = datetime.now(timezone.utc)
@@ -55,7 +59,7 @@ class UserService:
         )
         return self.user_dao.create_user(user)
 
-    def login(self, username: str, password_hashed: str) -> str | None:
+    def login(self, username: str, password_hashed: str) -> LoginResponse | None:
         """
         Authentifie un utilisateur à partir de ses identifiants.
 
@@ -68,8 +72,8 @@ class UserService:
 
         Returns
         -------
-        str
-            Jeton d'accès de la session créée.
+        LoginResponse
+            Informations de session (ex: jeton d'accès, données utilisateur).
             Ne renvoie rien si les deux arguments ne correspondent pas au nom d'utilisateur
             et au mot de passe d'un même utilisateur.
         """
@@ -90,7 +94,11 @@ class UserService:
             return None
 
         app_token_cache.set(access_token, (user.user_id, user.role))
-        return access_token
+        return LoginResponse(
+            user_id=user.user_id,
+            username=user.username,
+            access_token=access_token,
+        )
 
     def logout(self, user_id: int) -> bool:
         """
