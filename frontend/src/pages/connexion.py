@@ -1,7 +1,6 @@
 import requests
 import streamlit as st
-
-from src.utils.api_client import APIClient
+from utils.api_client import APIClient
 
 PAGE_PRINCIPALE = "app.py"  # fichier lancé avec "streamlit run"
 
