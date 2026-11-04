@@ -25,8 +25,8 @@ def favorite_station_dao(db_connection):
 
 def test_add_favorite_ok(favorite_station_dao):
     # GIVEN
-    station_id = "251039991"
-    user_id = 24
+    station_id = "213688169"
+    user_id = 4
 
     # WHEN
     added = favorite_station_dao.add_favorite(user_id, station_id)
@@ -38,7 +38,7 @@ def test_add_favorite_ok(favorite_station_dao):
 def test_add_favorite_for_unknown_user(favorite_station_dao):
     # GIVEN
     station_id = "19179944124"
-    user_id = 2
+    user_id = 21
 
     # WHEN
     fav = favorite_station_dao.add_favorite(user_id, station_id)
@@ -49,7 +49,7 @@ def test_add_favorite_for_unknown_user(favorite_station_dao):
 def test_add_favorite_for_unknown_station(favorite_station_dao):
     # GIVEN
     station_id = "1954223"
-    user_id = 21
+    user_id = 2
 
     # WHEN
     fav = favorite_station_dao.add_favorite(user_id, station_id)
@@ -59,7 +59,7 @@ def test_add_favorite_for_unknown_station(favorite_station_dao):
 
 def test_list_favorites(favorite_station_dao):
     # GIVEN
-    user_id = 21
+    user_id = 2
     station_id = "19179944124"
     favorite_station_dao.add_favorite(user_id, station_id)
 
@@ -81,7 +81,7 @@ def test_count_favorites_from_database(favorite_station_dao):
 def test_remove_favorite(favorite_station_dao):
     # GIVEN
     station_id = "19179944124"
-    user_id = 22
+    user_id = 2
     fav = favorite_station_dao.add_favorite(user_id, station_id)
 
     # WHEN
