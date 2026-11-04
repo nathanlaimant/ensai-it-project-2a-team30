@@ -166,7 +166,7 @@ async def get_station_history(
     return history
 
 
-@router.get("/", response_model=list[dict])
+@router.get("/nearby_recos", response_model=list[dict])
 async def get_nearby_recommendations(
     payload: dict, reco_service=Depends(get_station_service)
 ) -> Any:
