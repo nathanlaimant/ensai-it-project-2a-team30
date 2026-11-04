@@ -63,7 +63,7 @@ async def login(
 
     Parameters
     ----------
-    payload : dict
+    payload : LoginRequest
         Identifiants de connexion (ex: username, mot de passe).
 
     Returns
