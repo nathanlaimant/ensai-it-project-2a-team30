@@ -5,6 +5,24 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
+class SignupRequest(BaseModel):
+    """
+    Informations nécessaires à l'inscription.
+
+    Parameters
+    ----------
+    username: str
+        Nom d'utilisateur choisi
+    email: str
+        Email de connexion
+    password: str
+        Mot de passe non hashed
+    """
+
+    username: str
+    email: str
+    password: str
+
 class LoginRequest(BaseModel):
     """
     Informations nécessaires à l'authentification
