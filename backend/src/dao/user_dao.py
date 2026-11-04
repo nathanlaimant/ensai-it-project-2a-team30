@@ -1,5 +1,6 @@
 import psycopg2
-
+from typing import Tuple, Type, Union
+from typing import Any
 from business_object.user import User
 from utils.db_connection import DbConnection
 
@@ -17,7 +18,7 @@ class UserDAO:
 
     roles_valides = {"ADMIN", "USER"}
 
-    champs_modifiables = {
+    champs_modifiables: dict[str, type | tuple[type, ...]] = {
         "username": str,
         "email": str,
         "password_hashed": str,
@@ -181,7 +182,7 @@ class UserDAO:
                     return User(**result)
         return None
 
-    def get_by_username(self, username: str) -> User:
+    def get_by_username(self, username: str) -> User | None:
         """
         Récupère un utilisateur à partir de son nom d'utilisateur.
 
@@ -217,7 +218,7 @@ class UserDAO:
 
         return None
 
-    def get_by_access_token(self, token: str) -> User:
+    def get_by_access_token(self, token: str) -> User | None:
         """
         Récupère un utilisateur à partir de son jeton d'accès.
 
@@ -330,8 +331,8 @@ class UserDAO:
         ):
             return []
 
-        conditions = []
-        params = {}
+        conditions: list[str] = []
+        params: dict[str, Any] = {}
 
         if user_id is not None:
             conditions.append("user_id = %(user_id)s")
@@ -382,29 +383,17 @@ class UserDAO:
             print(f"Erreur SQL dans list_users : {e}")
             raise
 
-        users_list = []
-        if res:
-            for row in res:
-                users_list.append(
-                    User(
-                        user_id=row["user_id"],
-                        username=row["username"],
-                        password_hashed=row["password_hashed"],
-                        email=row["email"],
-                        role=row["role"],
-                        is_active=row["is_active"],
-                    )
-                )
-
-            if isinstance(nb_pages, int) and nb_pages > 1:
-                taille_page = max(1, len(users_list) // nb_pages)
-                decoupage = [
-                    users_list[i : i + taille_page]
-                    for i in range(0, len(users_list), taille_page)
-                ]
-                return decoupage[:nb_pages]
-
-        return users_list
+        return [
+            User(
+                user_id=row["user_id"],
+                username=row["username"],
+                password_hashed=row["password_hashed"],
+                email=row["email"],
+                role=row["role"],
+                is_active=row["is_active"],
+            )
+            for row in res or []
+        ]
 
     def update_user(self, user_id: int, updates: dict) -> bool:
         """
