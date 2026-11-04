@@ -14,12 +14,12 @@ from schema.station_model import (
 )
 from utils.log_utils import get_logger
 
-router = APIRouter()
+router = APIRouter(prefix="/station", tags=["Stations"])
 
 logger = get_logger(__name__)
 
 
-@router.get("/{station_id}", response_model=StationInfoResponse, tags=["Stations"])
+@router.get("/{station_id}", response_model=StationInfoResponse)
 async def get_station_info(
     station_id: str, station_service=Depends(get_station_service)
 ) -> Any:
@@ -52,7 +52,7 @@ async def get_station_info(
     return station
 
 
-@router.post("/", response_model=list[StationInfoResponse], tags=["Stations"])
+@router.post("/", response_model=list[StationInfoResponse])
 async def list_stations(
     payload: StationSearchRequest, station_service=Depends(get_station_service)
 ) -> Any:
@@ -76,9 +76,7 @@ async def list_stations(
     return stations
 
 
-@router.get(
-    "/{station_id}/status", response_model=StationStatusResponse, tags=["Stations"]
-)
+@router.get("/{station_id}/status", response_model=StationStatusResponse)
 async def get_station_current_status(
     station_id: str, station_service=Depends(get_station_service)
 ) -> Any:
@@ -158,7 +156,9 @@ async def get_station_history(
         end_time = timedelta(days=7)
     elif period == TimePeriod.trente_jours:
         end_time = timedelta(days=30)
-    history = station_service.get_station_history(station_id, datetime.now, datetime.now - end_time)
+    history = station_service.get_station_history(
+        station_id, datetime.now, datetime.now - end_time
+    )
     if not history:
         raise HTTPException(
             status_code=404, detail="Station (id={station_id}) non trouvée."
@@ -166,10 +166,9 @@ async def get_station_history(
     return history
 
 
-@router.get("/", response_model=list[dict], tags=["Stations"])
+@router.get("/", response_model=list[dict])
 async def get_nearby_recommendations(
-    payload: dict,
-    reco_service=Depends(get_station_service)
+    payload: dict, reco_service=Depends(get_station_service)
 ) -> Any:
     """
     Recommande des stations à proximité d'une position donnée.
