@@ -156,7 +156,12 @@ async def update_user_info(
         updates["email"] = payload.email.strip()
     if payload.password:
         updates["password_hashed"] = hash_password(payload.password)
-    if not user_service.update_user(user_id, updates):
+    updated = False
+    try:
+        updated = user_service.update_user(user_id, updates)
+    except psycopg2.IntegrityError:
+        updated = False
+    if not updated:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Unable to update the profile. Username or email may already exist.",

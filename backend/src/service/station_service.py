@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from haversine import haversine
 
 from business_object.station_information import StationInformation
-from business_object.station_state import StationState
 from dao.station_dao import StationDAO
 from dao.station_status_dao import StationStatusDAO
 from dao.station_status_hourly_dao import StationStatusHourlyDAO
+from schema.station_model import StationRecommendationRequest
 
 
 class StationService:
@@ -47,7 +47,7 @@ class StationService:
         StationInformation
             Station avec l'identifiant correspondant.
         """
-        return StationDAO().get_by_id(station_id)
+        return self.station_dao.get_by_id(station_id)
 
     def list_stations(
         self,
@@ -61,7 +61,7 @@ class StationService:
         contact_phone: str = None,
         capacity: int = None,
         is_charging_station: bool = None,
-        nb_pages: int = None
+        nb_pages: int = None,
     ) -> list[StationInformation]:
         """
         Liste les stations selon des critères de recherche.
@@ -99,7 +99,7 @@ class StationService:
             Liste des stations correspondant aux critères.
             Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
-        return StationDAO().list_stations(
+        return self.station_dao.list_stations(
             station_id,
             name,
             short_name,
@@ -110,7 +110,7 @@ class StationService:
             contact_phone,
             capacity,
             is_charging_station,
-            nb_pages
+            nb_pages,
         )
 
     def get_station_current_status(self, station_id: str) -> dict:
@@ -128,7 +128,7 @@ class StationService:
             État courant de la station (vélos/docks disponibles, etc.).
             Ne renvoie rien si la station n'est pas identifiable.
         """
-        statut = StationStatusDAO().get_latest_status(station_id)
+        statut = self.status_dao.get_latest_status(station_id)
         return {
             "last_reported": statut.last_reported,
             "station_state": statut.station_state,
@@ -136,14 +136,11 @@ class StationService:
             "num_bikes_available": statut.num_bikes_available,
             "vehicule_types_available": statut.vehicule_types_available,
             "num_docks_available": statut.num_docks_available,
-            "vehicule_docks_available": statut.vehicule_docks_available
+            "vehicule_docks_available": statut.vehicule_docks_available,
         }
 
     def get_station_history(
-        self,
-        station_id: str,
-        start_time: datetime = None,
-        end_time: datetime = None
+        self, station_id: str, start_time: datetime = None, end_time: datetime = None
     ) -> list[dict]:
         """
         Récupère l'historique d'état d'une station sur une période donnée.
@@ -166,44 +163,24 @@ class StationService:
             Ne renvoie rien si la station n'est pas identifiable, ou l'un des autres
             critères n'est pas dans le bon format.
         """
-        station_exists = StationDAO().get_by_id(station_id)
+        station_exists = self.station_dao.get_by_id(station_id)
         if not station_exists:
             return None
         if start_time > end_time:
             temp, start_time = start_time, end_time
             end_time = temp
-        return StationStatusDAO().get_one_station_history(station_id, start_time, end_time)
+        return self.hourly_dao.get_one_station_history(station_id, start_time, end_time)
 
     def get_nearby_recommendations(
-        self,
-        lat: int, lon: int, radius_meters: int,
-        op_cap: int = None,
-        station_state: StationState | str = None,
-        score_min: float = None
+        self, criteria: StationRecommendationRequest
     ) -> list[dict]:
         """
         Recommande des stations à proximité d'une position donnée.
 
         Arguments
         ---------
-        lat: int
-            Latitude de l'adresse données
-
-        longitude: int
-            Longitude de l'adresse données
-
-        radius_meters: int
-            Rayon envisagé pour la recherche de stations
-
-        op_cap: int = None
-            Capacité opérationnelle voulue pour la station
-
-        station_state: StationState | str = None
-            État global de la station
-            (StationState.FULL, StationState.EMPTY, StationState.FUNCTIONAL)
-
-        score_min: float = None
-            Score de fiabilité minimal fixé pour la recherche
+        criteria: StationRecommendationRequest
+            Critères de recherche pour les stations recommandées.
 
         Returns
         -------
@@ -212,40 +189,72 @@ class StationService:
             pertinentes (distance, disponibilité, fiabilité, etc.).
             Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
-        stations = StationDAO().get_nearby(lat, lon, radius_meters)
+        stations = self.station_dao.get_nearby(
+            criteria.lat, criteria.lon, criteria.radius_meters
+        )
 
         res = None
         if stations:
-            statuses, hourly_status, daily_reliability = [], [], []
+            res = []
             for i in range(len(stations)):
-                statuses[i] = StationStatusDAO().get_latest_status(stations[i].station_id)
-                hourly_status[i] = StationStatusHourlyDAO().get_hourly_stats(
-                    stations[i].station_id,
-                    statuses[i].last_reported,
-                    statuses[i].last_reported - timedelta(hours=1)
-                )[0]
+                if stations[i].station_id is not None:
+                    latest_status = self.status_dao.get_latest_status(
+                        stations[i].station_id
+                    )
+                    hourly_status = self.hourly_dao.get_latest_hourly_status(
+                        stations[i].station_id
+                    )
+                    daily_status = self.hourly_dao.aggregate_daily_stats(
+                        stations[i].station_id,
+                        date.today() - timedelta(days=1),
+                        date.today(),
+                    )
 
-                daily_reliability[i] = StationStatusHourlyDAO().get_daily_stats(
-                    stations[i].station_id,
-                    statuses[i].last_reported,
-                    statuses[i].last_reported - timedelta(days=1)
-                )[10]["avg_reliability_score"]
+                    if criteria.op_cap and (
+                        not latest_status
+                        or latest_status.operational_capacity < criteria.op_cap
+                    ):
+                        continue
 
-                la, lo = stations[i].lat, stations[i].lon
-                res[i] = {
-                    "station_id": stations[i].station_id,
-                    "name": stations[i].station_id,
-                    "distance_meters": haversine((la, lo), (lat, lon), unit='m'),
-                    "operational_capacity": hourly_status[i].operational_capacity,
-                    "station_state": hourly_status[i].station_state,
-                    "last_hour_reliability": hourly_status[i].reliability_score,
-                    "last_day_reliability": daily_reliability[i]
-                }
-                if hourly_status[i].operational_capacity < op_cap:
-                    res.pop()
-                if hourly_status[i].station_state != station_state:
-                    res.pop()
-                if hourly_status[i].reliability_score < score_min:
-                    res.pop()
-            sorted(res, key=lambda r: r["distance_meters"])
+                    if criteria.station_state and (
+                        not latest_status
+                        or latest_status.station_state != criteria.station_state
+                    ):
+                        continue
+
+                    if criteria.score_min and (
+                        not hourly_status
+                        or hourly_status.reliability_score < criteria.score_min
+                    ):
+                        continue
+
+                    la, lo = stations[i].lat, stations[i].lon
+                    res.append(
+                        {
+                            "station_id": stations[i].station_id,
+                            "name": stations[i].name,
+                            "distance_meters": haversine(
+                                (la, lo), (criteria.lat, criteria.lon), unit="m"
+                            ),
+                            "operational_capacity": (
+                                latest_status.operational_capacity
+                                if latest_status
+                                else None
+                            ),
+                            "station_state": (
+                                latest_status.station_state if latest_status else None
+                            ),
+                            "last_hour_reliability": (
+                                hourly_status.reliability_score
+                                if hourly_status
+                                else None
+                            ),
+                            "last_day_reliability": (
+                                daily_status[0]["avg_reliability_score"]
+                                if daily_status
+                                else None
+                            ),
+                        }
+                    )
+            return sorted(res, key=lambda r: r["distance_meters"])
         return res

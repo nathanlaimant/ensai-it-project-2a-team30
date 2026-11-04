@@ -129,3 +129,31 @@ class StationStatusResponse(BaseModel):
     vehicle_docks_available: dict[str, int] | None = None
     station_state: StationState
     reliability_score: float | None = None
+
+
+class StationRecommendationRequest(BaseModel):
+    """
+    Critères de recherche pour la recommandation de stations à proximité.
+
+    Parameters
+    ----------
+    lat : float
+        Latitude du point de référence pour la recherche.
+    lon : float
+        Longitude du point de référence pour la recherche.
+    radius_meters : float
+        Rayon de recherche autour du point de référence, en mètres.
+    op_cap : int | None
+        Capacité opérationnelle minimale souhaitée pour les stations recommandées.
+    station_state : StationState | None
+        État souhaité des stations recommandées (FULL, EMPTY, FUNCTIONAL).
+    score_min : float | None
+        Score de fiabilité minimum pour les stations recommandées (entre 0.0 et 100.0).
+    """
+
+    lat: float = Field(..., ge=-90.0, le=90.0)
+    lon: float = Field(..., ge=-180.0, le=180.0)
+    radius_meters: float = Field(default=1000.0, gt=0)
+    op_cap: int | None = Field(default=None, ge=0)
+    station_state: StationState | None = Field(default=None)
+    score_min: float | None = Field(default=None, ge=0.0, le=100.0)
