@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies.authentication import get_current_user
 from dependencies.service import get_user_service
 from schema.common_model import MessageResponse
-from schema.user_model import LoginResponse, UserResponse
+from schema.user_model import LoginRequest, LoginResponse, UserResponse
 from service.user_service import UserService
 from utils.log_utils import get_logger
 from utils.security import hash_password
@@ -55,7 +55,7 @@ async def signup(
 
 @router.post("/login", response_model=LoginResponse, tags=["Authentication"])
 async def login(
-    payload: dict,
+    payload: LoginRequest,
     user_service: UserService = Depends(get_user_service),
 ) -> LoginResponse:
     """
