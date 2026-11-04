@@ -55,7 +55,7 @@ async def signup(
     return MessageResponse(message="Account created successfully.")
 
 
-@router.post("/login", response_model=LoginResponse, tags=["Authentication"])
+@router.get("/login", response_model=LoginResponse, tags=["Authentication"])
 async def login(
     payload: LoginRequest,
     user_service: UserService = Depends(get_user_service),

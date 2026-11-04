@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import streamlit as st
-from utils.api_client import APIClient
+from utils.api_client import api_client
 from utils.log_init import get_page_logger
 from utils.security import hash_password
 
@@ -18,7 +18,7 @@ if not user_id:
 else:
     try:
         user_id = int(user_id)
-        user_res = APIClient().get(f"user/info/{user_id}")
+        user_res = api_client.get(f"user/info/{user_id}")
 
         if user_res["status_code"] == 200:
             user = user_res["data"]
@@ -27,20 +27,20 @@ else:
             st.write(f"Nom d'utilisateur : {user["username"]}")
             new_username = st.text_input("Nouveau nom d'utilisateur :")
             if new_username:
-                new_username = APIClient().post("/user/info", json={"username": new_username})
-                new_upadate = APIClient().post("/user/info", json={"updated_at": datetime.now})
+                new_username = api_client.post("/user/info", json={"username": new_username})
+                new_upadate = api_client.post("/user/info", json={"updated_at": datetime.now})
 
             st.write(f"E-mail : {user["email"]}")
             new_email = st.text_input("Nouvel email :", type="email")
             if new_email:
-                new_email = APIClient().post("/user/info", json={"email": new_email})
-                new_upadate = APIClient().post("/user/info", json={"updated_at": datetime.now})
+                new_email = api_client.post("/user/info", json={"email": new_email})
+                new_upadate = api_client.post("/user/info", json={"updated_at": datetime.now})
             
             st.write(f"Mot de passe : {user["password_hashed"]}")
             new_password = st.text_input("Nouveau mot de passe :", type="password")
             if new_password:
-                new_password = APIClient().post("/user/info", json={"password_hashed": hash_password(new_password)})
-                new_upadate = APIClient().post("/user/info", json={"updated_at": datetime.now})
+                new_password = api_client.post("/user/info", json={"password_hashed": hash_password(new_password)})
+                new_upadate = api_client.post("/user/info", json={"updated_at": datetime.now})
             
     except ValueError:
         logger.error(f"Format d'identifiant invalide {user_id}")
