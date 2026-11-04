@@ -1,4 +1,4 @@
-postgres_host=postgresql-cnpg-836219-rw.user-nathanlaimant
+postgres_host=postgresql-cnpg-836219-rw.user-antop
 postgres_port=5432
 postgres_database=defaultdb
 postgres_user=user-nathanlaimant

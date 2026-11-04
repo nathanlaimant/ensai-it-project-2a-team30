@@ -23,6 +23,7 @@ async def list_users(
 ) -> list[UserResponse]:
     """
     Liste les utilisateurs selon des critères de recherche.
+    **Authentification requise** : Fournir l'header `Authorization: Bearer <access_token>`.
 
     Parameters
     ----------
@@ -35,7 +36,7 @@ async def list_users(
 
     Returns
     -------
-    list of User
+    list[UserResponse]
         Liste des utilisateurs correspondant aux critères.
     """
     logger.info("Admin %s listed users with filters %s", admin_id, payload)
@@ -51,6 +52,7 @@ def activate_user(
 ) -> MessageResponse:
     """
     Active le compte d'un utilisateur.
+    **Authentification requise** : Fournir l'header `Authorization: Bearer <access_token>`.
 
     Parameters
     ----------
@@ -63,7 +65,7 @@ def activate_user(
 
     Returns
     -------
-    str
+    MessageResponse
         Message de confirmation de la mise à jour du statut.
     """
     user = user_service.get_user_by_id(user_id)
@@ -92,6 +94,7 @@ def deactivate_user(
 ) -> MessageResponse:
     """
     Désactive le compte d'un utilisateur.
+    **Authentification requise** : Fournir l'header `Authorization: Bearer <access_token>`.
 
     Parameters
     ----------
@@ -104,7 +107,7 @@ def deactivate_user(
 
     Returns
     -------
-    str
+    MessageResponse
         Message de confirmation de la mise à jour du statut.
     """
     user = user_service.get_user_by_id(user_id)
