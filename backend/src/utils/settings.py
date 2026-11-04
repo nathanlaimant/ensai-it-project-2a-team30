@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +26,8 @@ class Settings(BaseSettings):
         Adresse d'écoute du serveur Uvicorn.  Requis, par défaut "127.0.0.1".
     uvicorn_port : int, optional
         Port d'écoute du serveur Uvicorn.  Requis, par défaut 5000.
+    root_path : str, optional
+        Préfixe du chemin d'accès racine (ex: proxy Onyxia). Par défaut "/proxy/{uvicorn_port}".
     """
 
     postgres_host: str = Field(default=...)
@@ -37,6 +39,7 @@ class Settings(BaseSettings):
 
     uvicorn_host: str = Field(default="127.0.0.1")
     uvicorn_port: int = Field(default=5000)
+    root_path: str | None = Field(default=None)
 
     system_information_feed_url: str = Field(default=...)
     system_information_interval_seconds: int = Field(default=3600)
@@ -54,6 +57,16 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def set_default_root_path(self) -> "Settings":
+        """
+        Définit automatiquement le chemin root_path par défaut basé sur uvicorn_port
+        s'il n'est pas spécifié.
+        """
+        if self.root_path is None:
+            self.root_path = f"/proxy/{self.uvicorn_port}"
+        return self
 
 
 @lru_cache

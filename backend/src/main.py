@@ -160,6 +160,7 @@ if __name__ == "__main__":
         app,
         host=settings.uvicorn_host,
         port=settings.uvicorn_port,
+        root_path=settings.root_path,
     )
 
     logger.info("VeloScope webservice stopped")
