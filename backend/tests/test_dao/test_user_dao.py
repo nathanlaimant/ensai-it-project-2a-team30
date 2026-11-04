@@ -51,7 +51,7 @@ def test_get_by_id_existing(user_dao):
     """Recherche par id de l'utilisateur réussie"""
 
     # GIVEN
-    user_id = 20
+    user_id = 2
 
     # WHEN
     user = user_dao.get_by_id(user_id)
@@ -158,7 +158,7 @@ def test_update_user_ok(user_dao):
 
     # GIVEN
     new_email = "thenewemail@email.fr"
-    user_id = 20
+    user_id = 2
 
     # WHEN
     update_ok = user_dao.update_user(user_id=user_id, updates={"email": new_email})
@@ -192,7 +192,7 @@ def test_delete_user_ok(user_dao):
     """Suppression d'un utilisateur réussie"""
 
     # GIVEN
-    user_id = 23
+    user_id = 2
 
     # WHEN
     delete_ok = user_dao.delete_user(user_id)
