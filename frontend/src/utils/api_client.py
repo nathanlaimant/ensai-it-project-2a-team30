@@ -186,6 +186,7 @@ class APIClient:
 
     def get_stations(self, params: dict | None = None) -> requests.Response:
         """Récupère les stations auprès de l'API avec d'éventuels filtres."""
-        return self.get("/stations", params=params)
+        return self.post("/station/", data=params if params else {})
+
 
 api_client = APIClient(API_URL)

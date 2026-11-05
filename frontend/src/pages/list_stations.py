@@ -14,10 +14,7 @@ client: APIClient = st.session_state["api_client"]
 
 @st.cache_data(ttl=60)
 def charger_stations() -> list[dict]:
-    reponse = client.get_stations()
-    if reponse.status_code == 200:
-        return reponse.json()
-    return []
+    return client.get_stations()
 
 
 stations = charger_stations()
