@@ -1,45 +1,53 @@
-from datetime import datetime
-
 import streamlit as st
 from utils.api_client import api_client
 from utils.log_init import get_page_logger
-from utils.security import hash_password
 
 st.title("Paramètres d'utilisateur")
 
 logger = get_page_logger("user_info")
 
-query_params = st.query_params
 username = st.session_state["username"]
 token = st.session_state["token"]
+auth_headers = {"Authorization": f"Bearer {token}"}
 logger.info(f"Informations sur {username}")
 
 if not username:
     st.warning("Utilisateur introuvable")
 else:
     try:
-        user_res = api_client.get("user/info", headers={"Authorization": f"Bearer {token}"})
+        user = api_client.get("user/info", headers=auth_headers)
+        logger.info(f"Profil de l'utilisateur {user['username']} trouvé !")
 
-        user = user_res
-        logger.info(f"Profil de l'utilisateur {user["username"]} trouvé !")
-
-        st.write(f"Nom d'utilisateur : {user["username"]}")
+        st.write(f"Nom d'utilisateur : {user['username']}")
         new_username = st.text_input("Nouveau nom d'utilisateur :")
         if new_username:
-            new_username = api_client.post("/user/info", json={"username": new_username})
-            new_upadate = api_client.post("/user/info", json={"updated_at": datetime.now})
+            api_client.put(
+                "/user/info",
+                data={"username": new_username},
+                headers=auth_headers,
+            )
+            st.session_state["username"] = new_username
+            st.success("Nom d'utilisateur mis à jour.")
 
-        st.write(f"E-mail : {user["email"]}")
+        st.write(f"E-mail : {user['email']}")
         new_email = st.text_input("Nouvel email :", type="email")
         if new_email:
-            new_email = api_client.post("/user/info", json={"email": new_email})
-            new_upadate = api_client.post("/user/info", json={"updated_at": datetime.now})
-            
+            api_client.put(
+                "/user/info",
+                data={"email": new_email},
+                headers=auth_headers,
+            )
+            st.success("Email mis à jour.")
+
         new_password = st.text_input("Nouveau mot de passe :", type="password")
         if new_password:
-            new_password = api_client.post("/user/info", json={"password_hashed": hash_password(new_password)})
-            new_upadate = api_client.post("/user/info", json={"updated_at": datetime.now})
-            
+            api_client.put(
+                "/user/info",
+                data={"password": new_password},
+                headers=auth_headers,
+            )
+            st.success("Mot de passe mis à jour.")
+
     except ValueError:
         logger.error(f"Format de nom d'utilisateur invalide {username}")
         st.error("Format de nom d'utilisateur invalide dans l'URL")
