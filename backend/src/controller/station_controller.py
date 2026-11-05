@@ -52,7 +52,7 @@ async def get_station_info(
     return station
 
 
-@router.post("/", response_model=list[StationInfoResponse])
+@router.post("", response_model=list[StationInfoResponse])
 async def list_stations(
     payload: StationSearchRequest,
     station_service: StationService = Depends(get_station_service),
