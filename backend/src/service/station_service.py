@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from haversine import haversine
 
@@ -6,7 +6,8 @@ from business_object.station_information import StationInformation
 from dao.station_dao import StationDAO
 from dao.station_status_dao import StationStatusDAO
 from dao.station_status_hourly_dao import StationStatusHourlyDAO
-from schema.station_model import StationRecommendationRequest
+from schema.common_model import TimePeriod
+from schema.station_model import StationRecommendationRequest, StationSearchRequest
 
 
 class StationService:
@@ -33,7 +34,7 @@ class StationService:
         self.status_dao = status_dao
         self.hourly_dao = hourly_dao
 
-    def get_by_id(self, station_id: str) -> StationInformation:
+    def get_by_id(self, station_id: str) -> StationInformation | None:
         """
         Donne une station à partir de son identifiant.
 
@@ -46,52 +47,20 @@ class StationService:
         -------
         StationInformation
             Station avec l'identifiant correspondant.
+            None si la station n'est pas trouvée.
         """
+        if not station_id:
+            return None
         return self.station_dao.get_by_id(station_id)
 
-    def list_stations(
-        self,
-        station_id: str = None,
-        name: str = None,
-        short_name: str = None,
-        lat: int = None,
-        lon: int = None,
-        address: str = None,
-        is_virtual_station: bool = None,
-        contact_phone: str = None,
-        capacity: int = None,
-        is_charging_station: bool = None,
-        nb_pages: int = None,
-    ) -> list[StationInformation]:
+    def list_stations(self, payload: StationSearchRequest) -> list[StationInformation]:
         """
         Liste les stations selon des critères de recherche.
 
-        Arguments
-        ---------
-        station_id: str = None
-            Identifiant de stations
-        name: str = None
-            Nom de station
-        short_name: str = None
-            Nom raccourci de station
-        lat: int = None
-            Latitude de station
-        lon: int = None
-            Longitude de station
-        address: str = None
-            Adresse de station
-        is_virtual_station: bool = None
-            Si True, lister les stations virtuelles
-            Si False, lister les stations non virtuelles
-        contact_phone: str = None
-            Contact téléphonique de station
-        capacity: int = None
-            Capacité totale de la station
-        is_charging_station: bool = None
-            Si True, lister les stations avec bornes de charge
-            Si False, ne pas lister les stations avec bornes de charge
-        nb_pages: int = None
-            Nombre de pages de stations à créer
+        Parameters
+        ----------
+        payload: StationSearchRequest
+            Requête de recherche contenant les critères de filtrage.
 
         Returns
         -------
@@ -99,26 +68,24 @@ class StationService:
             Liste des stations correspondant aux critères.
             Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
+        if not payload:
+            return []
         return self.station_dao.list_stations(
-            station_id,
-            name,
-            short_name,
-            lat,
-            lon,
-            address,
-            is_virtual_station,
-            contact_phone,
-            capacity,
-            is_charging_station,
-            nb_pages,
+            name=payload.name,
+            short_name=payload.short_name,
+            address=payload.address,
+            min_capacity=payload.min_capacity,
+            max_capacity=payload.max_capacity,
+            page=payload.page,
+            size=payload.size,
         )
 
-    def get_station_current_status(self, station_id: str) -> dict:
+    def get_station_current_status(self, station_id: str) -> dict | None:
         """
         Récupère l'état en temps réel d'une station.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         station_id : str
             Identifiant de la station demandée.
 
@@ -129,47 +96,144 @@ class StationService:
             Ne renvoie rien si la station n'est pas identifiable.
         """
         statut = self.status_dao.get_latest_status(station_id)
+        s_horaire = self.hourly_dao.get_latest_hourly_status(station_id)
+        if not statut:
+            return None
         return {
+            "num_bikes_available": statut.num_bikes_available,
+            "num_docks_available": statut.num_docks_available,
             "last_reported": statut.last_reported,
+            "vehicle_types_available": statut.vehicle_types_available,
+            "vehicle_docks_available": statut.vehicle_docks_available,
             "station_state": statut.station_state,
             "operational_capacity": statut.operational_capacity,
-            "num_bikes_available": statut.num_bikes_available,
-            "vehicule_types_available": statut.vehicule_types_available,
-            "num_docks_available": statut.num_docks_available,
-            "vehicule_docks_available": statut.vehicule_docks_available,
+            "full_ratio": min(
+                statut.num_bikes_available / statut.operational_capacity, 1.0
+            ),
+            "reliability_score": s_horaire.reliability_score if s_horaire else None,
         }
 
     def get_station_history(
-        self, station_id: str, start_time: datetime = None, end_time: datetime = None
+        self, station_id: str, time_period: TimePeriod
     ) -> list[dict]:
         """
         Récupère l'historique d'état d'une station sur une période donnée.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         station_id: str
             Identifiant de la station
-
-        start_time: datetime
-            Début de la période considérée pour la recherche
-
-        end_time: datetime
-            Fin de la période considérée pour la recherche
+        time_period: TimePeriod
+            Période de temps pour laquelle récupérer l'historique
 
         Returns
         -------
         list of dict
-            Historique des états de la station sur la période demandée.
-            Ne renvoie rien si la station n'est pas identifiable, ou l'un des autres
-            critères n'est pas dans le bon format.
+            Liste des statuts de la station sur la période demandée.
+            Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
-        station_exists = self.station_dao.get_by_id(station_id)
-        if not station_exists:
-            return None
-        if start_time > end_time:
-            temp, start_time = start_time, end_time
-            end_time = temp
-        return self.hourly_dao.get_one_station_history(station_id, start_time, end_time)
+        end_time = datetime.now(UTC)
+        if time_period == TimePeriod.une_heure:
+            start_time = datetime.now(UTC) - timedelta(hours=1)
+            statut = self.status_dao.get_one_station_history(
+                station_id, start_time, end_time
+            )
+            s_horaire = self.hourly_dao.get_hourly_stats(
+                station_id, start_time, end_time
+            )
+            if not statut:
+                return []
+            reliability_score = s_horaire[0].reliability_score if s_horaire else None
+            return [
+                {
+                    "station_id": s.station_id,
+                    "num_bikes_available": s.num_bikes_available,
+                    "num_docks_available": s.num_docks_available,
+                    "last_reported": s.last_reported,
+                    "station_state": s.station_state,
+                    "operational_capacity": s.operational_capacity,
+                    "full_ratio": min(
+                        s.num_bikes_available / s.operational_capacity, 1.0
+                    ),
+                    "reliability_score": reliability_score,
+                }
+                for s in statut
+            ]
+        elif time_period == TimePeriod.vingt_quatre_heures:
+            start_time = datetime.now(UTC) - timedelta(days=1)
+            s_horaire = self.hourly_dao.get_hourly_stats(
+                station_id, start_time, end_time
+            )
+            if not s_horaire:
+                return []
+            return [
+                {
+                    "station_id": s.station_id,
+                    "num_bikes_available": s.avg_num_bikes_available,
+                    "num_docks_available": s.avg_num_docks_available,
+                    "last_reported": s.bucket_hour,
+                    "operational_capacity": round(s.avg_operational_capacity),
+                    "full_ratio": min(
+                        s.avg_num_bikes_available / s.avg_operational_capacity, 1.0
+                    ),
+                    "full_duration_ratio": s.full_duration_sec / 3600,
+                    "avg_full_duration": (
+                        (s.full_duration_sec / s.full_events_cnt)
+                        if s.full_events_cnt > 0
+                        else 0
+                    ),
+                    "empty_duration_ratio": s.empty_duration_sec / 3600,
+                    "avg_empty_duration": (
+                        (s.empty_duration_sec / s.empty_events_cnt)
+                        if s.empty_events_cnt > 0
+                        else 0
+                    ),
+                    "reliability_score": s.reliability_score,
+                }
+                for s in s_horaire
+            ]
+        elif time_period in [TimePeriod.sept_jours, TimePeriod.trente_jours]:
+            start_time = datetime.now(UTC) - (
+                timedelta(days=7)
+                if time_period == TimePeriod.sept_jours
+                else timedelta(days=30)
+            )
+            s_quotidienne = self.hourly_dao.aggregate_daily_stats(
+                station_id, start_time.date(), end_time.date()
+            )
+            if not s_quotidienne:
+                return []
+            return [
+                {
+                    "station_id": s["station_id"],
+                    "num_bikes_available": s["avg_num_bikes_available"],
+                    "num_docks_available": s["avg_num_docks_available"],
+                    "last_reported": datetime.combine(
+                        s["stat_date"], datetime.min.time(), tzinfo=UTC
+                    ),
+                    "operational_capacity": round(s["avg_operational_capacity"]),
+                    "full_ratio": min(
+                        s["avg_num_bikes_available"] / s["avg_operational_capacity"],
+                        1.0,
+                    ),
+                    "full_duration_ratio": s["full_duration_sec"] / 3600,
+                    "avg_full_duration": (
+                        (s["full_duration_sec"] / s["full_events_cnt"])
+                        if s["full_events_cnt"] > 0
+                        else 0
+                    ),
+                    "empty_duration_ratio": s["empty_duration_sec"] / 3600,
+                    "avg_empty_duration": (
+                        (s["empty_duration_sec"] / s["empty_events_cnt"])
+                        if s["empty_events_cnt"] > 0
+                        else 0
+                    ),
+                    "reliability_score": s["avg_reliability_score"],
+                }
+                for s in s_quotidienne
+            ]
+        else:
+            return []
 
     def get_nearby_recommendations(
         self, criteria: StationRecommendationRequest

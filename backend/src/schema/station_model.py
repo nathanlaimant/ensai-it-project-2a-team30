@@ -109,8 +109,20 @@ class StationStatusResponse(BaseModel):
         Répartition des vélos disponibles par type.
     vehicle_docks_available : dict[str, int] | None
         Répartition des bornes disponibles par type.
-    station_state : StationState
+    station_state : StationState | None
         État actuel de la station.
+    operational_capacity : int
+        Capacité opérationnelle de la station.
+    full_ratio : float | None
+        Taux de remplissage de la station (nombre de vélos disponibles / capacité opérationnelle).
+    full_duration_ratio : float | None
+        Ratio de temps passé saturé. Disponible uniquement pour une periode d'historique (1h, 24h, 7j, 30j).
+    avg_full_duration : float | None
+        Durée moyenne de chaque épisode saturé en secondes. Disponible uniquement pour une periode d'historique.
+    empty_duration_ratio : float | None
+        Ratio de temps passé vide. Disponible uniquement pour une periode d'historique.
+    avg_empty_duration : float | None
+        Durée moyenne de chaque épisode vide en secondes. Disponible uniquement pour une periode d'historique.
     reliability_score : float | None
         Score de fiabilité le plus récent du statut de la station. None si non disponible.
 
@@ -127,7 +139,13 @@ class StationStatusResponse(BaseModel):
     last_reported: datetime
     vehicle_types_available: dict[str, int] | None = None
     vehicle_docks_available: dict[str, int] | None = None
-    station_state: StationState
+    station_state: StationState | None = None
+    operational_capacity: int
+    full_ratio: float | None = None
+    full_duration_ratio: float | None = None
+    avg_full_duration: float | None = None
+    empty_duration_ratio: float | None = None
+    avg_empty_duration: float | None = None
     reliability_score: float | None = None
 
 

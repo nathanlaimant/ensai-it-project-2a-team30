@@ -32,13 +32,13 @@ def test_upsert_station_info_ok(station_dao):
 
     # GIVEN
     external_data = StationInformation(
-            station_id="19179944124",
-            name="Hôpital Mondor",
-            short_name="40001",
-            lat=48.798922410229,
-            lon=2.4537451531298,
-            capacity=28,
-        )
+        station_id="19179944124",
+        name="Hôpital Mondor",
+        short_name="40001",
+        lat=48.798922410229,
+        lon=2.4537451531298,
+        capacity=28,
+    )
 
     # WHEN
     added = station_dao.upsert_station_info(external_data)

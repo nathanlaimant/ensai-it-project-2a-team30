@@ -1,6 +1,6 @@
 """Gère les consultations de stations."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 
 @router.get("/{station_id}", response_model=StationInfoResponse)
 async def get_station_info(
-    station_id: str, station_service=Depends(get_station_service)
+    station_id: str, station_service: StationService = Depends(get_station_service)
 ) -> Any:
     """
     Récupère les informations fixes d'une station.
@@ -49,14 +49,13 @@ async def get_station_info(
         raise HTTPException(
             status_code=404, detail="Station (id={station_id}) non trouvée."
         )
-    # On returne l'objet StationInformation, qui sera automatiquement converti
-    # en StationInfoResponse par la configuration from_attributes=True du modèle Pydantic.
     return station
 
 
 @router.post("/", response_model=list[StationInfoResponse])
 async def list_stations(
-    payload: StationSearchRequest, station_service=Depends(get_station_service)
+    payload: StationSearchRequest,
+    station_service: StationService = Depends(get_station_service),
 ) -> Any:
     """
     Liste les stations selon des critères de recherche.
@@ -72,15 +71,12 @@ async def list_stations(
         Liste des stations correspondant aux critères.
     """
     logger.info("Recherche d'une station à partir de paramètres donnés ou non")
-    stations = station_service.list_stations(payload)
-    # On returne la liste des StationInformation, qui sera automatiquement converti
-    # en liste de StationInfoResponse.
-    return stations
+    return station_service.list_stations(payload)
 
 
 @router.get("/{station_id}/status", response_model=StationStatusResponse)
 async def get_station_current_status(
-    station_id: str, station_service=Depends(get_station_service)
+    station_id: str, station_service: StationService = Depends(get_station_service)
 ) -> Any:
     """
     Récupère l'état en temps réel d'une station.
@@ -103,7 +99,7 @@ async def get_station_current_status(
     logger.info("Statut le plus récent de la station")
     # Recupère StationStatus le plus récent par le StationStatusDAO.get_latest_status
     # et StationStatusHourly le plus récent par le StationStatusHourlyDAO.get_latest_hourly_status.
-    # Puis, les convertit en StationStatusResponse. Cette classe peut être modifiée si nécessaire !
+    # Puis, les convertit en StationStatusResponse.
     statut = station_service.get_station_current_status(station_id)
     if not statut:
         raise HTTPException(
@@ -122,9 +118,7 @@ async def get_station_history(
     period: TimePeriod = Query(
         default=TimePeriod.une_heure,
     ),
-    page: int = Query(default=1, ge=1),
-    size: int = Query(default=10, ge=1, le=100),
-    station_service=Depends(get_station_service),
+    station_service: StationService = Depends(get_station_service),
 ) -> Any:
     """
     Récupère l'historique de l'état d'une station sur une période donnée.
@@ -135,10 +129,6 @@ async def get_station_history(
         Identifiant de la station
     period: TimePeriod
         Période de temps pour l'historique (1h, 24h, 7j, 30j)
-    page: int
-        Numéro de page pour la pagination (1 par défaut)
-    size: int
-        Nombre d'éléments par page (10 par défaut, maximum 100)
 
     Returns
     -------
@@ -151,21 +141,7 @@ async def get_station_history(
         Erreur 404 si la station n'est pas trouvée.
     """
     logger.info("Historique de la station")
-    end_time = timedelta(hours=1)
-    if period == TimePeriod.vingt_quatre_heures:
-        end_time = timedelta(days=1)
-    elif period == TimePeriod.sept_jours:
-        end_time = timedelta(days=7)
-    elif period == TimePeriod.trente_jours:
-        end_time = timedelta(days=30)
-    history = station_service.get_station_history(
-        station_id, datetime.now, datetime.now - end_time
-    )
-    if not history:
-        raise HTTPException(
-            status_code=404, detail="Station (id={station_id}) non trouvée."
-        )
-    return history
+    return station_service.get_station_history(station_id, period)
 
 
 @router.post("/recommendations", response_model=list[dict])

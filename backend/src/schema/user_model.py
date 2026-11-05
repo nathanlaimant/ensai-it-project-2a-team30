@@ -82,8 +82,6 @@ class UserResponse(BaseModel):
         True si le compte de l'utilisateur est actif.
     created_at : datetime
         Date et heure de création du compte.
-    updated_at : datetime
-        Date et heure de la dernière mise à jour du compte.
 
     Returns
     -------
@@ -99,7 +97,6 @@ class UserResponse(BaseModel):
     role: UserRole
     is_active: bool
     created_at: datetime
-    updated_at: datetime
 
 
 class UserSearchRequest(BaseModel):

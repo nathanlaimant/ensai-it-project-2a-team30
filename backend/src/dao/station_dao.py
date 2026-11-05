@@ -2,7 +2,7 @@ from psycopg2.extras import Json
 
 from business_object.station_information import StationInformation
 from utils.db_connection import DbConnection
-from utils.log_utils import get_logger, log
+from utils.log_utils import get_logger
 
 logger = get_logger(__name__)
 
@@ -103,7 +103,7 @@ class StationDAO:
             return True
         return False
 
-    def get_by_id(self, station_id: str) -> StationInformation:
+    def get_by_id(self, station_id: str) -> StationInformation | None:
         """
         Récupère une station à partir de son identifiant.
 
@@ -195,71 +195,82 @@ class StationDAO:
         if res:
             stations_list = []
             for i in range(len(res)):
-                stations_list.append(StationInformation(
-                    station_id=res[i]["station_id"],
-                    name=res[i]["name"],
-                    short_name=res[i]["short_name"],
-                    lat=res[i]["lat"],
-                    lon=res[i]["lon"],
-                    address=res[i]["address"],
-                    is_virtual_station=res[i]["is_virtual_station"],
-                    station_area=res[i]["station_area"],
-                    contact_phone=res[i]["contact_phone"],
-                    capacity=res[i]["capacity"],
-                    is_charging_station=res[i]["is_charging_station"],
-                ))
+                stations_list.append(
+                    StationInformation(
+                        station_id=res[i]["station_id"],
+                        name=res[i]["name"],
+                        short_name=res[i]["short_name"],
+                        lat=res[i]["lat"],
+                        lon=res[i]["lon"],
+                        address=res[i]["address"],
+                        is_virtual_station=res[i]["is_virtual_station"],
+                        station_area=res[i]["station_area"],
+                        contact_phone=res[i]["contact_phone"],
+                        capacity=res[i]["capacity"],
+                        is_charging_station=res[i]["is_charging_station"],
+                    )
+                )
         return stations_list
 
     def list_stations(
         self,
-        station_id: str = None,
-        name: str = None,
-        short_name: str = None,
-        lat: int = None,
-        lon: int = None,
-        address: str = None,
-        is_virtual_station: bool = None,
-        contact_phone: str = None,
-        capacity: int = None,
-        is_charging_station: bool = None,
-        nb_pages: int = None,
+        station_id: str | None = None,
+        name: str | None = None,
+        short_name: str | None = None,
+        lat: float | None = None,
+        lon: float | None = None,
+        address: str | None = None,
+        is_virtual_station: bool | None = None,
+        contact_phone: str | None = None,
+        capacity: int | None = None,
+        min_capacity: int | None = None,
+        max_capacity: int | None = None,
+        is_charging_station: bool | None = None,
+        page: int = 1,
+        size: int = 10,
     ) -> list[StationInformation]:
         """
         Liste les stations selon des critères de recherche.
         Tous les arguments de la méthode sont optionnels.
 
-        Arguments
+        Parameters
         ----------
-        station_id: str = None
+        station_id: str | None = None
             Identifiant de stations
-        name: str = None
+        name: str | None = None
             Nom de station
-        short_name: str = None
+        short_name: str | None = None
             Nom raccourci de station
-        lat: int = None
+        lat: float | None = None
             Latitude de station
-        lon: int = None
+        lon: float | None = None
             Longitude de station
-        address: str = None
+        address: str | None = None
             Adresse de station
-        is_virtual_station: bool = None
+        is_virtual_station: bool | None = None
             Si True, lister les stations virtuelles
             Si False, lister les stations non virtuelles
-        contact_phone: str = None
+        contact_phone: str | None = None
             Contact téléphonique de station
-        capacity: int = None
+        capacity: int | None = None
             Capacité totale de la station
-        is_charging_station: bool = None
+        min_capacity: int | None = None
+            Capacité minimale de la station
+        max_capacity: int | None = None
+            Capacité maximale de la station
+        is_charging_station: bool | None = None
             Si True, lister les stations avec bornes de charge
             Si False, ne pas lister les stations avec bornes de charge
-        nb_pages: int = None
-            Nombre de pages de stations à créer
+        page: int = 1
+            Numéro de la page de stations à créer
+        size: int = 10
+            Taille de la page de stations à créer
 
         Returns
         -------
         list of StationInformation
             Liste des stations correspondant aux critères.
-            Ne renvoie rien lorsqu'un des critères n'est pas dans le bon format.
+            Renvoie une liste vide lorsqu'un des critères n'est pas dans le bon format.
         """
         res = None
 
@@ -278,18 +289,31 @@ class StationDAO:
                         "AND ((%(is_virtual_station)s IS NULL) OR (is_virtual_station = %(is_virtual_station)s)) "
                         "AND ((%(contact_phone)s IS NULL) OR (contact_phone ILIKE %(contact_phone)s)) "
                         "AND ((%(capacity)s IS NULL) OR (capacity = %(capacity)s)) "
-                        "AND ((%(is_charging_station)s IS NULL) OR (is_charging_station = %(is_charging_station)s));",
+                        "AND ((%(min_capacity)s IS NULL) OR (capacity >= %(min_capacity)s)) "
+                        "AND ((%(max_capacity)s IS NULL) OR (capacity <= %(max_capacity)s)) "
+                        "AND ((%(is_charging_station)s IS NULL) OR (is_charging_station = %(is_charging_station)s)) "
+                        "ORDER BY station_id LIMIT %(size)s OFFSET %(offset)s;",
                         {
-                            "station_id": "%" + station_id + "%" if station_id else None,
+                            "station_id": (
+                                "%" + station_id + "%" if station_id else None
+                            ),
                             "name": "%" + name + "%" if name else None,
-                            "short_name": "%" + short_name + "%" if short_name else None,
+                            "short_name": (
+                                "%" + short_name + "%" if short_name else None
+                            ),
                             "lat": lat,
                             "lon": lon,
                             "address": "%" + address + "%" if address else None,
                             "is_virtual_station": is_virtual_station,
-                            "contact_phone": "%" + contact_phone + "%" if contact_phone else None,
+                            "contact_phone": (
+                                "%" + contact_phone + "%" if contact_phone else None
+                            ),
                             "capacity": capacity,
+                            "min_capacity": min_capacity,
+                            "max_capacity": max_capacity,
                             "is_charging_station": is_charging_station,
+                            "size": size,
+                            "offset": (page - 1) * size,
                         },
                     )
                     res = cursor.fetchall()
@@ -297,26 +321,27 @@ class StationDAO:
             logger.error(e)
             raise
 
-        stations_list = None
+        stations_list = []
         if res:
-            stations_list = []
             for i in range(len(res)):
-                stations_list.append(StationInformation(
-                    station_id=res[i]["station_id"],
-                    name=res[i]["name"],
-                    short_name=res[i]["short_name"],
-                    lat=res[i]["lat"],
-                    lon=res[i]["lon"],
-                    address=res[i]["address"],
-                    is_virtual_station=res[i]["is_virtual_station"],
-                    station_area=res[i]["station_area"],
-                    contact_phone=res[i]["contact_phone"],
-                    capacity=res[i]["capacity"],
-                    is_charging_station=res[i]["is_charging_station"],
-                ))
-            if isinstance(nb_pages, int) and nb_pages > 1:
-                sous_liste = []
-                for k in range(nb_pages):
-                    sous_liste[k] = stations_list[k * nb_pages: (k + 1) * nb_pages - 1]
-                stations_list = sous_liste
+                stations_list.append(
+                    StationInformation(
+                        station_id=res[i]["station_id"],
+                        name=res[i]["name"],
+                        short_name=res[i]["short_name"],
+                        lat=res[i]["lat"],
+                        lon=res[i]["lon"],
+                        address=res[i]["address"],
+                        is_virtual_station=res[i]["is_virtual_station"],
+                        station_area=res[i]["station_area"],
+                        contact_phone=res[i]["contact_phone"],
+                        capacity=res[i]["capacity"],
+                        is_charging_station=res[i]["is_charging_station"],
+                    )
+                )
+            # if isinstance(nb_pages, int) and nb_pages > 1:
+            #     sous_liste = []
+            #     for k in range(nb_pages):
+            #         sous_liste[k] = stations_list[k * nb_pages : (k + 1) * nb_pages - 1]
+            #     stations_list = sous_liste
         return stations_list

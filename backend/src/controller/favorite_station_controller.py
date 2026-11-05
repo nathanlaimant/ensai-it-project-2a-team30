@@ -10,7 +10,7 @@ from schema.station_model import StationInfoResponse
 from service.favorite_station_service import FavoriteStationService
 from utils.log_utils import get_logger
 
-router = APIRouter(prefix="/favorites", tags=["Favoris"])
+router = APIRouter(prefix="/favorites", tags=["Favorites"])
 logger = get_logger(__name__)
 
 
