@@ -67,9 +67,9 @@ if not station_id:
 # 4. Appels au Backend (StationController)
 # -----------------------------------------------------------------------------
 # Adapter les chemins ci-dessous si les routes de votre StationController diffèrent
-ENDPOINT_INFO = f"/stations/{station_id}"
-ENDPOINT_STATUS = f"/stations/{station_id}/status"
-ENDPOINT_HOURLY = f"/stations/{station_id}/hourly"
+ENDPOINT_INFO = f"/station/{station_id}"
+ENDPOINT_STATUS = f"/station/{station_id}/status"
+ENDPOINT_HOURLY = f"/station/{station_id}/hourly"
 
 station_info = None
 station_status = None
