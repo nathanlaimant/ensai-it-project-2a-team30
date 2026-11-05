@@ -257,9 +257,8 @@ class StationService:
             criteria.lat, criteria.lon, criteria.radius_meters
         )
 
-        res = None
+        res = []
         if stations:
-            res = []
             for i in range(len(stations)):
                 if stations[i].station_id is not None:
                     latest_status = self.status_dao.get_latest_status(
