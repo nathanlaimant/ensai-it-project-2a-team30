@@ -1,9 +1,8 @@
 """Gère les consultations de stations."""
 
-from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status  # type: ignore[import-not-found]
 
 from dependencies.service import get_station_service
 from schema.common_model import TimePeriod
@@ -47,7 +46,8 @@ async def get_station_info(
     station = station_service.get_by_id(station_id)
     if not station:
         raise HTTPException(
-            status_code=404, detail="Station (id={station_id}) non trouvée."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Station (id={station_id}) non trouvée.",
         )
     return station
 
@@ -101,9 +101,10 @@ async def get_station_current_status(
     # et StationStatusHourly le plus récent par le StationStatusHourlyDAO.get_latest_hourly_status.
     # Puis, les convertit en StationStatusResponse.
     statut = station_service.get_station_current_status(station_id)
-    if not statut:
+    if statut is None:
         raise HTTPException(
-            status_code=404, detail="Station (id={station_id}) non trouvée."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Station (id={station_id}) non trouvée.",
         )
     return statut
 
@@ -147,7 +148,7 @@ async def get_station_history(
 @router.post("/recommendations", response_model=list[dict])
 async def get_nearby_recommendations(
     payload: StationRecommendationRequest,
-    reco_service: StationService = Depends(get_station_service),
+    station_service: StationService = Depends(get_station_service),
 ) -> Any:
     """
     Recommande des stations à proximité d'une position donnée.
@@ -164,4 +165,4 @@ async def get_nearby_recommendations(
         pertinentes (distance, disponibilité, etc.).
     """
     logger.info("Proposition de stations à proximité")
-    return reco_service.get_nearby_recommendations(payload)
+    return station_service.get_nearby_recommendations(payload)

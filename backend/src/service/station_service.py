@@ -1,6 +1,6 @@
 from datetime import UTC, date, datetime, timedelta
 
-from haversine import haversine
+from haversine import haversine  # type: ignore[import-not-found]
 
 from business_object.station_information import StationInformation
 from dao.station_dao import StationDAO
