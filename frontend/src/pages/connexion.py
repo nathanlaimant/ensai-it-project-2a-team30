@@ -32,12 +32,11 @@ if btn_login:
         st.warning("Veuillez renseigner votre identifiant et votre mot de passe.")
     else:
         try:
-            res = api_client.post("/login", data={"username": login_user, "password": login_pwd})
+            res = api_client.post(
+                "/login", data={"username": login_user, "password": login_pwd}
+            )
         except requests.exceptions.RequestException as e:
-            if "401" in str(e):
-                st.error("Identifiants incorrects.")
-            else:
-                st.error("Le serveur est injoignable. Réessayez plus tard.")
+            st.error(f"{type(e).__name__} : {e}")
             st.stop()
 
         st.write(str(res))
@@ -45,7 +44,7 @@ if btn_login:
         st.session_state["username"] = res["username"]
         # api_client.set_token(res["access_token"])
         st.switch_page(PAGE_PRINCIPALE)
-            
+
         try:
             detail = str(res.json().get("detail", "Erreur lors de la connexion."))
         except ValueError:
