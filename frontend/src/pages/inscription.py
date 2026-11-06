@@ -15,7 +15,6 @@ if "username" not in st.session_state:
 
 client: APIClient = st.session_state["api_client"]
 
-# Déjà connecté : retour à la page principale
 if st.session_state["token"] is not None:
     st.switch_page(PAGE_PRINCIPALE)
 
@@ -32,23 +31,22 @@ if btn_signup:
         st.warning("Tous les champs sont requis pour l'inscription.")
     else:
         try:
-            res = client.signup(new_user.strip(), new_email.strip(), new_pwd)
-        except requests.exceptions.RequestException:
-            st.error("Le serveur est injoignable. Réessayez plus tard.")
-            st.stop()
-
-        if res.status_code in (200, 201):
+            client.signup(new_user.strip(), new_email.strip(), new_pwd)
             st.success(
                 "Compte créé avec succès ! Rendez-vous sur la page "
                 "**Connexion** pour vous connecter."
             )
-        elif res.status_code == 409:
-            st.error("Ce nom d'utilisateur ou cette adresse e-mail existe déjà.")
-        elif res.status_code == 422:
-            st.error("Données d'inscription invalides.")
-        else:
-            try:
-                detail = str(res.json().get("detail", "Erreur serveur."))
-            except ValueError:
-                detail = "Erreur serveur."
-            st.error(f"Échec ({res.status_code}) : {detail}")
+        except requests.exceptions.HTTPError as e:
+            status_code = e.response.status_code
+            if status_code == 409:
+                st.error("Ce nom d'utilisateur ou cette adresse e-mail existe déjà.")
+            elif status_code == 422:
+                st.error("Données d'inscription invalides.")
+            else:
+                try:
+                    detail = str(e.response.json().get("detail", "Erreur serveur."))
+                except ValueError:
+                    detail = "Erreur serveur."
+                st.error(f"Échec ({status_code}) : {detail}")
+        except requests.exceptions.RequestException:
+            st.error("Le serveur est injoignable. Réessayez plus tard.")
