@@ -12,7 +12,7 @@ st.title("🚲 Bienvenue sur VeloScope")
 
 st.write(
     "Bienvenue sur VeloScope, votre application de recherche "
-    "et de consultation des stations de vélos."
+    "et de consultation de stations de vélos."
 )
 
 st.info(
