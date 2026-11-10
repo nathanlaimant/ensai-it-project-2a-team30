@@ -296,6 +296,8 @@ class StationService:
                         {
                             "station_id": stations[i].station_id,
                             "name": stations[i].name,
+                            "lat": la,
+                            "lon": lo,
                             "distance_meters": haversine(
                                 (la, lo), (criteria.lat, criteria.lon), unit="m"
                             ),
