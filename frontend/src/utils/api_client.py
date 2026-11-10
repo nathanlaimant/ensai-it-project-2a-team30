@@ -122,5 +122,9 @@ class APIClient:
         """Récupère les stations auprès de l'API avec d'éventuels filtres."""
         return self.post("/station", data=params if params else {})
 
+    def get_nearby_recommendations(self, payload: dict) -> Any:
+        """Appelle la route POST /station/recommendations."""
+        return self.post("/station/recommendations", data=payload)
+
 
 api_client = APIClient(API_URL)
