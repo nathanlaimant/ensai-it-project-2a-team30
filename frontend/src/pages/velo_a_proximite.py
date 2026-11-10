@@ -16,16 +16,50 @@ if not st.session_state.get(SESSION_TOKEN_KEY):
 
 @st.cache_data(ttl=600)
 def locate_from_ip():
-    """Position approximative d'après l'adresse IP (peu fiable), ou None."""
+    """Position approximative d'après l'adresse IP (peu fiable)."""
     g = geocoder.ip("me")
-    return g.latlng if g.latlng is not None else None
+    if g.latlng is None:
+        raise ValueError("Position IP introuvable")
+    return g.latlng
 
 
 @st.cache_data(ttl=600)
 def locate_from_address(address: str):
-    """Position d'une adresse ou d'une ville via OpenStreetMap, ou None."""
-    g = geocoder.osm(address)
-    return g.latlng if g.ok and g.latlng is not None else None
+    """Position d'une adresse ou d'une ville (Nominatim, puis Open-Meteo en secours)."""
+    # 1) Nominatim (OpenStreetMap), avec un User-Agent explicite
+    try:
+        response = requests.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={"q": address, "format": "jsonv2", "limit": 1},
+            headers={"User-Agent": "veloscope-ensai-team30/1.0 (projet etudiant ENSAI)"},
+            timeout=10,
+        )
+        response.raise_for_status()
+        results = response.json()
+        if results:
+            return float(results[0]["lat"]), float(results[0]["lon"])
+    except requests.RequestException:
+        pass  # on tente le service de secours
+
+    # 2) Open-Meteo (recherche par nom de lieu, sans clé)
+    try:
+        response = requests.get(
+            "https://geocoding-api.open-meteo.com/v1/search",
+            params={
+                "name": address.split(",")[0].strip(),
+                "count": 1,
+                "language": "fr",
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        results = response.json().get("results")
+        if results:
+            return float(results[0]["latitude"]), float(results[0]["longitude"])
+    except requests.RequestException as e:
+        raise ValueError(f"service de géocodage injoignable : {e}")
+
+    raise ValueError("aucun résultat pour cette adresse")
 
 
 mode = st.radio(
@@ -35,14 +69,16 @@ mode = st.radio(
 
 coordinates = None
 if mode == "Saisir une adresse ou une ville":
-    address = st.text_input("Adresse ou ville", placeholder="Ex : Rennes")
+    address = st.text_input("Adresse ou ville", placeholder="Ex : Rennes, France")
     if address:
-        coordinates = locate_from_address(address)
-        if coordinates is None:
-            st.error("Adresse introuvable.")
+        try:
+            coordinates = locate_from_address(address)
+        except ValueError as e:
+            st.error(f"Adresse introuvable ({e}).")
 else:
-    coordinates = locate_from_ip()
-    if coordinates is None:
+    try:
+        coordinates = locate_from_ip()
+    except ValueError:
         st.error("Impossible de récupérer votre position.")
 
 if coordinates is None:
@@ -73,9 +109,14 @@ except requests.exceptions.ConnectionError:
     st.error("Impossible de joindre le backend.")
 else:
     if not stations_nearby:
-        st.info(f"Aucune station trouvée dans un rayon de {radius} m. Essayez d'agrandir le rayon.")
+        st.info(
+            f"Aucune station trouvée dans un rayon de {radius} m. "
+            "Essayez d'agrandir le rayon."
+        )
     else:
         df = pd.DataFrame(stations_nearby)
         st.success(f"{len(df)} station(s) trouvée(s), de la plus proche à la plus éloignée.")
-        st.map(df[["lat", "lon"]])
-        st.dataframe(df.drop(columns=["lat", "lon"]), hide_index=True)
+        if {"lat", "lon"}.issubset(df.columns):
+            st.map(df[["lat", "lon"]])
+            df = df.drop(columns=["lat", "lon"])
+        st.dataframe(df, hide_index=True)
