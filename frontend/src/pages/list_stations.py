@@ -37,6 +37,8 @@ if not stations:
 
 for i in stations:
     stations["state"] = client.get(f"/{i["station_id"]}/status")["station_state"]
+    if not stations["state"]:
+        st.warning("Statut indisponible")
 
 df_brut = pd.DataFrame(stations)
 df = df_brut[["name", "address", "capacity", "state"]]
