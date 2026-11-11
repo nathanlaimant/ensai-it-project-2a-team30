@@ -17,8 +17,8 @@ terme_recherche = st.sidebar.text_input(
     "Recherche par nom", placeholder="Ex : République..."
 )
 
-size_wanted = st.number_input(label="Nombre de stations à afficher", min_value=1, max_value=100)
-page_wanted = st.number_input(label="Afficher la page :", min_value=1, max_value=100)
+size_wanted = st.number_input(label="Nombre de stations à afficher", min_value=5, max_value=50)
+page_wanted = st.number_input(label="Afficher la page :", min_value=1, max_value=20)
 
 stations = client.post(
     "/station",
@@ -35,7 +35,17 @@ if not stations:
     )
     st.stop()
 
-df = pd.DataFrame(stations)
+for i in stations:
+    stations["state"] = client.get(f"/{i["station_id"]}/status")["station_state"]
+
+df_brut = pd.DataFrame(stations)
+df = df_brut[["name", "address", "capacity", "state"]]
+df = df.rename(columns={
+    "name": "Nom",
+    "address": "Adresse",
+    "capacity": "Capacité",
+    "state": "État"
+})
 
 st.metric("Total des stations affichées", len(df))
 

@@ -13,7 +13,7 @@ auth_headers = {"Authorization": f"Bearer {token}"}
 logger.info(f"Informations sur {username}")
 
 if not username:
-    st.warning("Utilisateur introuvable")
+    st.warning("Vous devez être connecté.e pour accéder à cette fonctionnalité.")
 else:
     try:
         user = api_client.get("user/info", headers=auth_headers)
