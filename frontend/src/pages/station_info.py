@@ -118,11 +118,6 @@ try:
 except requests.exceptions.RequestException:
     station_status = None
 
-try:
-    hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"hours": 24})
-except requests.exceptions.RequestException:
-    hourly_stats = []
-
 nom_station = station_info.get("name", f"Station {station_id}")
 short_name = station_info.get("short_name")
 
@@ -173,6 +168,11 @@ with col_fav:
         st.caption("🔒 *Connectez-vous pour ajouter cette station à vos favoris.*")
 
 st.subheader("📊 Disponibilité en temps réel et Fiabilité")
+
+try:
+    hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": "24h"})
+except Exception as e:
+    st.warning(f"{e}")
 
 score_fiabilite = None
 if isinstance(hourly_stats, list) and len(hourly_stats) > 0:
@@ -233,8 +233,12 @@ if station_status:
         station_status['last_reported'] = station_status['last_reported'].replace("Z", "")
         station_status['last_reported'] = datetime.strptime(station_status['last_reported'], "%Y-%m-%d %H:%M:%S")
         periode = datetime.now() - station_status['last_reported']
+        if periode.seconds // 60 <= 1:
+            mins = "minute"
+        else:
+            mins = "minutes"
         col_stat4.write(
-            f"**Dernier relevé :** Il y a `{periode.seconds // 60} minutes`."
+            f"**Dernier relevé :** Il y a `{periode.seconds // 60} {mins}`."
         )
     else:
         col_stat4.write("**Dernier relevé :** `N/A`")
@@ -267,38 +271,54 @@ with col_info2:
         f"* **Coordonnées GPS :** `{station_info.get('lat', 'N/A')}, {station_info.get('lon', 'N/A')}`"
     )
 
-if isinstance(hourly_stats, list) and len(hourly_stats) > 0:
-    st.divider()
-    st.subheader("📈 Historique horaire et métriques de fiabilité")
+st.divider()
+st.subheader("📈 Historique horaire et métriques de fiabilité")
 
-    periode_voulue = st.multiselect(
-        label="Période",
-        options=[
-            "La dernière heure",
-            "Dans les dernières 24 heures",
-            "Dans les 7 derniers jours",
-            "Dans les 30 derniers jours"
-        ],
-        max_selections=1
-    )[0][0]
+periode_voulue = st.multiselect(
+    label="Période",
+    options=[
+        "La dernière heure",
+        "Dans les dernières 24 heures",
+        "Dans les 7 derniers jours",
+        "Dans les 30 derniers jours"
+    ],
+    max_selections=1
+)
+if not periode_voulue:
+    st.info("Choisir une période à observer sur la station.")
+elif periode_voulue[0] == "La dernière heure":
+    periode_voulue = "1h"
+elif periode_voulue[0] == "Dans les dernières 24 heures":
+    periode_voulue = "24h"
+elif periode_voulue[0] == "Dans les 7 derniers jours":
+    periode_voulue = "7j"
+else:
+    periode_voulue = "30j"
 
-    st.write(hourly_stats)
-    df_hourly = pd.DataFrame(hourly_stats)
+try:
+    if "h" in periode_voulue:
+        hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
+    else:
+        hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
+except requests.exceptions.RequestException:
+    hourly_stats = []
 
-    # Renommage lisible des colonnes issues de la table station_status_hourly
-    colonnes_traduction = {
-        "bucket_hour": "Tranche horaire",
-        "reliability_score": "Score de fiabilité",
-        "avg_num_bikes_available": "Moy. vélos dispo",
-        "avg_num_docks_available": "Moy. places libres",
-        "avg_operational_capacity": "Capacité op. moyenne",
-        "empty_events_cnt": "Pénuries (0 vélo)",
-        "full_events_cnt": "Saturations (0 place)",
-        "empty_duration_sec": "Durée vide (s)",
-        "full_duration_sec": "Durée saturée (s)",
-    }
+df_hourly = pd.DataFrame(hourly_stats)
 
-    colonnes_presentes = [c for c in colonnes_traduction if c in df_hourly.columns]
-    df_affichage = df_hourly[colonnes_presentes].rename(columns=colonnes_traduction)
+# Renommage lisible des colonnes issues de la table station_status_hourly
+colonnes_traduction = {
+    "bucket_hour": "Tranche horaire",
+    "reliability_score": "Score de fiabilité",
+    "avg_num_bikes_available": "Moy. vélos dispo",
+    "avg_num_docks_available": "Moy. places libres",
+    "avg_operational_capacity": "Capacité op. moyenne",
+    "empty_events_cnt": "Pénuries (0 vélo)",
+    "full_events_cnt": "Saturations (0 place)",
+    "empty_duration_sec": "Durée vide (s)",
+    "full_duration_sec": "Durée saturée (s)",
+}
 
-    st.dataframe(df_affichage, use_container_width=True, hide_index=True)
+colonnes_presentes = [c for c in colonnes_traduction if c in df_hourly.columns]
+df_affichage = df_hourly[colonnes_presentes].rename(columns=colonnes_traduction)
+
+st.dataframe(df_affichage, use_container_width=True, hide_index=True)
