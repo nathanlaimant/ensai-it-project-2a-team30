@@ -9,12 +9,15 @@ st.title("🚲 Liste des stations VeloScope")
 
 if "api_client" not in st.session_state:
     st.session_state["api_client"] = APIClient()
+if "in_search" not in st.session_state:
+    st.session_state["in_search"] = None
 
 client: APIClient = st.session_state["api_client"]
 
 st.sidebar.header("Filtres")
 terme_recherche = st.sidebar.text_input(
-    "Recherche par nom", placeholder="Ex : République..."
+    "Recherche par nom", placeholder="Ex : République...",
+    value=st.session_state["in_search"] 
 )
 
 size_wanted = st.number_input(label="Nombre de stations à afficher", min_value=5, max_value=50)
@@ -35,25 +38,30 @@ if not stations:
     )
     st.stop()
 
-for i in stations:
-    stations["state"] = client.get(f"/{i["station_id"]}/status")["station_state"]
-    if not stations["state"]:
+for i in range(len(stations)):
+    statut = client.get(f"/station/{stations[i]["station_id"]}/status")["station_state"]
+    if not statut:
         st.warning("Statut indisponible")
+    stations[i]["state"] = statut
 
 df_brut = pd.DataFrame(stations)
-df = df_brut[["name", "address", "capacity", "state"]]
+df = df_brut[["station_id", "name", "address", "capacity", "state"]]
 df = df.rename(columns={
+    "station_id": "Identifiant",
     "name": "Nom",
     "address": "Adresse",
     "capacity": "Capacité",
     "state": "État"
 })
+df["Infos de la station"] = df.apply(lambda row: f"/proxy/8501/station_info?station_id={row['Identifiant']}", axis=1)
 
 st.metric("Total des stations affichées", len(df))
 
-# 6. Affichage sous forme de tableau interactif
 st.dataframe(
     df,
+    column_config={
+        "Infos de la station": st.column_config.LinkColumn(label="Infos", display_text="ℹ️"),
+    },
     use_container_width=True,
     hide_index=True,
 )

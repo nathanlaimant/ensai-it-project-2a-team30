@@ -7,5 +7,5 @@
 - `uv sync --project frontend --all-extras`
 - `cd frontend`
 - `pip install streamlit`
-- `pip install -e`
+- `pip install -e` ?
 - `streamlit run ./src/app.py`
