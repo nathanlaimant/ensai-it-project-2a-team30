@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+
 from utils.api_client import APIClient
 
 st.set_page_config(page_title="Stations - VeloScope", page_icon="🚲", layout="wide")
@@ -11,13 +12,15 @@ if "api_client" not in st.session_state:
 
 client: APIClient = st.session_state["api_client"]
 
+st.sidebar.header("Filtres")
+terme_recherche = st.sidebar.text_input(
+    "Recherche par nom", placeholder="Ex : République..."
+)
 
-@st.cache_data(ttl=60)
-def charger_stations() -> list[dict]:
-    return client.get_stations()
+size_wanted = st.number_input(label="Nombre de stations à afficher", min_value=1, max_value=100)
+page_wanted = st.number_input(label="Afficher la page :", min_value=1, max_value=100)
 
-
-stations = charger_stations()
+stations = client.post("/station", data={"page": page_wanted, "size": size_wanted})
 
 if not stations:
     st.warning(
@@ -25,14 +28,7 @@ if not stations:
     )
     st.stop()
 
-# 3. Conversion des données brutes en DataFrame Pandas
 df = pd.DataFrame(stations)
-
-# 4. Barre latérale : Recherche textuelle rapide
-st.sidebar.header("Filtres")
-terme_recherche = st.sidebar.text_input(
-    "Recherche par nom", placeholder="Ex : République..."
-)
 
 df_filtre = df.copy()
 
