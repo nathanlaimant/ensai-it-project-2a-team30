@@ -1,6 +1,6 @@
 from datetime import UTC, date, datetime, timedelta
 
-from haversine import haversine
+from haversine import haversine  # type: ignore[import-not-found]
 
 from business_object.station_information import StationInformation
 from dao.station_dao import StationDAO
@@ -257,9 +257,8 @@ class StationService:
             criteria.lat, criteria.lon, criteria.radius_meters
         )
 
-        res = None
+        res = []
         if stations:
-            res = []
             for i in range(len(stations)):
                 if stations[i].station_id is not None:
                     latest_status = self.status_dao.get_latest_status(
@@ -297,6 +296,8 @@ class StationService:
                         {
                             "station_id": stations[i].station_id,
                             "name": stations[i].name,
+                            "lat": la,
+                            "lon": lo,
                             "distance_meters": haversine(
                                 (la, lo), (criteria.lat, criteria.lon), unit="m"
                             ),

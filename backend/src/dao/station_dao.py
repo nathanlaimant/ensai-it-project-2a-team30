@@ -339,9 +339,4 @@ class StationDAO:
                         is_charging_station=res[i]["is_charging_station"],
                     )
                 )
-            # if isinstance(nb_pages, int) and nb_pages > 1:
-            #     sous_liste = []
-            #     for k in range(nb_pages):
-            #         sous_liste[k] = stations_list[k * nb_pages : (k + 1) * nb_pages - 1]
-            #     stations_list = sous_liste
         return stations_list

@@ -1,6 +1,6 @@
 """Gère les requêtes des administrateurs."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status  # type: ignore[import-not-found]
 
 from dependencies.authentication import get_current_admin
 from dependencies.service import get_user_service
@@ -68,6 +68,12 @@ def activate_user(
     MessageResponse
         Message de confirmation de la mise à jour du statut.
     """
+    if user_id == admin_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unable to activate yourself.",
+        )
+
     user = user_service.get_user_by_id(user_id)
     if user is None:
         raise HTTPException(
@@ -110,6 +116,12 @@ def deactivate_user(
     MessageResponse
         Message de confirmation de la mise à jour du statut.
     """
+    if user_id == admin_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unable to deactivate yourself.",
+        )
+
     user = user_service.get_user_by_id(user_id)
     if user is None:
         raise HTTPException(

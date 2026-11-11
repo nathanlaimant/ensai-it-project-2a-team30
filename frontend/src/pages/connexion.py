@@ -1,7 +1,6 @@
 import requests
 import streamlit as st
-from utils.api_client import APIClient, api_client
-from utils.security import hash_password
+from utils.api_client import APIClient
 
 PAGE_PRINCIPALE = "app.py"  # fichier lancé avec "streamlit run"
 
@@ -13,6 +12,8 @@ if "token" not in st.session_state:
     st.session_state["token"] = None
 if "username" not in st.session_state:
     st.session_state["username"] = None
+
+client: APIClient = st.session_state["api_client"]
 
 # Déjà connecté : retour à la page principale
 if st.session_state["token"] is not None:
@@ -32,21 +33,23 @@ if btn_login:
         st.warning("Veuillez renseigner votre identifiant et votre mot de passe.")
     else:
         try:
-            res = api_client.post(
-                "/login", data={"username": login_user, "password": login_pwd}
+            res = client.post(
+                "/login",
+                data={"username": login_user.strip(), "password": login_pwd},
             )
-        except requests.exceptions.RequestException as e:
-            st.error(f"{type(e).__name__} : {e}")
-            st.stop()
-
-        st.write(str(res))
-        st.session_state["token"] = res["access_token"]
-        st.session_state["username"] = res["username"]
-        # api_client.set_token(res["access_token"])
-        st.switch_page(PAGE_PRINCIPALE)
-
-        try:
-            detail = str(res.json().get("detail", "Erreur lors de la connexion."))
-        except ValueError:
-            detail = "Erreur lors de la connexion."
-        st.error(f"Échec ({res.status_code}) : {detail}")
+            st.session_state["token"] = res["access_token"]
+            st.session_state["username"] = res["username"]
+            st.switch_page(PAGE_PRINCIPALE)
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 401:
+                st.error("L'identifiant ou le mot de passe est incorrect.")
+            else:
+                try:
+                    detail = str(
+                        e.response.json().get("detail", "Erreur lors de la connexion.")
+                    )
+                except ValueError:
+                    detail = "Erreur lors de la connexion."
+                st.error(f"Échec ({e.response.status_code}) : {detail}")
+        except requests.exceptions.RequestException:
+            st.error("Le serveur est injoignable. Réessayez plus tard.")

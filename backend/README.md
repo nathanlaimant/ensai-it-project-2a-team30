@@ -18,7 +18,7 @@ postgres_port=fill_your_own
 postgres_database=fill_your_own
 postgres_user=fill_your_own
 postgres_password=fill_your_own
-postgres_schema=fill_your_own
+postgres_schema=veloscope
 
 system_information_feed_url=https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_ae/fr/system_information.json
 station_information_feed_url=https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_ae/fr/station_information.json

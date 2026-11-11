@@ -1,6 +1,6 @@
 import re
 import unicodedata
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -305,7 +305,9 @@ class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
             station_state = StationState.FUNCTIONAL
 
         # 9. last_reported: int timestamp, MUST NOT be None
-        last_reported = datetime.fromtimestamp(json_dict["last_reported"], tz=UTC)
+        debut = datetime(year=1970, month=1, day=1, hour=0, minute=0, second=0)
+        last_reported = debut + timedelta(seconds=json_dict["last_reported"])
+        # last_reported = datetime.fromtimestamp(json_dict["last_reported"], tz=UTC)
 
         return StationStatus(
             station_id=str(json_dict["station_id"]),

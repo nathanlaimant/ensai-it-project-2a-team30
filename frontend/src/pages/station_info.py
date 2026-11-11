@@ -1,7 +1,11 @@
+from datetime import datetime, timedelta
+
 import pandas as pd
 import requests
 import streamlit as st
+
 from utils.api_client import APIClient, api_client
+from utils.log_init import get_page_logger
 
 st.set_page_config(
     page_title="Informations Station - VeloScope",
@@ -9,9 +13,8 @@ st.set_page_config(
     layout="wide",
 )
 
-# -----------------------------------------------------------------------------
-# 1. Initialisation des variables de session
-# -----------------------------------------------------------------------------
+logger = get_page_logger("station_info")
+
 if "api_client" not in st.session_state:
     st.session_state["api_client"] = APIClient()
 if "token" not in st.session_state:
@@ -39,37 +42,63 @@ st.divider()
 # -----------------------------------------------------------------------------
 # 3. Sélection de la station (pré-sélectionnée en session ou saisie manuelle)
 # -----------------------------------------------------------------------------
-station_id = st.session_state.get("selected_station_id")
+station_id = st.query_params.get("station_id")
 
-with st.expander(
-    "Changer ou saisir l'identifiant d'une station", expanded=(station_id is None)
-):
-    with st.form("select_station_form"):
-        saisie_id = st.text_input(
-            "Identifiant de la station (station_id) :",
-            value=station_id if station_id else "",
-            placeholder="Ex: 1, station_rennes_01...",
-        )
-        btn_charger = st.form_submit_button("Afficher les informations")
-
-    if btn_charger and saisie_id.strip():
-        st.session_state["selected_station_id"] = saisie_id.strip()
-        station_id = saisie_id.strip()
-        st.rerun()
+ENDPOINT_INFO = f"/station/{station_id}"
+ENDPOINT_STATUS = f"/station/{station_id}/status"
+ENDPOINT_HOURLY = f"/station/{station_id}/history"
 
 if not station_id:
+    with st.expander(
+        "Changer ou saisir l'identifiant d'une station", expanded=(station_id is None)
+    ):
+        with st.form("select_station_form"):
+            saisie_id = st.text_input(
+                "Identifiant de la station (station_id) :",
+                value=station_id if station_id else "",
+                placeholder="Ex: 1, station_rennes_01...",
+            )
+            btn_charger = st.form_submit_button("Afficher les informations")
+
+        if btn_charger and saisie_id.strip():
+            station_id = saisie_id.strip()
+            st.session_state["selected_station_id"] = station_id
+            st.query_params["station_id"] = station_id
+            st.rerun()
     st.info(
         "Veuillez renseigner un identifiant de station ci-dessus ou choisir une station depuis la page de recherche."
     )
     st.stop()
+else:
+    with st.expander(
+        "Changer de station", expanded=(station_id is not None)
+    ):
+        with st.form("select_station_form"):
+            saisie_id = st.text_input(
+                label="Identifiant de la station (station_id) :",
+                placeholder="Ex: 1, 1234...",
+            )
+            saisie_nom = st.text_input(
+                label="Nom de la station",
+                type="search",
+                autocomplete="search",
+                placeholder="Ex: Gare, Mairie...",
+            )
+            btn_charger = st.form_submit_button("Afficher les informations")
 
-# -----------------------------------------------------------------------------
-# 4. Appels au Backend (StationController)
-# -----------------------------------------------------------------------------
-# Adapter les chemins ci-dessous si les routes de votre StationController diffèrent
-ENDPOINT_INFO = f"/stations/{station_id}"
-ENDPOINT_STATUS = f"/stations/{station_id}/status"
-ENDPOINT_HOURLY = f"/stations/{station_id}/hourly"
+        if btn_charger and (saisie_id.strip() or saisie_nom.strip()):
+            if len(api_client.post("/station", {"name": saisie_nom})) > 1:
+                st.session_state["in_search"] = saisie_nom
+                st.switch_page("pages/list_stations.py")
+            if saisie_id.strip():
+                st.session_state["selected_station_id"] = saisie_id.strip()
+                st.query_params["station_id"] = saisie_id.strip()
+                station_id = saisie_id.strip()
+            else:
+                station_id = api_client.post("/station", {"name": saisie_nom})[0]["station_id"]
+                st.session_state["selected_station_id"] = station_id
+                st.query_params["station_id"] = station_id
+            st.rerun()
 
 station_info = None
 station_status = None
@@ -84,21 +113,11 @@ except requests.exceptions.RequestException as e:
         st.error(f"Erreur lors de la récupération des informations de la station : {e}")
     st.stop()
 
-# Récupération du statut temps réel (StationStatus)
 try:
     station_status = api_client.get(ENDPOINT_STATUS)
 except requests.exceptions.RequestException:
     station_status = None
 
-# Récupération des statistiques horaires et du score de fiabilité (StationStatusHourly)
-try:
-    hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"hours": 24})
-except requests.exceptions.RequestException:
-    hourly_stats = []
-
-# -----------------------------------------------------------------------------
-# 5. En-tête de la station & Gestion des Favoris (si utilisateur connecté)
-# -----------------------------------------------------------------------------
 nom_station = station_info.get("name", f"Station {station_id}")
 short_name = station_info.get("short_name")
 
@@ -111,7 +130,6 @@ with col_titre:
     else:
         st.caption(f"ID : `{station_id}`")
 
-# Logique du diagramme d'activité 2.3.1 : Ajouter / Retirer des favoris
 with col_fav:
     if st.session_state["token"] is not None:
         headers = {"Authorization": f"Bearer {st.session_state['token']}"}
@@ -149,12 +167,13 @@ with col_fav:
     else:
         st.caption("🔒 *Connectez-vous pour ajouter cette station à vos favoris.*")
 
-# -----------------------------------------------------------------------------
-# 6. État en temps réel et Score de fiabilité (KPIs principaux)
-# -----------------------------------------------------------------------------
 st.subheader("📊 Disponibilité en temps réel et Fiabilité")
 
-# Extraction du dernier score de fiabilité connu (dans hourly_stats ou station_status)
+try:
+    hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": "24h"})
+except Exception as e:
+    st.warning(f"{e}")
+
 score_fiabilite = None
 if isinstance(hourly_stats, list) and len(hourly_stats) > 0:
     score_fiabilite = hourly_stats[-1].get("reliability_score")
@@ -209,9 +228,20 @@ if station_status:
     col_stat3.write(
         f"**Restitution active :** {'Oui ✅' if station_status.get('is_returning') else 'Non ❌'}"
     )
-    col_stat4.write(
-        f"**Dernier relevé :** `{station_status.get('last_reported', 'N/A')}`"
-    )
+    if station_status["last_reported"]:
+        station_status['last_reported'] = station_status['last_reported'].replace("T", " ")
+        station_status['last_reported'] = station_status['last_reported'].replace("Z", "")
+        station_status['last_reported'] = datetime.strptime(station_status['last_reported'], "%Y-%m-%d %H:%M:%S")
+        periode = datetime.now() - station_status['last_reported']
+        if periode.seconds // 60 <= 1:
+            mins = "minute"
+        else:
+            mins = "minutes"
+        col_stat4.write(
+            f"**Dernier relevé :** Il y a `{periode.seconds // 60} {mins}`."
+        )
+    else:
+        col_stat4.write("**Dernier relevé :** `N/A`")
 else:
     st.info(
         "Les données de statut en temps réel (`StationStatus`) ne sont pas disponibles pour cette station."
@@ -219,9 +249,6 @@ else:
 
 st.divider()
 
-# -----------------------------------------------------------------------------
-# 7. Caractéristiques statiques de la station (StationInformation)
-# -----------------------------------------------------------------------------
 st.subheader("🗂️ Caractéristiques de la station")
 
 col_info1, col_info2 = st.columns(2)
@@ -244,29 +271,54 @@ with col_info2:
         f"* **Coordonnées GPS :** `{station_info.get('lat', 'N/A')}, {station_info.get('lon', 'N/A')}`"
     )
 
-# -----------------------------------------------------------------------------
-# 8. Historique horaire et analyse de fiabilité (StationStatusHourly)
-# -----------------------------------------------------------------------------
-if isinstance(hourly_stats, list) and len(hourly_stats) > 0:
-    st.divider()
-    st.subheader("📈 Historique horaire et métriques de fiabilité")
+st.divider()
+st.subheader("📈 Historique horaire et métriques de fiabilité")
 
-    df_hourly = pd.DataFrame(hourly_stats)
+periode_voulue = st.multiselect(
+    label="Période",
+    options=[
+        "La dernière heure",
+        "Dans les dernières 24 heures",
+        "Dans les 7 derniers jours",
+        "Dans les 30 derniers jours"
+    ],
+    max_selections=1
+)
+if not periode_voulue:
+    st.info("Choisir une période à observer sur la station.")
+elif periode_voulue[0] == "La dernière heure":
+    periode_voulue = "1h"
+elif periode_voulue[0] == "Dans les dernières 24 heures":
+    periode_voulue = "24h"
+elif periode_voulue[0] == "Dans les 7 derniers jours":
+    periode_voulue = "7j"
+else:
+    periode_voulue = "30j"
 
-    # Renommage lisible des colonnes issues de la table station_status_hourly
-    colonnes_traduction = {
-        "bucket_hour": "Tranche horaire",
-        "reliability_score": "Score de fiabilité",
-        "avg_num_bikes_available": "Moy. vélos dispo",
-        "avg_num_docks_available": "Moy. places libres",
-        "avg_operational_capacity": "Capacité op. moyenne",
-        "empty_events_cnt": "Pénuries (0 vélo)",
-        "full_events_cnt": "Saturations (0 place)",
-        "empty_duration_sec": "Durée vide (s)",
-        "full_duration_sec": "Durée saturée (s)",
-    }
+try:
+    if "h" in periode_voulue:
+        hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
+    else:
+        hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
+except requests.exceptions.RequestException:
+    hourly_stats = []
 
-    colonnes_presentes = [c for c in colonnes_traduction if c in df_hourly.columns]
-    df_affichage = df_hourly[colonnes_presentes].rename(columns=colonnes_traduction)
+df_hourly = pd.DataFrame(hourly_stats)
 
-    st.dataframe(df_affichage, use_container_width=True, hide_index=True)
+# Renommage lisible des colonnes issues de la table station_status_hourly
+colonnes_traduction = {
+    "bucket_hour": "Tranche horaire",
+    "reliability_score": "Score de fiabilité",
+    "avg_num_bikes_available": "Moy. vélos dispo",
+    "avg_num_docks_available": "Moy. places libres",
+    "avg_operational_capacity": "Capacité op. moyenne",
+    "empty_events_cnt": "Pénuries (0 vélo)",
+    "full_events_cnt": "Saturations (0 place)",
+    "empty_duration_sec": "Durée vide (s)",
+    "full_duration_sec": "Durée saturée (s)",
+}
+
+colonnes_presentes = [c for c in colonnes_traduction if c in df_hourly.columns]
+df_affichage = df_hourly[colonnes_presentes].rename(columns=colonnes_traduction)
+
+st.dataframe(df_affichage, use_container_width=True, hide_index=True)

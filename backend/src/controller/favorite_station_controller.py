@@ -1,6 +1,6 @@
 """Gère les requètes sur les stations favorites."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status  # type: ignore[import-not-found]
 
 from business_object.station_information import StationInformation
 from dependencies.authentication import get_current_user

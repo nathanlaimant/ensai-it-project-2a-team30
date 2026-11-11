@@ -1,7 +1,7 @@
 """Gère les requètes d'authentification et de modifications de comptes utilisateurs."""
 
 import psycopg2
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status  # type: ignore[import-not-found]
 
 from dependencies.authentication import get_current_user
 from dependencies.service import get_user_service
