@@ -40,10 +40,7 @@ class UserService:
         username = dto.get("username")
         email = dto.get("email")
         password = dto.get("password")
-        if not all(
-            isinstance(value, str) and value.strip()
-            for value in (username, email, password)
-        ):
+        if not all(isinstance(value, str) and value.strip() for value in (username, email, password)):
             return False
 
         now = datetime.now(timezone.utc)
@@ -81,12 +78,7 @@ class UserService:
             return None
 
         user = self.user_dao.get_by_username(username)
-        if (
-            user is None
-            or not user.is_active
-            or user.password_hashed != password_hashed
-            or user.user_id is None
-        ):
+        if user is None or not user.is_active or user.password_hashed != password_hashed or user.user_id is None:
             return None
 
         access_token = generate_user_token()
@@ -187,3 +179,19 @@ class UserService:
             True si la mise à jour a réussi.
         """
         return self.user_dao.update_user(user_id, updates)
+
+    def delete_user(self, user_id: int) -> bool:
+        """
+        Supprime définitivement un utilisateur.
+
+        Parameters
+        ----------
+        user_id : int
+            Identifiant de l'utilisateur à supprimer.
+
+        Returns
+        -------
+        bool
+            True si la suppression a réussi, False sinon.
+        """
+        return self.user_dao.delete_user(user_id)

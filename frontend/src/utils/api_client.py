@@ -188,4 +188,5 @@ class APIClient:
         """Récupère les stations auprès de l'API avec d'éventuels filtres."""
         return self.get("/stations", params=params)
 
+
 api_client = APIClient(API_URL)

@@ -132,3 +132,37 @@ def deactivate_user(
 
     logger.info("Admin %s deactivated user %s", admin_id, user_id)
     return MessageResponse(message="User account deactivated successfully.")
+
+
+@router.delete("/users/{user_id}", response_model=MessageResponse)
+def delete_user(
+    user_id: int,
+    user_service: UserService = Depends(get_user_service),
+    admin_id: int = Depends(get_current_admin),
+) -> MessageResponse:
+    """Supprime définitivement le compte d'un utilisateur."""
+    if user_id == admin_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot delete your own account.",
+        )
+
+    user = user_service.get_user_by_id(user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    if not user_service.delete_user(user_id):
+        logger.error("Admin %s could not delete user %s", admin_id, user_id)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to delete the user account.",
+        )
+
+    if user.access_token:
+        app_token_cache.delete(user.access_token)
+
+    logger.info("Admin %s deleted user %s", admin_id, user_id)
+    return MessageResponse(message="User account deleted successfully.")
