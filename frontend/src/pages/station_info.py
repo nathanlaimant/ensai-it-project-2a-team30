@@ -46,7 +46,7 @@ station_id = st.query_params.get("station_id")
 
 ENDPOINT_INFO = f"/station/{station_id}"
 ENDPOINT_STATUS = f"/station/{station_id}/status"
-ENDPOINT_HOURLY = f"/station/{station_id}/hourly"
+ENDPOINT_HOURLY = f"/station/{station_id}/history"
 
 if not station_id:
     with st.expander(
@@ -267,13 +267,22 @@ with col_info2:
         f"* **Coordonnées GPS :** `{station_info.get('lat', 'N/A')}, {station_info.get('lon', 'N/A')}`"
     )
 
-# -----------------------------------------------------------------------------
-# 8. Historique horaire et analyse de fiabilité (StationStatusHourly)
-# -----------------------------------------------------------------------------
 if isinstance(hourly_stats, list) and len(hourly_stats) > 0:
     st.divider()
     st.subheader("📈 Historique horaire et métriques de fiabilité")
 
+    periode_voulue = st.multiselect(
+        label="Période",
+        options=[
+            "La dernière heure",
+            "Dans les dernières 24 heures",
+            "Dans les 7 derniers jours",
+            "Dans les 30 derniers jours"
+        ],
+        max_selections=1
+    )[0][0]
+
+    st.write(hourly_stats)
     df_hourly = pd.DataFrame(hourly_stats)
 
     # Renommage lisible des colonnes issues de la table station_status_hourly
