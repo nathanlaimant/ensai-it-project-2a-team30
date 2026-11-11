@@ -20,29 +20,28 @@ terme_recherche = st.sidebar.text_input(
 size_wanted = st.number_input(label="Nombre de stations à afficher", min_value=1, max_value=100)
 page_wanted = st.number_input(label="Afficher la page :", min_value=1, max_value=100)
 
-stations = client.post("/station", data={"page": page_wanted, "size": size_wanted})
+stations = client.post(
+    "/station",
+    data={
+        "name": terme_recherche,
+        "page": page_wanted,
+        "size": size_wanted
+    }
+)
 
 if not stations:
     st.warning(
-        "Aucune station trouvée. Assurez-vous que le serveur FastAPI est bien démarré."
+        "Aucune station trouvée. Assurez-vous que le serveur FastAPI est bien démarré ou changez le numéro de page à afficher."
     )
     st.stop()
 
 df = pd.DataFrame(stations)
 
-df_filtre = df.copy()
-
-if terme_recherche.strip() and "name" in df_filtre.columns:
-    df_filtre = df_filtre[
-        df_filtre["name"].str.contains(terme_recherche, case=False, na=False)
-    ]
-
-# 5. Métrique récapitulative
-st.metric("Total des stations affichées", len(df_filtre))
+st.metric("Total des stations affichées", len(df))
 
 # 6. Affichage sous forme de tableau interactif
 st.dataframe(
-    df_filtre,
+    df,
     use_container_width=True,
     hide_index=True,
 )
