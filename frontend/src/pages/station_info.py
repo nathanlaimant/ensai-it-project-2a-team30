@@ -102,7 +102,6 @@ else:
 
 station_info = None
 station_status = None
-hourly_stats = []
 
 try:
     station_info = api_client.get(ENDPOINT_INFO)
@@ -260,7 +259,6 @@ st.subheader("📈 Historique horaire et métriques de fiabilité")
 periode_voulue = st.multiselect(
     label="Période",
     options=[
-        "La dernière heure",
         "Dans les dernières 24 heures",
         "Dans les 7 derniers jours",
         "Dans les 30 derniers jours"
@@ -269,8 +267,6 @@ periode_voulue = st.multiselect(
 )
 if not periode_voulue:
     st.info("Choisir une période à observer sur la station.")
-elif periode_voulue[0] == "La dernière heure":
-    periode_voulue = "1h"
 elif periode_voulue[0] == "Dans les dernières 24 heures":
     periode_voulue = "24h"
 elif periode_voulue[0] == "Dans les 7 derniers jours":
@@ -279,31 +275,30 @@ else:
     periode_voulue = "30j"
 
 try:
-    if "h" in periode_voulue:
-        hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
-    else:
-        hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
+    hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
 except Exception as e:
     hourly_stats = []
     st.warning(f"Error {e}")
     st.stop()
 
-df_hourly = pd.DataFrame(hourly_stats)
+if periode_voulue:
+    st.write(hourly_stats)
+    df_hourly = pd.DataFrame(hourly_stats)
 
-# Renommage lisible des colonnes issues de la table station_status_hourly
-colonnes_traduction = {
-    "bucket_hour": "Tranche horaire",
-    "reliability_score": "Score de fiabilité",
-    "avg_num_bikes_available": "Moy. vélos dispo",
-    "avg_num_docks_available": "Moy. places libres",
-    "avg_operational_capacity": "Capacité op. moyenne",
-    "empty_events_cnt": "Pénuries (0 vélo)",
-    "full_events_cnt": "Saturations (0 place)",
-    "empty_duration_sec": "Durée vide (s)",
-    "full_duration_sec": "Durée saturée (s)",
-}
+    # Renommage lisible des colonnes issues de la table station_status_hourly
+    colonnes_traduction = {
+        "bucket_hour": "Tranche horaire",
+        "reliability_score": "Score de fiabilité",
+        "avg_num_bikes_available": "Moy. vélos dispo",
+        "avg_num_docks_available": "Moy. places libres",
+        "avg_operational_capacity": "Capacité op. moyenne",
+        "empty_events_cnt": "Pénuries (0 vélo)",
+        "full_events_cnt": "Saturations (0 place)",
+        "empty_duration_sec": "Durée vide (s)",
+        "full_duration_sec": "Durée saturée (s)",
+    }
 
-colonnes_presentes = [c for c in colonnes_traduction if c in df_hourly.columns]
-df_affichage = df_hourly[colonnes_presentes].rename(columns=colonnes_traduction)
+    colonnes_presentes = [c for c in colonnes_traduction if c in df_hourly.columns]
+    df_affichage = df_hourly[colonnes_presentes].rename(columns=colonnes_traduction)
 
-st.dataframe(df_affichage, use_container_width=True, hide_index=True)
+    st.dataframe(df_affichage, use_container_width=True, hide_index=True)
