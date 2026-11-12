@@ -169,17 +169,6 @@ with col_fav:
 
 st.subheader("📊 Disponibilité en temps réel et Fiabilité")
 
-try:
-    hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": "24h"})
-except Exception as e:
-    st.warning(f"{e}")
-
-score_fiabilite = None
-if isinstance(hourly_stats, list) and len(hourly_stats) > 0:
-    score_fiabilite = hourly_stats[-1].get("reliability_score")
-elif isinstance(station_info, dict) and "reliability_score" in station_info:
-    score_fiabilite = station_info.get("reliability_score")
-
 if station_status:
     etat = station_status.get("station_state", "INCONNU")
     if etat == "FUNCTIONAL":
@@ -190,6 +179,8 @@ if station_status:
         st.warning("⚠️ **État de la station : SATURÉE (FULL) — Aucune place libre**")
     else:
         st.info(f"ℹ️ **État de la station : {etat}**")
+
+    taux_remplissage = 100 * station_status["num_docks_available"] / station_status["operational_capacity"]
 
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     kpi1.metric(
@@ -209,24 +200,16 @@ if station_status:
         station_status.get("operational_capacity", station_info.get("capacity", "N/A")),
     )
     kpi4.metric(
-        "🎯 Score de fiabilité",
-        f"{round(score_fiabilite * 100, 1)} %"
-        if isinstance(score_fiabilite, (int, float)) and score_fiabilite <= 1
-        else (
-            round(score_fiabilite, 2) if score_fiabilite is not None else "Non calculé"
-        ),
+        "Taux de remplissage :",
+        f"{int(taux_remplissage)} %",
     )
 
     # Détails techniques du statut en temps réel
-    col_stat1, col_stat2, col_stat3, col_stat4 = st.columns(4)
-    col_stat1.write(
-        f"**Installée :** {'Oui ✅' if station_status.get('is_installed') else 'Non ❌'}"
-    )
-    col_stat2.write(
-        f"**Location active :** {'Oui ✅' if station_status.get('is_renting') else 'Non ❌'}"
-    )
-    col_stat3.write(
-        f"**Restitution active :** {'Oui ✅' if station_status.get('is_returning') else 'Non ❌'}"
+    col_stat1, col_stat2 = st.columns(2)
+    col_stat1.metric(
+        "🎯 Score de fiabilité",
+        f"{int(station_status["reliability_score"])} %"
+        if station_status.get("reliability_score") else "Non calculé",
     )
     if station_status["last_reported"]:
         station_status['last_reported'] = station_status['last_reported'].replace("T", " ")
@@ -237,11 +220,11 @@ if station_status:
             mins = "minute"
         else:
             mins = "minutes"
-        col_stat4.write(
+        col_stat2.write(
             f"**Dernier relevé :** Il y a `{periode.seconds // 60} {mins}`."
         )
     else:
-        col_stat4.write("**Dernier relevé :** `N/A`")
+        col_stat2.write("**Dernier relevé :** `N/A`")
 else:
     st.info(
         "Les données de statut en temps réel (`StationStatus`) ne sont pas disponibles pour cette station."
@@ -300,8 +283,10 @@ try:
         hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
     else:
         hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
-except requests.exceptions.RequestException:
+except Exception as e:
     hourly_stats = []
+    st.warning(f"Error {e}")
+    st.stop()
 
 df_hourly = pd.DataFrame(hourly_stats)
 

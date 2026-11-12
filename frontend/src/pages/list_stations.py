@@ -84,7 +84,7 @@ df = df.rename(
     }
 )
 df["Infos de la station"] = df.apply(
-    lambda row: f"/proxy/8501/station_info?station_id={row['Identifiant']}", axis=1
+    lambda row: f"/proxy/8502/station_info?station_id={row['Identifiant']}", axis=1
 )
 
 st.metric("Total des stations affichées", len(df))
