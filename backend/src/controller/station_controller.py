@@ -9,6 +9,7 @@ from schema.common_model import TimePeriod
 from schema.station_model import (
     StationInfoResponse,
     StationRecommendationRequest,
+    StationRecommendationResponse,
     StationSearchRequest,
     StationStatusResponse,
 )
@@ -145,7 +146,7 @@ async def get_station_history(
     return station_service.get_station_history(station_id, period)
 
 
-@router.post("/recommendations", response_model=list[dict])
+@router.post("/recommendations", response_model=list[StationRecommendationResponse])
 async def get_nearby_recommendations(
     payload: StationRecommendationRequest,
     station_service: StationService = Depends(get_station_service),
@@ -156,13 +157,14 @@ async def get_nearby_recommendations(
     Parameters
     ----------
     payload: StationRecommendationRequest
-        Critères de recherche pour les stations recommandées.
+        Critères de recherche pour les stations recommandées (position,
+        rayon, capacité opérationnelle, état, score min, type de vélo: all, mechanical, electric).
 
     Returns
     -------
-    list of dict
+    list of StationRecommendationResponse
         Liste des stations recommandées, avec leurs informations
-        pertinentes (distance, disponibilité, etc.).
+        pertinentes (distance, disponibilité, type de vélo, etc.).
     """
     logger.info("Proposition de stations à proximité")
     return station_service.get_nearby_recommendations(payload)

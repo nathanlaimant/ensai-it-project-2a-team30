@@ -92,6 +92,15 @@ radius = st.slider("Rayon de recherche (mètres)", 100, 5000, 1000, step=100)
 with st.expander("Filtres facultatifs"):
     op_cap = st.number_input("Capacité opérationnelle minimale", min_value=0, value=0)
     score_min = st.slider("Score de fiabilité minimal", 0, 100, 0)
+    vehicle_type = st.selectbox(
+        "Type de vélo disponible",
+        options=["all", "mechanical", "electric"],
+        format_func=lambda x: {
+            "all": "Tous les vélos",
+            "mechanical": "Mécanique uniquement",
+            "electric": "Électrique uniquement",
+        }.get(x, x),
+    )
 
 payload = {
     "lat": latitude,
@@ -99,6 +108,7 @@ payload = {
     "radius_meters": radius,
     "op_cap": op_cap or None,
     "score_min": float(score_min) if score_min else None,
+    "vehicle_type": vehicle_type,
 }
 
 try:

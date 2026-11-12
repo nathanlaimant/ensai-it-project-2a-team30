@@ -1,10 +1,17 @@
 """Station-related request and response models exposed by the API."""
 
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from business_object.station_state import StationState
+
+
+class VehicleTypeFilter(StrEnum):
+    ALL = "all"
+    MECHANICAL = "mechanical"
+    ELECTRIC = "electric"
 
 
 class StationSearchRequest(BaseModel):
@@ -167,6 +174,8 @@ class StationRecommendationRequest(BaseModel):
         État souhaité des stations recommandées (FULL, EMPTY, FUNCTIONAL).
     score_min : float | None
         Score de fiabilité minimum pour les stations recommandées (entre 0.0 et 100.0).
+    vehicle_type : VehicleTypeFilter | None
+        Type de véhicule souhaité (all, mechanical, electric). Par défaut "all".
     """
 
     lat: float = Field(..., ge=-90.0, le=90.0)
@@ -175,3 +184,46 @@ class StationRecommendationRequest(BaseModel):
     op_cap: int | None = Field(default=None, ge=0)
     station_state: StationState | None = Field(default=None)
     score_min: float | None = Field(default=None, ge=0.0, le=100.0)
+    vehicle_type: VehicleTypeFilter = Field(default=VehicleTypeFilter.ALL)
+
+
+class StationRecommendationResponse(BaseModel):
+    """
+    Réponse représentant une station recommandée avec ses métriques associées.
+
+    Parameters
+    ----------
+    station_id : str
+        Identifiant unique de la station.
+    name : str
+        Nom complet de la station.
+    lat : float
+        Latitude de la station.
+    lon : float
+        Longitude de la station.
+    distance_meters : float
+        Distance en mètres par rapport au point de référence demandé.
+    operational_capacity : int | None
+        Capacité opérationnelle de la station. Nullable.
+    station_state : StationState | None
+        État actuel de la station (FULL, EMPTY, FUNCTIONAL). Nullable.
+    vehicle_types_available : dict[str, int] | None
+        Répartition des types de véhicules disponibles (mechanical, electric). Nullable.
+    last_hour_reliability : float | None
+        Score de fiabilité calculé sur la dernière heure. Nullable.
+    last_day_reliability : float | None
+        Score de fiabilité moyen calculé sur le dernier jour. Nullable.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    station_id: str
+    name: str
+    lat: float
+    lon: float
+    distance_meters: float
+    operational_capacity: int | None = None
+    station_state: StationState | None = None
+    vehicle_types_available: dict[str, int] | None = None
+    last_hour_reliability: float | None = None
+    last_day_reliability: float | None = None

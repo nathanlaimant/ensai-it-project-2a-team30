@@ -7,7 +7,11 @@ from dao.station_dao import StationDAO
 from dao.station_status_dao import StationStatusDAO
 from dao.station_status_hourly_dao import StationStatusHourlyDAO
 from schema.common_model import TimePeriod
-from schema.station_model import StationRecommendationRequest, StationSearchRequest
+from schema.station_model import (
+    StationRecommendationRequest,
+    StationSearchRequest,
+    VehicleTypeFilter,
+)
 
 
 class StationService:
@@ -260,20 +264,17 @@ class StationService:
         res = []
         if stations:
             for i in range(len(stations)):
-                if stations[i].station_id is not None:
-                    latest_status = self.status_dao.get_latest_status(
-                        stations[i].station_id
-                    )
-                    hourly_status = self.hourly_dao.get_latest_hourly_status(
-                        stations[i].station_id
-                    )
+                station_id = stations[i].station_id
+                if station_id is not None:
+                    latest_status = self.status_dao.get_latest_status(station_id)
+                    hourly_status = self.hourly_dao.get_latest_hourly_status(station_id)
                     daily_status = self.hourly_dao.aggregate_daily_stats(
-                        stations[i].station_id,
-                        date.today() - timedelta(days=1),
-                        date.today(),
+                        station_id,
+                        datetime.now(UTC).date() - timedelta(days=1),
+                        datetime.now(UTC).date(),
                     )
 
-                    if criteria.op_cap and (
+                    if criteria.op_cap is not None and (
                         not latest_status
                         or latest_status.operational_capacity < criteria.op_cap
                     ):
@@ -285,11 +286,34 @@ class StationService:
                     ):
                         continue
 
-                    if criteria.score_min and (
+                    if criteria.score_min is not None and (
                         not hourly_status
                         or hourly_status.reliability_score < criteria.score_min
                     ):
                         continue
+
+                    if criteria.vehicle_type == VehicleTypeFilter.MECHANICAL:
+                        vtypes = (
+                            latest_status.vehicle_types_available
+                            if latest_status
+                            else None
+                        )
+                        if (
+                            not isinstance(vtypes, dict)
+                            or (vtypes.get("mechanical") or 0) <= 0
+                        ):
+                            continue
+                    elif criteria.vehicle_type == VehicleTypeFilter.ELECTRIC:
+                        vtypes = (
+                            latest_status.vehicle_types_available
+                            if latest_status
+                            else None
+                        )
+                        if (
+                            not isinstance(vtypes, dict)
+                            or (vtypes.get("electric") or 0) <= 0
+                        ):
+                            continue
 
                     la, lo = stations[i].lat, stations[i].lon
                     res.append(
@@ -309,13 +333,18 @@ class StationService:
                             "station_state": (
                                 latest_status.station_state if latest_status else None
                             ),
+                            "vehicle_types_available": (
+                                latest_status.vehicle_types_available
+                                if latest_status
+                                else None
+                            ),
                             "last_hour_reliability": (
                                 hourly_status.reliability_score
                                 if hourly_status
                                 else None
                             ),
                             "last_day_reliability": (
-                                daily_status[0]["avg_reliability_score"]
+                                daily_status[-1]["avg_reliability_score"]
                                 if daily_status
                                 else None
                             ),
