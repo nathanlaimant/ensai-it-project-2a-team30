@@ -42,21 +42,25 @@ class APIClient:
         Envoie une requête HTTP GET à l'API.
         """
         url = self._build_url(endpoint)
-        response = self.session.get(url, params=params, headers=headers, timeout=self.timeout)
+        response = self.session.get(
+            url, params=params, headers=headers, timeout=self.timeout
+        )
         response.raise_for_status()
         return response.json() if response.content else {}
 
     def post(
         self,
         endpoint: str,
-        data: Optional[dict[str, Any]] = None,
+        data: Optional[Any] = None,
         headers: Optional[dict[str, str]] = None,
     ) -> Any:
         """
         Envoie une requête HTTP POST à l'API.
         """
         url = self._build_url(endpoint)
-        response = self.session.post(url, json=data, headers=headers, timeout=self.timeout)
+        response = self.session.post(
+            url, json=data, headers=headers, timeout=self.timeout
+        )
         response.raise_for_status()
         return response.json() if response.content else {}
 
@@ -70,7 +74,9 @@ class APIClient:
         Envoie une requête HTTP PUT à l'API.
         """
         url = self._build_url(endpoint)
-        response = self.session.put(url, json=data, headers=headers, timeout=self.timeout)
+        response = self.session.put(
+            url, json=data, headers=headers, timeout=self.timeout
+        )
         response.raise_for_status()
         return response.json() if response.content else {}
 
@@ -119,6 +125,10 @@ class APIClient:
     def get_nearby_recommendations(self, payload: dict) -> Any:
         """Appelle la route POST /station/recommendations."""
         return self.post("/station/recommendations", data=payload)
+
+    def get_stations_statuses(self, station_ids: list[str]) -> dict[str, Any]:
+        """Appelle la route POST /station/statuses."""
+        return self.post("/station/statuses", data=station_ids)
 
 
 api_client = APIClient(API_URL)

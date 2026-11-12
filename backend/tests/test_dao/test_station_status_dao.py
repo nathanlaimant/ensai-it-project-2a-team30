@@ -221,6 +221,39 @@ def test_get_latest_status_fail(station_status_dao, sample_statuses):
     assert result is None
 
 
+# Tests de get_latest_statuses()
+def test_get_latest_statuses_ok(station_status_dao, sample_statuses):
+    """Récupère en une requête le dernier statut de chaque station demandée"""
+    # GIVEN
+    station_status_dao.bulk_insert_status(sample_statuses)
+    station_ids = ["245557155", "245557947", "fakeid"]
+    # WHEN
+    results = station_status_dao.get_latest_statuses(station_ids)
+    # THEN
+    assert len(results) == 2
+    assert "fakeid" not in results
+    assert results["245557155"].last_reported == sample_statuses[0].last_reported
+    assert results["245557947"].last_reported == sample_statuses[1].last_reported
+
+
+def test_get_latest_statuses_empty_input(station_status_dao):
+    """Retourne {} si la liste d'identifiants est vide"""
+    # WHEN
+    results = station_status_dao.get_latest_statuses([])
+    # THEN
+    assert results == {}
+
+
+def test_get_latest_statuses_unknown_ids(station_status_dao, sample_statuses):
+    """Retourne {} si aucun identifiant n'existe"""
+    # GIVEN
+    station_status_dao.bulk_insert_status(sample_statuses)
+    # WHEN
+    results = station_status_dao.get_latest_statuses(["fakeid1", "fakeid2"])
+    # THEN
+    assert results == {}
+
+
 # Tests de get_one_station_history()
 def test_get_one_station_history_ok(station_status_dao, sample_statuses):
     """Requête réussie pour obtenir l'historique du statut d'une station sur une période donnée"""

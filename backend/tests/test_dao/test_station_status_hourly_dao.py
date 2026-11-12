@@ -261,6 +261,49 @@ def test_get_latest_hourly_status_fail_unknown_station(
     assert latest is None
 
 
+# Tests de get_latest_hourly_statuses()
+def test_get_latest_hourly_statuses_ok(
+    station_status_hourly_dao, sample_hourly_stats
+):
+    """Récupère en une requête le dernier statut horaire de chaque station demandée"""
+    # GIVEN
+    station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
+    station_ids = ["245557155", "245557947", "unknown_id"]
+    # WHEN
+    results = station_status_hourly_dao.get_latest_hourly_statuses(station_ids)
+    # THEN
+    assert len(results) == 2
+    assert "unknown_id" not in results
+    assert results["245557155"].bucket_hour == datetime.fromisoformat(
+        "2026-11-01 02:00:00+00:00"
+    )
+    assert results["245557155"].reliability_score == 90.0
+    assert results["245557947"].bucket_hour == datetime.fromisoformat(
+        "2026-11-01 01:00:00+00:00"
+    )
+    assert results["245557947"].reliability_score == 100.0
+
+
+def test_get_latest_hourly_statuses_empty_input(station_status_hourly_dao):
+    """Retourne {} si la liste d'identifiants est vide"""
+    # WHEN
+    results = station_status_hourly_dao.get_latest_hourly_statuses([])
+    # THEN
+    assert results == {}
+
+
+def test_get_latest_hourly_statuses_unknown_ids(
+    station_status_hourly_dao, sample_hourly_stats
+):
+    """Retourne {} si aucun identifiant n'existe"""
+    # GIVEN
+    station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
+    # WHEN
+    results = station_status_hourly_dao.get_latest_hourly_statuses(["unknown_id"])
+    # THEN
+    assert results == {}
+
+
 # Tests de get_hourly_stats()
 def test_get_hourly_stats_ok(station_status_hourly_dao, sample_hourly_stats):
     """Récupère avec succès les statuts horaires sur une période définie"""
@@ -375,3 +418,55 @@ def test_aggregate_daily_stats_wrong_time(
     )
     # THEN
     assert daily_stats == []
+
+
+# Tests de aggregate_daily_stats_for_stations()
+def test_aggregate_daily_stats_for_stations_ok(
+    station_status_hourly_dao, sample_hourly_stats
+):
+    """Agrégation journalière réussie en une requête pour plusieurs stations"""
+    # GIVEN
+    station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
+    station_ids = ["245557155", "245557947", "unknown_id"]
+    start_date = date(2026, 10, 31)
+    end_date = date(2026, 11, 1)
+    # WHEN
+    results = station_status_hourly_dao.aggregate_daily_stats_for_stations(
+        station_ids, start_date, end_date
+    )
+    # THEN
+    assert len(results) == 2
+    assert "unknown_id" not in results
+    assert len(results["245557155"]) == 2
+    assert results["245557155"][0]["stat_date"] == date(2026, 10, 31)
+    assert results["245557155"][0]["avg_reliability_score"] == 70
+    assert results["245557155"][1]["stat_date"] == date(2026, 11, 1)
+    assert results["245557155"][1]["avg_reliability_score"] == 88
+    assert len(results["245557947"]) == 1
+    assert results["245557947"][0]["stat_date"] == date(2026, 11, 1)
+    assert results["245557947"][0]["sample_count"] == 12
+    assert results["245557947"][0]["avg_reliability_score"] == 100
+
+
+def test_aggregate_daily_stats_for_stations_empty_input(station_status_hourly_dao):
+    """Retourne {} si la liste d'identifiants est vide"""
+    # WHEN
+    results = station_status_hourly_dao.aggregate_daily_stats_for_stations(
+        [], date(2026, 10, 31), date(2026, 11, 1)
+    )
+    # THEN
+    assert results == {}
+
+
+def test_aggregate_daily_stats_for_stations_wrong_time(
+    station_status_hourly_dao, sample_hourly_stats
+):
+    """Retourne {} si aucune donnée n'existe sur la période demandée"""
+    # GIVEN
+    station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
+    # WHEN
+    results = station_status_hourly_dao.aggregate_daily_stats_for_stations(
+        ["245557155", "245557947"], date(2026, 12, 1), date(2026, 12, 2)
+    )
+    # THEN
+    assert results == {}

@@ -171,14 +171,30 @@ class StationDAO:
         res = None
 
         t = 0.01745329251994  # nombre de radian dans 1°
+        query = """
+            SELECT *
+            FROM station_information
+            WHERE 2 * 6371200 * ASIN(
+                LEAST(
+                    1.0,
+                    SQRT(
+                        GREATEST(
+                            0.0,
+                            POWER(SIN(%(t)s * (lat - %(lat_dep)s) / 2), 2)
+                            + COS(lat * %(t)s)
+                            * COS(%(lat_dep)s * %(t)s)
+                            * POWER(SIN(%(t)s * (lon - %(lon_dep)s) / 2), 2)
+                        )
+                    )
+                )
+            ) <= %(radius_meters)s;
+        """
 
         try:
             with self._db_connection.get_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute(
-                        "SELECT * "
-                        "FROM station_information "
-                        "WHERE 2 * 6371200 * ASIN(SQRT(POWER(SIN(%(t)s * (lat - %(lat_dep)s) / 2), 2) + COS(lat * %(t)s) * COS(%(lat_dep)s * %(t)s) * POWER(SIN(%(t)s * (lon - %(lon_dep)s) / 2),2))) <= %(radius_meters)s;",
+                        query,
                         {
                             "lat_dep": lat,
                             "lon_dep": lon,

@@ -91,6 +91,23 @@ class StationStatusDAO:
         logger.info(f"Successfully inserted {res} station status records.")
         return res
 
+    @staticmethod
+    def _row_to_station_status(row: dict) -> StationStatus:
+        """Construit un StationStatus à partir d'une ligne SQL."""
+        return StationStatus(
+            station_status_id=row["station_status_id"],
+            station_id=row["station_id"],
+            num_bikes_available=row["num_bikes_available"],
+            num_bikes_disabled=row["num_bikes_disabled"],
+            num_docks_available=row["num_docks_available"],
+            num_docks_disabled=row["num_docks_disabled"],
+            operational_capacity=row["operational_capacity"],
+            last_reported=row["last_reported"],
+            vehicle_types_available=row["vehicle_types_available"],
+            vehicle_docks_available=row["vehicle_docks_available"],
+            station_state=row["station_state"],
+        )
+
     def get_latest_status(self, station_id: str) -> StationStatus | None:
         """
         Récupère le dernier statut connu d'une station.
@@ -122,20 +139,49 @@ class StationStatusDAO:
             logger.error(e)
 
         if row:
-            return StationStatus(
-                station_status_id=row["station_status_id"],
-                station_id=row["station_id"],
-                num_bikes_available=row["num_bikes_available"],
-                num_bikes_disabled=row["num_bikes_disabled"],
-                num_docks_available=row["num_docks_available"],
-                num_docks_disabled=row["num_docks_disabled"],
-                operational_capacity=row["operational_capacity"],
-                last_reported=row["last_reported"],
-                vehicle_types_available=row["vehicle_types_available"],
-                vehicle_docks_available=row["vehicle_docks_available"],
-                station_state=row["station_state"],
-            )
+            return self._row_to_station_status(row)
         return None
+
+    def get_latest_statuses(self, station_ids: list[str]) -> dict[str, StationStatus]:
+        """
+        Récupère le dernier statut connu pour une liste de stations.
+
+        Parameters
+        ----------
+        station_ids : list of str
+            Identifiants des stations concernées.
+
+        Returns
+        -------
+        dict[str, StationStatus]
+            Dictionnaire associant chaque station_id à son dernier statut connu.
+        """
+        if not station_ids:
+            return {}
+
+        rows = None
+        try:
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = """
+                        SELECT s.*
+                        FROM UNNEST(%s::text[]) AS ids(station_id)
+                        CROSS JOIN LATERAL (
+                            SELECT *
+                            FROM station_status
+                            WHERE station_id = ids.station_id
+                            ORDER BY last_reported DESC
+                            LIMIT 1
+                        ) s;
+                    """
+                    cursor.execute(query, (station_ids,))
+                    rows = cursor.fetchall()
+        except Exception as e:
+            logger.error(e)
+
+        if not rows:
+            return {}
+        return {row["station_id"]: self._row_to_station_status(row) for row in rows}
 
     def get_one_station_history(
         self, station_id: str, start_time: datetime, end_time: datetime

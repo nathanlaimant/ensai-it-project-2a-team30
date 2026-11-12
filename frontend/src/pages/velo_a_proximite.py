@@ -31,7 +31,9 @@ def locate_from_address(address: str):
         response = requests.get(
             "https://nominatim.openstreetmap.org/search",
             params={"q": address, "format": "jsonv2", "limit": 1},
-            headers={"User-Agent": "veloscope-ensai-team30/1.0 (projet etudiant ENSAI)"},
+            headers={
+                "User-Agent": "veloscope-ensai-team30/1.0 (projet etudiant ENSAI)"
+            },
             timeout=10,
         )
         response.raise_for_status()
@@ -92,6 +94,15 @@ radius = st.slider("Rayon de recherche (mètres)", 100, 5000, 1000, step=100)
 with st.expander("Filtres facultatifs"):
     op_cap = st.number_input("Capacité opérationnelle minimale", min_value=0, value=0)
     score_min = st.slider("Score de fiabilité minimal", 0, 100, 0)
+    vehicle_type = st.selectbox(
+        "Type de vélo disponible",
+        options=["all", "mechanical", "electric"],
+        format_func=lambda x: {
+            "all": "Tous les vélos",
+            "mechanical": "Mécanique",
+            "electric": "Électrique",
+        }.get(x, x),
+    )
 
 payload = {
     "lat": latitude,
@@ -99,6 +110,7 @@ payload = {
     "radius_meters": radius,
     "op_cap": op_cap or None,
     "score_min": float(score_min) if score_min else None,
+    "vehicle_type": vehicle_type,
 }
 
 try:
@@ -115,7 +127,9 @@ else:
         )
     else:
         df = pd.DataFrame(stations_nearby)
-        st.success(f"{len(df)} station(s) trouvée(s), de la plus proche à la plus éloignée.")
+        st.success(
+            f"{len(df)} station(s) trouvée(s), de la plus proche à la plus éloignée."
+        )
         if {"lat", "lon"}.issubset(df.columns):
             st.map(df[["lat", "lon"]])
             df = df.drop(columns=["lat", "lon"])

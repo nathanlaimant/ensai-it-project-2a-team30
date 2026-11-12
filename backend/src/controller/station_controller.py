@@ -2,13 +2,14 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status  # type: ignore[import-not-found]
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status  # type: ignore[import-not-found]
 
 from dependencies.service import get_station_service
 from schema.common_model import TimePeriod
 from schema.station_model import (
     StationInfoResponse,
     StationRecommendationRequest,
+    StationRecommendationResponse,
     StationSearchRequest,
     StationStatusResponse,
 )
@@ -109,6 +110,28 @@ async def get_station_current_status(
     return statut
 
 
+@router.post("/statuses", response_model=dict[str, StationStatusResponse])
+def get_stations_current_statuses(
+    station_ids: list[str] = Body(..., max_length=500),
+    station_service: StationService = Depends(get_station_service),
+) -> Any:
+    """
+    Récupère l'état en temps réel de plusieurs stations.
+
+    Parameters
+    ----------
+    station_ids : list[str]
+        Liste des identifiants des stations demandées.
+
+    Returns
+    -------
+    dict[str, StationStatusResponse]
+        Dictionnaire associant chaque identifiant de station trouvé à son état courant.
+    """
+    logger.info("Statuts les plus récents de plusieurs stations")
+    return station_service.get_stations_current_statuses(station_ids)
+
+
 @router.get(
     "/{station_id}/history",
     response_model=list[StationStatusResponse],
@@ -145,8 +168,8 @@ async def get_station_history(
     return station_service.get_station_history(station_id, period)
 
 
-@router.post("/recommendations", response_model=list[dict])
-async def get_nearby_recommendations(
+@router.post("/recommendations", response_model=list[StationRecommendationResponse])
+def get_nearby_recommendations(
     payload: StationRecommendationRequest,
     station_service: StationService = Depends(get_station_service),
 ) -> Any:
@@ -156,13 +179,14 @@ async def get_nearby_recommendations(
     Parameters
     ----------
     payload: StationRecommendationRequest
-        Critères de recherche pour les stations recommandées.
+        Critères de recherche pour les stations recommandées (position,
+        rayon, capacité opérationnelle, état, score min, type de vélo: all, mechanical, electric).
 
     Returns
     -------
-    list of dict
+    list of StationRecommendationResponse
         Liste des stations recommandées, avec leurs informations
-        pertinentes (distance, disponibilité, etc.).
+        pertinentes (distance, disponibilité, type de vélo, etc.).
     """
     logger.info("Proposition de stations à proximité")
     return station_service.get_nearby_recommendations(payload)

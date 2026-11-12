@@ -1,8 +1,15 @@
 import streamlit as st
+
 from utils.api_client import api_client
 from utils.log_init import get_page_logger
 
-st.title("Rechercher une station")
+st.set_page_config(
+    page_title="Rechercher une station",
+    page_icon="🔍",
+    layout="wide",
+)
+
+st.title("🔍 Rechercher une station")
 
 logger = get_page_logger("station_search")
 
@@ -41,7 +48,5 @@ if research:
                     st.switch_page("pages/station_info.py")
 
     except Exception as e:
-        logger.exception(
-            f"Erreur lors de la recherche de stations : {e}"
-        )
+        logger.exception(f"Erreur lors de la recherche de stations : {e}")
         st.error(f"Une erreur est survenue : {e}")

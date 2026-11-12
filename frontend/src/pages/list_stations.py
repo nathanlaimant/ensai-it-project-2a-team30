@@ -1,5 +1,4 @@
 import pandas as pd
-import requests
 import streamlit as st
 
 from utils.api_client import APIClient
@@ -17,21 +16,19 @@ client: APIClient = st.session_state["api_client"]
 
 
 @st.cache_data(ttl=60)
-def get_station_state(station_id: str) -> str | None:
+def get_stations_states(station_ids: tuple[str, ...]) -> dict[str, str | None]:
     """
-    Retourne l'état d'une station, ou None si elle n'a pas de statut.
+    Retourne l'état de chaque station trouvée via un appel batch.
 
-    Un 404 signifie que la station n'a pas encore de statut en base :
-    ce n'est pas une erreur grave. Les autres erreurs sont relancées
-    (et donc jamais mises en cache).
+    Les erreurs HTTP éventuelles sont relancées (et donc jamais mises en cache).
     """
-    try:
-        status = APIClient().get(f"/station/{station_id}/status")
-    except requests.exceptions.HTTPError as e:
-        if e.response is not None and e.response.status_code == 404:
-            return None
-        raise
-    return status.get("station_state")
+    if not station_ids:
+        return {}
+    statuses = APIClient().get_stations_statuses(list(station_ids))
+    return {
+        sid: (status.get("station_state") if status else None)
+        for sid, status in statuses.items()
+    }
 
 
 st.sidebar.header("Filtres")
@@ -62,9 +59,12 @@ if not stations:
     )
     st.stop()
 
+station_ids = tuple(station["station_id"] for station in stations)
+states_by_id = get_stations_states(station_ids)
+
 nb_sans_statut = 0
 for station in stations:
-    state = get_station_state(station["station_id"])
+    state = states_by_id.get(station["station_id"])
     if state is None:
         nb_sans_statut += 1
     station["state"] = state or "Indisponible"
