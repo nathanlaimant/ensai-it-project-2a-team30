@@ -211,8 +211,8 @@ class StationService:
             return [
                 {
                     "station_id": s.station_id,
-                    "num_bikes_available": s.avg_num_bikes_available,
-                    "num_docks_available": s.avg_num_docks_available,
+                    "num_bikes_available": round(s.avg_num_bikes_available),
+                    "num_docks_available": round(s.avg_num_docks_available),
                     "last_reported": s.bucket_hour,
                     "operational_capacity": round(s.avg_operational_capacity),
                     "full_ratio": min(
