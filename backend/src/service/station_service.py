@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from haversine import haversine  # type: ignore[import-not-found]
 
@@ -239,6 +239,31 @@ class StationService:
         else:
             return []
 
+    @staticmethod
+    def _matches_status_filters(
+        latest_status, criteria: StationRecommendationRequest
+    ) -> bool:
+        """Vérifie si le statut courant d'une station respecte les filtres demandés."""
+        if criteria.op_cap is not None and (
+            not latest_status or latest_status.operational_capacity < criteria.op_cap
+        ):
+            return False
+
+        if criteria.station_state and (
+            not latest_status or latest_status.station_state != criteria.station_state
+        ):
+            return False
+
+        if criteria.vehicle_type != VehicleTypeFilter.ALL:
+            vtypes = latest_status.vehicle_types_available if latest_status else None
+            if (
+                not isinstance(vtypes, dict)
+                or (vtypes.get(criteria.vehicle_type.value) or 0) <= 0
+            ):
+                return False
+
+        return True
+
     def get_nearby_recommendations(
         self, criteria: StationRecommendationRequest
     ) -> list[dict]:
@@ -257,98 +282,82 @@ class StationService:
             pertinentes (distance, disponibilité, fiabilité, etc.).
             Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
+        # 1. Find nearby stations based on location and radius
         stations = self.station_dao.get_nearby(
             criteria.lat, criteria.lon, criteria.radius_meters
         )
-
+        if not stations:
+            return []
+        nearby_stations: list[tuple[str, StationInformation]] = [
+            (s.station_id, s) for s in stations if s.station_id is not None
+        ]
+        if not nearby_stations:
+            return []
+        # 2. Filter stations using op_cap, state, and vehicle type (from station_status)
+        nearby_ids = [sid for sid, _ in nearby_stations]
+        latest_statuses = self.status_dao.get_latest_statuses(nearby_ids)
+        status_filtered = [
+            (sid, s)
+            for sid, s in nearby_stations
+            if self._matches_status_filters(latest_statuses.get(sid), criteria)
+        ]
+        if not status_filtered:
+            return []
+        # 3. Filter stations using reliability score (from station_status_hourly)
+        hourly_statuses = self.hourly_dao.get_latest_hourly_statuses(
+            [sid for sid, _ in status_filtered]
+        )
+        final_stations = []
+        for sid, s in status_filtered:
+            hourly_status = hourly_statuses.get(sid)
+            if criteria.score_min is not None and (
+                not hourly_status
+                or hourly_status.reliability_score < criteria.score_min
+            ):
+                continue
+            final_stations.append((sid, s))
+        if not final_stations:
+            return []
+        # 4. Aggregate daily stats for the final stations
+        today = datetime.now(UTC).date()
+        daily_stats_map = self.hourly_dao.aggregate_daily_stats_for_stations(
+            [sid for sid, _ in final_stations],
+            today - timedelta(days=1),
+            today,
+        )
+        # 5. Combine all information and return the recommended stations with relevant details
         res = []
-        if stations:
-            for i in range(len(stations)):
-                station_id = stations[i].station_id
-                if station_id is not None:
-                    latest_status = self.status_dao.get_latest_status(station_id)
-                    hourly_status = self.hourly_dao.get_latest_hourly_status(station_id)
-                    daily_status = self.hourly_dao.aggregate_daily_stats(
-                        station_id,
-                        datetime.now(UTC).date() - timedelta(days=1),
-                        datetime.now(UTC).date(),
-                    )
-
-                    if criteria.op_cap is not None and (
-                        not latest_status
-                        or latest_status.operational_capacity < criteria.op_cap
-                    ):
-                        continue
-
-                    if criteria.station_state and (
-                        not latest_status
-                        or latest_status.station_state != criteria.station_state
-                    ):
-                        continue
-
-                    if criteria.score_min is not None and (
-                        not hourly_status
-                        or hourly_status.reliability_score < criteria.score_min
-                    ):
-                        continue
-
-                    if criteria.vehicle_type == VehicleTypeFilter.MECHANICAL:
-                        vtypes = (
-                            latest_status.vehicle_types_available
-                            if latest_status
-                            else None
-                        )
-                        if (
-                            not isinstance(vtypes, dict)
-                            or (vtypes.get("mechanical") or 0) <= 0
-                        ):
-                            continue
-                    elif criteria.vehicle_type == VehicleTypeFilter.ELECTRIC:
-                        vtypes = (
-                            latest_status.vehicle_types_available
-                            if latest_status
-                            else None
-                        )
-                        if (
-                            not isinstance(vtypes, dict)
-                            or (vtypes.get("electric") or 0) <= 0
-                        ):
-                            continue
-
-                    la, lo = stations[i].lat, stations[i].lon
-                    res.append(
-                        {
-                            "station_id": stations[i].station_id,
-                            "name": stations[i].name,
-                            "lat": la,
-                            "lon": lo,
-                            "distance_meters": haversine(
-                                (la, lo), (criteria.lat, criteria.lon), unit="m"
-                            ),
-                            "operational_capacity": (
-                                latest_status.operational_capacity
-                                if latest_status
-                                else None
-                            ),
-                            "station_state": (
-                                latest_status.station_state if latest_status else None
-                            ),
-                            "vehicle_types_available": (
-                                latest_status.vehicle_types_available
-                                if latest_status
-                                else None
-                            ),
-                            "last_hour_reliability": (
-                                hourly_status.reliability_score
-                                if hourly_status
-                                else None
-                            ),
-                            "last_day_reliability": (
-                                daily_status[-1]["avg_reliability_score"]
-                                if daily_status
-                                else None
-                            ),
-                        }
-                    )
-            return sorted(res, key=lambda r: r["distance_meters"])
-        return res
+        for sid, s in final_stations:
+            latest_status = latest_statuses.get(sid)
+            hourly_status = hourly_statuses.get(sid)
+            daily_status = daily_stats_map.get(sid)
+            la, lo = s.lat, s.lon
+            res.append(
+                {
+                    "station_id": sid,
+                    "name": s.name,
+                    "lat": la,
+                    "lon": lo,
+                    "distance_meters": haversine(
+                        (la, lo), (criteria.lat, criteria.lon), unit="m"
+                    ),
+                    "operational_capacity": (
+                        latest_status.operational_capacity if latest_status else None
+                    ),
+                    "station_state": (
+                        latest_status.station_state if latest_status else None
+                    ),
+                    "vehicle_types_available": (
+                        latest_status.vehicle_types_available if latest_status else None
+                    ),
+                    "last_hour_reliability": (
+                        hourly_status.reliability_score if hourly_status else None
+                    ),
+                    "last_day_reliability": (
+                        daily_status[-1]["avg_reliability_score"]
+                        if daily_status
+                        else None
+                    ),
+                }
+            )
+        return sorted(res, key=lambda r: r["distance_meters"])

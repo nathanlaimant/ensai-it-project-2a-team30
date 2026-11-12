@@ -3,6 +3,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status  # type: ignore[import-not-found]
+from fastapi.concurrency import run_in_threadpool  # type: ignore[import-not-found]
 
 from dependencies.service import get_station_service
 from schema.common_model import TimePeriod
@@ -147,7 +148,7 @@ async def get_station_history(
 
 
 @router.post("/recommendations", response_model=list[StationRecommendationResponse])
-async def get_nearby_recommendations(
+def get_nearby_recommendations(
     payload: StationRecommendationRequest,
     station_service: StationService = Depends(get_station_service),
 ) -> Any:

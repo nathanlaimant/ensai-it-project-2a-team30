@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import date, datetime, time
 
 from psycopg2.extras import execute_values
@@ -102,6 +103,23 @@ class StationStatusHourlyDAO:
         logger.info(f"Successfully upserted {res} station hourly status records.")
         return res
 
+    @staticmethod
+    def _row_to_hourly_status(row: dict) -> StationStatusHourly:
+        """Construit un StationStatusHourly à partir d'une ligne SQL."""
+        return StationStatusHourly(
+            station_id=row["station_id"],
+            bucket_hour=row["bucket_hour"],
+            sample_count=row["sample_count"],
+            avg_operational_capacity=row["avg_operational_capacity"],
+            avg_num_bikes_available=row["avg_num_bikes_available"],
+            avg_num_docks_available=row["avg_num_docks_available"],
+            empty_duration_sec=row["empty_duration_sec"],
+            full_duration_sec=row["full_duration_sec"],
+            empty_events_cnt=row["empty_events_cnt"],
+            full_events_cnt=row["full_events_cnt"],
+            reliability_score=row["reliability_score"],
+        )
+
     def get_latest_hourly_status(self, station_id: str) -> StationStatusHourly | None:
         """
         Récupère le dernier enregistrement d'agrégation horaire d'une station.
@@ -135,20 +153,52 @@ class StationStatusHourlyDAO:
             return None
 
         if row:
-            return StationStatusHourly(
-                station_id=row["station_id"],
-                bucket_hour=row["bucket_hour"],
-                sample_count=row["sample_count"],
-                avg_operational_capacity=row["avg_operational_capacity"],
-                avg_num_bikes_available=row["avg_num_bikes_available"],
-                avg_num_docks_available=row["avg_num_docks_available"],
-                empty_duration_sec=row["empty_duration_sec"],
-                full_duration_sec=row["full_duration_sec"],
-                empty_events_cnt=row["empty_events_cnt"],
-                full_events_cnt=row["full_events_cnt"],
-                reliability_score=row["reliability_score"],
-            )
+            return self._row_to_hourly_status(row)
         return None
+
+    def get_latest_hourly_statuses(
+        self, station_ids: list[str]
+    ) -> dict[str, StationStatusHourly]:
+        """
+        Récupère le dernier enregistrement d'agrégation horaire pour une liste de stations.
+
+        Parameters
+        ----------
+        station_ids : list of str
+            Identifiants des stations concernées.
+
+        Returns
+        -------
+        dict[str, StationStatusHourly]
+            Dictionnaire associant chaque station_id à son dernier enregistrement horaire.
+        """
+        if not station_ids:
+            return {}
+
+        rows = None
+        try:
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = """
+                        SELECT h.*
+                        FROM UNNEST(%s::text[]) AS ids(station_id)
+                        CROSS JOIN LATERAL (
+                            SELECT *
+                            FROM station_status_hourly
+                            WHERE station_id = ids.station_id
+                            ORDER BY bucket_hour DESC
+                            LIMIT 1
+                        ) h;
+                    """
+                    cursor.execute(query, (station_ids,))
+                    rows = cursor.fetchall()
+        except Exception as e:
+            logger.error(e)
+            return {}
+
+        if not rows:
+            return {}
+        return {row["station_id"]: self._row_to_hourly_status(row) for row in rows}
 
     def get_hourly_stats(
         self, station_id: str, start_time: datetime, end_time: datetime
@@ -231,6 +281,35 @@ class StationStatusHourlyDAO:
             avg_num_bikes_available, avg_num_docks_available, empty_duration_sec, full_duration,
             empty_events_cnt, full_events_cnt, avg_reliability_score
         """
+        if not station_id:
+            return []
+        return self.aggregate_daily_stats_for_stations(
+            [station_id], start_date, end_date
+        ).get(station_id, [])
+
+    def aggregate_daily_stats_for_stations(
+        self, station_ids: list[str], start_date: date, end_date: date
+    ) -> dict[str, list[dict]]:
+        """
+        Agrège les statistiques horaires à l'échelle journalière pour une liste de stations.
+
+        Parameters
+        ----------
+        station_ids : list of str
+            Identifiants des stations concernées.
+        start_date : date
+            Date de début de la période.
+        end_date : date
+            Date de fin de la période.
+
+        Returns
+        -------
+        dict[str, list[dict]]
+            Dictionnaire associant chaque station_id à ses statistiques journalières agrégées.
+        """
+        if not station_ids:
+            return {}
+
         start_datetime = datetime.combine(start_date, time.min)
         end_datetime = datetime.combine(end_date, time.max)
         res = None
@@ -251,15 +330,19 @@ class StationStatusHourlyDAO:
                             SUM(full_events_cnt) AS full_events_cnt,
                             ROUND(AVG(reliability_score)::real)::int AS avg_reliability_score
                         FROM station_status_hourly
-                        WHERE station_id = %s
+                        WHERE station_id = ANY(%s)
                         AND bucket_hour BETWEEN %s AND %s
                         GROUP BY date_trunc('day', bucket_hour)::date, station_id
-                        ORDER BY stat_date ASC;
+                        ORDER BY station_id, stat_date ASC;
                     """
-                    cursor.execute(query, (station_id, start_datetime, end_datetime))
+                    cursor.execute(query, (station_ids, start_datetime, end_datetime))
                     res = cursor.fetchall()
+            grouped: defaultdict[str, list[dict]] = defaultdict(list)
             if res:
-                return [dict(row) for row in res]
+                for row in res:
+                    row_dict = dict(row)
+                    grouped[row_dict["station_id"]].append(row_dict)
+            return dict(grouped)
         except Exception as e:
             logger.error(e)
-        return []
+        return {}
