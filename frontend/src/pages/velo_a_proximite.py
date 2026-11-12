@@ -31,7 +31,9 @@ def locate_from_address(address: str):
         response = requests.get(
             "https://nominatim.openstreetmap.org/search",
             params={"q": address, "format": "jsonv2", "limit": 1},
-            headers={"User-Agent": "veloscope-ensai-team30/1.0 (projet etudiant ENSAI)"},
+            headers={
+                "User-Agent": "veloscope-ensai-team30/1.0 (projet etudiant ENSAI)"
+            },
             timeout=10,
         )
         response.raise_for_status()
@@ -97,8 +99,8 @@ with st.expander("Filtres facultatifs"):
         options=["all", "mechanical", "electric"],
         format_func=lambda x: {
             "all": "Tous les vélos",
-            "mechanical": "Mécanique uniquement",
-            "electric": "Électrique uniquement",
+            "mechanical": "Mécanique",
+            "electric": "Électrique",
         }.get(x, x),
     )
 
@@ -125,7 +127,9 @@ else:
         )
     else:
         df = pd.DataFrame(stations_nearby)
-        st.success(f"{len(df)} station(s) trouvée(s), de la plus proche à la plus éloignée.")
+        st.success(
+            f"{len(df)} station(s) trouvée(s), de la plus proche à la plus éloignée."
+        )
         if {"lat", "lon"}.issubset(df.columns):
             st.map(df[["lat", "lon"]])
             df = df.drop(columns=["lat", "lon"])

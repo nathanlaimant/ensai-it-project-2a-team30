@@ -84,6 +84,26 @@ class StationService:
             size=payload.size,
         )
 
+    @staticmethod
+    def _build_current_status_dict(statut, s_horaire) -> dict:
+        """Construit le dictionnaire de statut courant d'une station."""
+        full_ratio = (
+            min(statut.num_bikes_available / statut.operational_capacity, 1.0)
+            if statut.operational_capacity > 0
+            else 0.0
+        )
+        return {
+            "num_bikes_available": statut.num_bikes_available,
+            "num_docks_available": statut.num_docks_available,
+            "last_reported": statut.last_reported,
+            "vehicle_types_available": statut.vehicle_types_available,
+            "vehicle_docks_available": statut.vehicle_docks_available,
+            "station_state": statut.station_state,
+            "operational_capacity": statut.operational_capacity,
+            "full_ratio": full_ratio,
+            "reliability_score": s_horaire.reliability_score if s_horaire else None,
+        }
+
     def get_station_current_status(self, station_id: str) -> dict | None:
         """
         Récupère l'état en temps réel d'une station.
@@ -103,18 +123,36 @@ class StationService:
         s_horaire = self.hourly_dao.get_latest_hourly_status(station_id)
         if not statut:
             return None
+        return self._build_current_status_dict(statut, s_horaire)
+
+    def get_stations_current_statuses(self, station_ids: list[str]) -> dict[str, dict]:
+        """
+        Récupère l'état en temps réel pour une liste de stations.
+
+        Parameters
+        ----------
+        station_ids : list of str
+            Identifiants des stations demandées.
+
+        Returns
+        -------
+        dict[str, dict]
+            Dictionnaire associant chaque identifiant de station trouvé à son état courant.
+        """
+        unique_ids = list({sid for sid in station_ids if sid})
+        if not unique_ids:
+            return {}
+
+        statuses = self.status_dao.get_latest_statuses(unique_ids)
+        if not statuses:
+            return {}
+
+        hourly_statuses = self.hourly_dao.get_latest_hourly_statuses(
+            list(statuses.keys())
+        )
         return {
-            "num_bikes_available": statut.num_bikes_available,
-            "num_docks_available": statut.num_docks_available,
-            "last_reported": statut.last_reported,
-            "vehicle_types_available": statut.vehicle_types_available,
-            "vehicle_docks_available": statut.vehicle_docks_available,
-            "station_state": statut.station_state,
-            "operational_capacity": statut.operational_capacity,
-            "full_ratio": min(
-                statut.num_bikes_available / statut.operational_capacity, 1.0
-            ),
-            "reliability_score": s_horaire.reliability_score if s_horaire else None,
+            sid: self._build_current_status_dict(statut, hourly_statuses.get(sid))
+            for sid, statut in statuses.items()
         }
 
     def get_station_history(

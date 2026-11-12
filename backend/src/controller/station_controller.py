@@ -2,8 +2,7 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status  # type: ignore[import-not-found]
-from fastapi.concurrency import run_in_threadpool  # type: ignore[import-not-found]
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status  # type: ignore[import-not-found]
 
 from dependencies.service import get_station_service
 from schema.common_model import TimePeriod
@@ -109,6 +108,28 @@ async def get_station_current_status(
             detail="Station (id={station_id}) non trouvée.",
         )
     return statut
+
+
+@router.post("/statuses", response_model=dict[str, StationStatusResponse])
+def get_stations_current_statuses(
+    station_ids: list[str] = Body(..., max_length=500),
+    station_service: StationService = Depends(get_station_service),
+) -> Any:
+    """
+    Récupère l'état en temps réel de plusieurs stations.
+
+    Parameters
+    ----------
+    station_ids : list[str]
+        Liste des identifiants des stations demandées.
+
+    Returns
+    -------
+    dict[str, StationStatusResponse]
+        Dictionnaire associant chaque identifiant de station trouvé à son état courant.
+    """
+    logger.info("Statuts les plus récents de plusieurs stations")
+    return station_service.get_stations_current_statuses(station_ids)
 
 
 @router.get(
