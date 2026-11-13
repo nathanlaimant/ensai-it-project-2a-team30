@@ -3,7 +3,7 @@ import streamlit as st
 from utils.api_client import api_client
 from utils.log_init import get_page_logger
 
-st.title("Paramètres d'utilisateur")
+st.title("👤 Paramètres d'utilisateur")
 
 logger = get_page_logger("user_info")
 

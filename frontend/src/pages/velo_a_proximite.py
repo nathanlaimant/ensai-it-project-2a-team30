@@ -4,7 +4,7 @@ import requests
 import streamlit as st
 from utils.api_client import APIClient
 
-st.title("Je veux trouver un vélo à proximité")
+st.title("🎯 Je veux trouver un vélo à proximité")
 
 # Adapter cette clé à celle utilisée dans connexion.py
 SESSION_TOKEN_KEY = "token"
