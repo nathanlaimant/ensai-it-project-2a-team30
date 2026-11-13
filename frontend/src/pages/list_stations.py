@@ -19,8 +19,6 @@ client: APIClient = st.session_state["api_client"]
 def get_stations_states(station_ids: tuple[str, ...]) -> dict[str, str | None]:
     """
     Retourne l'état de chaque station trouvée via un appel batch.
-
-    Les erreurs HTTP éventuelles sont relancées (et donc jamais mises en cache).
     """
     if not station_ids:
         return {}
@@ -39,9 +37,9 @@ terme_recherche = st.sidebar.text_input(
 )
 
 size_wanted = st.number_input(
-    label="Nombre de stations à afficher", min_value=5, max_value=50
+    label="Nombre de stations à afficher", min_value=5, max_value=50, value=10
 )
-page_wanted = st.number_input(label="Afficher la page :", min_value=1, max_value=20)
+page_wanted = st.number_input(label="Afficher la page :", min_value=1, max_value=20, value=1)
 
 stations = client.post(
     "/station",
@@ -72,30 +70,30 @@ for station in stations:
 if nb_sans_statut:
     st.caption(f"Statut indisponible pour {nb_sans_statut} station(s) de cette page.")
 
-df_brut = pd.DataFrame(stations)
-df = df_brut[["station_id", "name", "address", "capacity", "state"]]
-df = df.rename(
-    columns={
-        "station_id": "Identifiant",
-        "name": "Nom",
-        "address": "Adresse",
-        "capacity": "Capacité",
-        "state": "État",
-    }
-)
-df["Infos de la station"] = df.apply(
-    lambda row: f"/proxy/8501/station_info?station_id={row['Identifiant']}", axis=1
-)
+st.metric("Total des stations affichées", len(stations))
 
-st.metric("Total des stations affichées", len(df))
+st.divider()
 
-st.dataframe(
-    df,
-    column_config={
-        "Infos de la station": st.column_config.LinkColumn(
-            label="Infos", display_text="ℹ️"
-        ),
-    },
-    use_container_width=True,
-    hide_index=True,
-)
+# Affichage sous forme de lignes interactives propres pour conserver la session
+for station in stations:
+    s_id = str(station["station_id"])
+    s_name = station["name"]
+    s_address = station.get("address") or "Adresse inconnue"
+    s_capacity = station.get("capacity", "N/A")
+    s_state = station["state"]
+
+    cols = st.columns([1.5, 3, 2, 1, 1, 1])
+    cols[0].write(f"`{s_id}`")
+    cols[1].write(f"**{s_name}**")
+    cols[2].write(s_address)
+    cols[3].write(f"Capacité : {s_capacity}")
+    cols[4].write(s_state)
+
+    with cols[5]:
+        if st.button("ℹ️ Infos", key=f"btn_station_{s_id}", use_container_width=True):
+            # On met à jour à la fois le state et les query_params pour la page info
+            st.session_state["selected_station_id"] = s_id
+            st.query_params["station_id"] = s_id
+            st.switch_page("pages/station_info.py")
+
+    st.divider()
