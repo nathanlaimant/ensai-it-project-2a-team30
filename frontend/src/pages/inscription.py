@@ -2,7 +2,8 @@ import requests
 import streamlit as st
 from utils.api_client import APIClient
 
-PAGE_PRINCIPALE = "app.py"
+# Modification : pointe vers la page d'accueil gérée par st.navigation
+PAGE_PRINCIPALE = "pages/home.py"
 
 st.set_page_config(page_title="Inscription - VeloScope", page_icon="🚲")
 

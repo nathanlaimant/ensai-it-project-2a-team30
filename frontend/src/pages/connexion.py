@@ -2,7 +2,8 @@ import requests
 import streamlit as st
 from utils.api_client import APIClient
 
-PAGE_PRINCIPALE = "app.py"  # fichier lancé avec "streamlit run"
+# Modification : pointe vers la page d'accueil gérée par st.navigation
+PAGE_PRINCIPALE = "pages/home.py" 
 
 st.set_page_config(page_title="Connexion - VeloScope", page_icon="🚲")
 
@@ -15,7 +16,7 @@ if "username" not in st.session_state:
 
 client: APIClient = st.session_state["api_client"]
 
-# Déjà connecté : retour à la page principale
+# Déjà connecté : retour à la page d'accueil
 if st.session_state["token"] is not None:
     st.switch_page(PAGE_PRINCIPALE)
 
