@@ -32,7 +32,7 @@ if research:
             # Affichage des résultats sous forme de boutons
             for station in stations_searched:
 
-                station_id = station["station_id"]
+                station_id = str(station["station_id"])
                 name = station["name"]
                 address = station.get("address") or "Adresse inconnue"
 
@@ -41,8 +41,9 @@ if research:
                     key=f"station_{station_id}",
                     use_container_width=True,
                 ):
-                    # Enregistrement de la station sélectionnée
-                    st.session_state["selected_station_id"] = str(station_id)
+                    # Enregistrement de la station sélectionnée dans le state et dans l'URL
+                    st.session_state["selected_station_id"] = station_id
+                    st.query_params["station_id"] = station_id
 
                     # Redirection vers station_info
                     st.switch_page("pages/station_info.py")

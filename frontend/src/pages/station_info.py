@@ -27,7 +27,7 @@ if "selected_station_id" not in st.session_state:
 st.title("📍 Informations détaillées de la station")
 
 # -----------------------------------------------------------------------------
-# 2. Barre de navigation (Retour en arrière selon les diagrammes d'activité)
+# 2. Barre de navigation
 # -----------------------------------------------------------------------------
 col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 4])
 with col_nav1:
@@ -40,22 +40,22 @@ with col_nav2:
 st.divider()
 
 # -----------------------------------------------------------------------------
-# 3. Sélection de la station (pré-sélectionnée en session ou saisie manuelle)
+# 3. Sélection de la station (URL en priorité, puis session_state)
 # -----------------------------------------------------------------------------
 station_id = st.query_params.get("station_id")
 
-ENDPOINT_INFO = f"/station/{station_id}"
-ENDPOINT_STATUS = f"/station/{station_id}/status"
-ENDPOINT_HOURLY = f"/station/{station_id}/history"
+if not station_id and st.session_state.get("selected_station_id"):
+    station_id = st.session_state.get("selected_station_id")
+    st.query_params["station_id"] = station_id
 
 if not station_id:
     with st.expander(
-        "Changer ou saisir l'identifiant d'une station", expanded=(station_id is None)
+        "Changer ou saisir l'identifiant d'une station", expanded=True
     ):
         with st.form("select_station_form"):
             saisie_id = st.text_input(
                 "Identifiant de la station (station_id) :",
-                value=station_id if station_id else "",
+                value="",
                 placeholder="Ex: 1, station_rennes_01...",
             )
             btn_charger = st.form_submit_button("Afficher les informations")
@@ -65,13 +65,14 @@ if not station_id:
             st.session_state["selected_station_id"] = station_id
             st.query_params["station_id"] = station_id
             st.rerun()
+
     st.info(
         "Veuillez renseigner un identifiant de station ci-dessus ou choisir une station depuis la page de recherche."
     )
     st.stop()
 else:
     with st.expander(
-        "Changer de station", expanded=(station_id is not None)
+        "Changer de station", expanded=False
     ):
         with st.form("select_station_form"):
             saisie_id = st.text_input(
@@ -91,14 +92,18 @@ else:
                 st.session_state["in_search"] = saisie_nom
                 st.switch_page("pages/list_stations.py")
             if saisie_id.strip():
-                st.session_state["selected_station_id"] = saisie_id.strip()
-                st.query_params["station_id"] = saisie_id.strip()
                 station_id = saisie_id.strip()
+                st.session_state["selected_station_id"] = station_id
+                st.query_params["station_id"] = station_id
             else:
                 station_id = api_client.post("/station", {"name": saisie_nom})[0]["station_id"]
                 st.session_state["selected_station_id"] = station_id
                 st.query_params["station_id"] = station_id
             st.rerun()
+
+ENDPOINT_INFO = f"/station/{station_id}"
+ENDPOINT_STATUS = f"/station/{station_id}/status"
+ENDPOINT_HOURLY = f"/station/{station_id}/history"
 
 station_info = None
 station_status = None
@@ -157,7 +162,6 @@ with col_fav:
                 "⭐ Ajouter aux favoris", type="primary", use_container_width=True
             ):
                 try:
-                    # Votre contrôleur favorites utilise @router.get("/{station_id}") pour l'ajout
                     api_client.get(f"/favorites/{station_id}", headers=headers)
                     st.success("Station ajoutée aux favoris !")
                     st.rerun()
@@ -179,7 +183,7 @@ if station_status:
     else:
         st.info(f"ℹ️ **État de la station : {etat}**")
 
-    taux_remplissage = 100 * station_status["num_docks_available"] / station_status["operational_capacity"]
+    taux_remplissage = 100 * station_status["num_docks_available"] / station_status["operational_capacity"] if station_status["operational_capacity"] > 0 else 0
 
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     kpi1.metric(
@@ -203,25 +207,23 @@ if station_status:
         f"{int(taux_remplissage)} %",
     )
 
-    # Détails techniques du statut en temps réel
     col_stat1, col_stat2 = st.columns(2)
     col_stat1.metric(
         "🎯 Score de fiabilité",
-        f"{int(station_status["reliability_score"])} %"
+        f"{int(station_status.get('reliability_score'))} %"
         if station_status.get("reliability_score") else "Non calculé",
     )
-    if station_status["last_reported"]:
-        station_status['last_reported'] = station_status['last_reported'].replace("T", " ")
-        station_status['last_reported'] = station_status['last_reported'].replace("Z", "")
-        station_status['last_reported'] = datetime.strptime(station_status['last_reported'], "%Y-%m-%d %H:%M:%S")
-        periode = datetime.now() - station_status['last_reported']
-        if periode.seconds // 60 <= 1:
-            mins = "minute"
-        else:
-            mins = "minutes"
-        col_stat2.write(
-            f"**Dernier relevé :** Il y a `{periode.seconds // 60} {mins}`."
-        )
+    if station_status.get("last_reported"):
+        last_rep = str(station_status['last_reported']).replace("T", " ").replace("Z", "")
+        try:
+            dt_reported = datetime.strptime(last_rep, "%Y-%m-%d %H:%M:%S")
+            periode = datetime.now() - dt_reported
+            mins = "minute" if periode.seconds // 60 <= 1 else "minutes"
+            col_stat2.write(
+                f"**Dernier relevé :** Il y a `{periode.seconds // 60} {mins}`."
+            )
+        except Exception:
+            col_stat2.write(f"**Dernier relevé :** `{last_rep}`")
     else:
         col_stat2.write("**Dernier relevé :** `N/A`")
 else:
@@ -267,38 +269,39 @@ periode_voulue = st.multiselect(
 )
 if not periode_voulue:
     st.info("Choisir une période à observer sur la station.")
-elif periode_voulue[0] == "Dans les dernières 24 heures":
-    periode_voulue = "24h"
-elif periode_voulue[0] == "Dans les 7 derniers jours":
-    periode_voulue = "7j"
 else:
-    periode_voulue = "30j"
+    if periode_voulue[0] == "Dans les dernières 24 heures":
+        periode_param = "24h"
+    elif periode_voulue[0] == "Dans les 7 derniers jours":
+        periode_param = "7j"
+    else:
+        periode_param = "30j"
 
-try:
-    hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_voulue})
-except Exception as e:
-    hourly_stats = []
-    st.warning(f"Error {e}")
-    st.stop()
+    try:
+        hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_param})
+    except Exception as e:
+        hourly_stats = []
+        st.warning(f"Error {e}")
+        st.stop()
 
-if periode_voulue:
-    st.write(hourly_stats)
-    df_hourly = pd.DataFrame(hourly_stats)
+    if hourly_stats:
+        df_hourly = pd.DataFrame(hourly_stats)
 
-    # Renommage lisible des colonnes issues de la table station_status_hourly
-    colonnes_traduction = {
-        "bucket_hour": "Tranche horaire",
-        "reliability_score": "Score de fiabilité",
-        "avg_num_bikes_available": "Moy. vélos dispo",
-        "avg_num_docks_available": "Moy. places libres",
-        "avg_operational_capacity": "Capacité op. moyenne",
-        "empty_events_cnt": "Pénuries (0 vélo)",
-        "full_events_cnt": "Saturations (0 place)",
-        "empty_duration_sec": "Durée vide (s)",
-        "full_duration_sec": "Durée saturée (s)",
-    }
+        colonnes_traduction = {
+            "bucket_hour": "Tranche horaire",
+            "reliability_score": "Score de fiabilité",
+            "avg_num_bikes_available": "Moy. vélos dispo",
+            "avg_num_docks_available": "Moy. places libres",
+            "avg_operational_capacity": "Capacité op. moyenne",
+            "empty_events_cnt": "Pénuries (0 vélo)",
+            "full_events_cnt": "Saturations (0 place)",
+            "empty_duration_sec": "Durée vide (s)",
+            "full_duration_sec": "Durée saturée (s)",
+        }
 
-    colonnes_presentes = [c for c in colonnes_traduction if c in df_hourly.columns]
-    df_affichage = df_hourly[colonnes_presentes].rename(columns=colonnes_traduction)
+        colonnes_presentes = [c for c in colonnes_traduction if c in df_hourly.columns]
+        df_affichage = df_hourly[colonnes_presentes].rename(columns=colonnes_traduction)
 
-    st.dataframe(df_affichage, use_container_width=True, hide_index=True)
+        st.dataframe(df_affichage, use_container_width=True, hide_index=True)
+    else:
+        st.info("Aucun historique disponible pour cette période.")
