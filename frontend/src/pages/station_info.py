@@ -50,7 +50,7 @@ if not station_id and st.session_state.get("selected_station_id"):
 
 if not station_id:
     with st.expander(
-        "Changer ou saisir l'identifiant d'une station", expanded=True
+        "Saisir l'identifiant d'une station", expanded=True
     ):
         with st.form("select_station_form"):
             saisie_id = st.text_input(
@@ -88,13 +88,13 @@ else:
             btn_charger = st.form_submit_button("Afficher les informations")
 
         if btn_charger and (saisie_id.strip() or saisie_nom.strip()):
-            if len(api_client.post("/station", {"name": saisie_nom})) > 1:
-                st.session_state["in_search"] = saisie_nom
-                st.switch_page("pages/list_stations.py")
             if saisie_id.strip():
                 station_id = saisie_id.strip()
                 st.session_state["selected_station_id"] = station_id
                 st.query_params["station_id"] = station_id
+            elif len(api_client.post("/station", {"name": saisie_nom})) > 1:
+                st.session_state["in_search"] = saisie_nom
+                st.switch_page("pages/list_stations.py")
             else:
                 station_id = api_client.post("/station", {"name": saisie_nom})[0]["station_id"]
                 st.session_state["selected_station_id"] = station_id
