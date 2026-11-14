@@ -1,0 +1,65 @@
+---
+bibliography: refs.bib
+citeproc: false
+nocite: "@*"
+format:
+  html:
+    code-tools: true
+  typst:
+    papersize: a4
+    margin:
+      x: 1.5cm
+      y: 2.0cm
+    section-numbering: 1.1.a
+    mainfont: "Libertinus Serif"
+    fontsize: 11pt
+---
+
+
+```{=typst}
+#import "model.typ": project_template
+
+#show: body => project_template(
+  title: [Créer un rapport de projet\ avec Quarto et Typst],
+  team: [Équipe 8],
+  authors: ([Jean-Guy Badiane], [Serena Williams], [François Pignon], [Anne Hathaway]),
+  tutor: [Philippe Lucas],
+  project: [Projet Statistique de 1ère année - Année 2025-2026],
+  body
+)
+```
+
+## Introduction {.unnumbered}
+
+```{=typst} 
+#lorem(100)
+```
+
+{{< pagebreak >}}
+
+## Section 1
+
+### Subsection 1.1
+
+### Subsection 1.2
+
+{{< pagebreak >}}
+
+## Section 2
+
+{{< pagebreak >}}
+
+## Bibliography
+
+
+{{< pagebreak >}}
+
+## Conclusion {.unnumbered}
+
+
+{{< pagebreak >}}
+
+## Annexes {.unnumbered}
+
+
+{{< pagebreak >}}
