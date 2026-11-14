@@ -24,6 +24,16 @@ if st.session_state["token"] is None:
 
 headers = {"Authorization": f"Bearer {st.session_state['token']}"}
 
+col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 4])
+with col_nav1:
+    if st.button("⬅️ Liste des stations"):
+        st.switch_page("pages/list_stations.py")
+with col_nav2:
+    if st.button("🔍 Rechercher"):
+        st.switch_page("pages/station_search.py")
+
+st.divider()
+
 try:
     favorites = api_client.get(
         "/favorites/",
