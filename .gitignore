@@ -156,7 +156,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-.test_env
 
 # Spyder project settings
 .spyderproject
@@ -220,3 +219,4 @@ __marimo__/
 
 logs/
 backend/.test_env
+.Rproj.user
