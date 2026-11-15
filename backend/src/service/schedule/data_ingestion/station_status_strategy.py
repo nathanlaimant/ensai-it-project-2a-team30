@@ -291,16 +291,20 @@ class StationStatusStrategy(BaseIngestionStrategy[StationStatus]):
         operational_capacity = num_bikes_available + (num_docks_available or 0)
 
         # 8. classify station_state
-        # some boolean flags
-        # is_installed = json_dict.get("is_installed")
+        is_installed = json_dict.get("is_installed")
         is_renting = json_dict.get("is_renting")
         is_returning = json_dict.get("is_returning")
-        if (num_docks_available is not None and num_docks_available == 0) or (
+        if (
+            (is_installed is not None and not is_installed)
+            or operational_capacity == 0
+            or num_bikes_available == 0
+            or (is_renting is not None and not is_renting)
+        ):
+            station_state = StationState.EMPTY
+        elif (num_docks_available is not None and num_docks_available == 0) or (
             is_returning is not None and not is_returning
         ):
             station_state = StationState.FULL
-        elif num_bikes_available == 0 or (is_renting is not None and not is_renting):
-            station_state = StationState.EMPTY
         else:
             station_state = StationState.FUNCTIONAL
 

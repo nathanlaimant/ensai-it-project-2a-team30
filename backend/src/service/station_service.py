@@ -85,12 +85,19 @@ class StationService:
         )
 
     @staticmethod
+    def _compute_full_ratio(num_bikes: float, operational_capacity: float) -> float:
+        """Calcule le taux de remplissage borné à 1.0, ou 0.0 si la capacité est nulle."""
+        return (
+            min(num_bikes / operational_capacity, 1.0)
+            if operational_capacity > 0
+            else 0.0
+        )
+
+    @staticmethod
     def _build_current_status_dict(statut, s_horaire) -> dict:
         """Construit le dictionnaire de statut courant d'une station."""
-        full_ratio = (
-            min(statut.num_bikes_available / statut.operational_capacity, 1.0)
-            if statut.operational_capacity > 0
-            else 0.0
+        full_ratio = StationService._compute_full_ratio(
+            statut.num_bikes_available, statut.operational_capacity
         )
         return {
             "num_bikes_available": statut.num_bikes_available,
@@ -194,8 +201,8 @@ class StationService:
                     "last_reported": s.last_reported,
                     "station_state": s.station_state,
                     "operational_capacity": s.operational_capacity,
-                    "full_ratio": min(
-                        s.num_bikes_available / s.operational_capacity, 1.0
+                    "full_ratio": self._compute_full_ratio(
+                        s.num_bikes_available, s.operational_capacity
                     ),
                     "reliability_score": reliability_score,
                 }
@@ -215,8 +222,8 @@ class StationService:
                     "num_docks_available": round(s.avg_num_docks_available),
                     "last_reported": s.bucket_hour,
                     "operational_capacity": round(s.avg_operational_capacity),
-                    "full_ratio": min(
-                        s.avg_num_bikes_available / s.avg_operational_capacity, 1.0
+                    "full_ratio": self._compute_full_ratio(
+                        s.avg_num_bikes_available, s.avg_operational_capacity
                     ),
                     "full_duration_ratio": s.full_duration_sec / 3600,
                     "avg_full_duration": (
@@ -254,9 +261,8 @@ class StationService:
                         s["stat_date"], datetime.min.time(), tzinfo=UTC
                     ),
                     "operational_capacity": round(s["avg_operational_capacity"]),
-                    "full_ratio": min(
-                        s["avg_num_bikes_available"] / s["avg_operational_capacity"],
-                        1.0,
+                    "full_ratio": self._compute_full_ratio(
+                        s["avg_num_bikes_available"], s["avg_operational_capacity"]
                     ),
                     "full_duration_ratio": s["full_duration_sec"] / 3600,
                     "avg_full_duration": (
