@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -25,7 +26,7 @@ def favorite_station_dao(db_connection):
     return FavoriteStationDAO(db_connection)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def initiate_stations_and_users(db_connection):
     """Insère les stations et utilisateurs nécessaires aux tests de favoris."""
     initial_stations = [
@@ -344,3 +345,35 @@ def test_remove_favorite_unknown_user(favorite_station_dao, initiate_stations_an
 
     # THEN
     assert removed is False
+
+
+def test_favorite_station_dao_db_exceptions_rollback():
+    """Vérifie que les méthodes de FavoriteStationDAO effectuent un rollback et lèvent l'exception en cas d'erreur DB"""
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.execute.side_effect = Exception("Erreur DB SQL")
+    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+
+    mock_db = MagicMock()
+    mock_db.get_connection.return_value.__enter__.return_value = mock_conn
+
+    dao = FavoriteStationDAO(mock_db)
+
+    with pytest.raises(Exception, match="Erreur DB SQL"):
+        dao.add_favorite(1, "101")
+    mock_conn.rollback.assert_called()
+
+    mock_conn.reset_mock()
+    with pytest.raises(Exception, match="Erreur DB SQL"):
+        dao.list_favorites(1)
+    mock_conn.rollback.assert_called()
+
+    mock_conn.reset_mock()
+    with pytest.raises(Exception, match="Erreur DB SQL"):
+        dao.count_favorites(["101"])
+    mock_conn.rollback.assert_called()
+
+    mock_conn.reset_mock()
+    with pytest.raises(Exception, match="Erreur DB SQL"):
+        dao.remove_favorite(1, "101")
+    mock_conn.rollback.assert_called()

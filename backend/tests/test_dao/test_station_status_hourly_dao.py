@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -262,9 +263,7 @@ def test_get_latest_hourly_status_fail_unknown_station(
 
 
 # Tests de get_latest_hourly_statuses()
-def test_get_latest_hourly_statuses_ok(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_get_latest_hourly_statuses_ok(station_status_hourly_dao, sample_hourly_stats):
     """Récupère en une requête le dernier statut horaire de chaque station demandée"""
     # GIVEN
     station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
@@ -470,3 +469,37 @@ def test_aggregate_daily_stats_for_stations_wrong_time(
     )
     # THEN
     assert results == {}
+
+
+def test_station_status_hourly_dao_db_exceptions():
+    """Vérifie le comportement de repli lors d'exceptions de base de données"""
+    mock_db = MagicMock()
+    mock_db.get_connection.side_effect = Exception("Erreur DB Hourly")
+    dao = StationStatusHourlyDAO(mock_db)
+
+    assert dao.get_latest_hourly_status("101") is None
+    assert dao.get_latest_hourly_statuses(["101"]) == {}
+    assert dao.get_hourly_stats("101", datetime.now(), datetime.now()) == []
+    assert dao.aggregate_daily_stats("101", date(2026, 1, 1), date(2026, 1, 2)) == []
+    assert (
+        dao.aggregate_daily_stats_for_stations(
+            ["101"], date(2026, 1, 1), date(2026, 1, 2)
+        )
+        == {}
+    )
+
+
+def test_bulk_upsert_hourly_stats_empty_or_all_none(station_status_hourly_dao):
+    """Vérifie le retour 0 quand records est vide ou ne contient que des None"""
+    assert station_status_hourly_dao.bulk_upsert_hourly_stats([]) == 0
+    assert station_status_hourly_dao.bulk_upsert_hourly_stats([None, None]) == 0
+
+
+def test_aggregate_daily_stats_empty_station_id(station_status_hourly_dao):
+    """Vérifie le retour [] si le station_id est vide"""
+    assert (
+        station_status_hourly_dao.aggregate_daily_stats(
+            "", date(2026, 1, 1), date(2026, 1, 2)
+        )
+        == []
+    )

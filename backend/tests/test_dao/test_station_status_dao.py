@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -166,6 +167,16 @@ def test_bulk_insert_status_fail_none(station_status_dao):
     assert updates_made == 0
 
 
+def test_bulk_insert_status_empty_list(station_status_dao):
+    """Insertion retourne 0 car la liste est vide"""
+    assert station_status_dao.bulk_insert_status([]) == 0
+
+
+def test_bulk_insert_status_all_none(station_status_dao):
+    """Insertion retourne 0 car la liste ne contient que des None"""
+    assert station_status_dao.bulk_insert_status([None, None]) == 0
+
+
 def test_bulk_insert_status_fail_none_record(station_status_dao, sample_statuses):
     """
     Insertion retourne n-1 car l'un des enregistrements est None,
@@ -330,3 +341,17 @@ def test_get_all_station_history_fail_nothing(station_status_dao, sample_statuse
     status_history = station_status_dao.get_all_station_history(start_time, end_time)
     # THEN
     assert status_history == {}
+
+
+def test_station_status_dao_db_exceptions():
+    """Vérifie que les méthodes gèrent les exceptions de base de données en retournant des valeurs par défaut sécurisées"""
+    mock_db = MagicMock()
+    mock_db.get_connection.side_effect = Exception("Erreur DB Status")
+    dao = StationStatusDAO(mock_db)
+
+    assert dao.get_latest_status("101") is None
+    assert dao.get_latest_statuses(["101"]) == {}
+    start_time = datetime.fromisoformat("2026-11-01 00:00:00+00:00")
+    end_time = datetime.fromisoformat("2026-11-01 01:00:00+00:00")
+    assert dao.get_one_station_history("101", start_time, end_time) == []
+    assert dao.get_all_station_history(start_time, end_time) == {}

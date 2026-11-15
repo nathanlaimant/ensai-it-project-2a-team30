@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import psycopg2
 import pytest
@@ -14,7 +15,9 @@ test_env_path = Path(__file__).resolve().parents[2] / ".test_env"
 @pytest.fixture(scope="session")
 def db_connection():
     """Fournit un pool de connexion à la base de données de test."""
-    settings = Settings(_env_file=test_env_path if test_env_path.exists() else ".test_env")
+    settings = Settings(
+        _env_file=test_env_path if test_env_path.exists() else ".test_env"
+    )
     return DbConnection(settings)
 
 
@@ -281,6 +284,32 @@ def test_list_users_dict_param(user_dao, inserted_users):
     assert results[0].username == "alice"
 
 
+def test_list_users_filter_user_id(user_dao, inserted_users):
+    """Filtrage réussi par identifiant exact d'utilisateur"""
+    # GIVEN
+    target_id = inserted_users[0].user_id
+
+    # WHEN
+    results = user_dao.list_users(user_id=target_id)
+
+    # THEN
+    assert len(results) == 1
+    assert results[0].user_id == target_id
+
+
+def test_list_users_invalid_types(user_dao, inserted_users):
+    """Retourne une liste vide lorsque les critères ne respectent pas les types attendus"""
+    # WHEN / THEN
+    assert user_dao.list_users(username=123) == []
+    assert user_dao.list_users(email=123) == []
+    assert user_dao.list_users(is_active="not_a_bool") == []
+    assert user_dao.list_users(user_id=False) == []
+    assert user_dao.list_users(user_id=-1) == []
+    assert user_dao.list_users(nb_pages=-1) == []
+    assert user_dao.list_users(nb_pages="invalid") == []
+    assert user_dao.list_users(offset="invalid") == []
+
+
 def test_list_users_invalid_params(user_dao, inserted_users):
     """Retourne une liste vide lorsqu'un des critères n'a pas le bon format"""
     # WHEN / THEN
@@ -300,7 +329,9 @@ def test_update_user_ok(user_dao, inserted_users):
     new_email = "alice_updated@test.fr"
 
     # WHEN
-    update_ok = user_dao.update_user(user_id=target_user.user_id, updates={"email": new_email})
+    update_ok = user_dao.update_user(
+        user_id=target_user.user_id, updates={"email": new_email}
+    )
 
     # THEN
     assert update_ok is True
@@ -315,7 +346,9 @@ def test_update_user_fail_unknown_id(user_dao, inserted_users):
     unknown_id = 999999
 
     # WHEN
-    update_ok = user_dao.update_user(user_id=unknown_id, updates={"email": "new@test.fr"})
+    update_ok = user_dao.update_user(
+        user_id=unknown_id, updates={"email": "new@test.fr"}
+    )
 
     # THEN
     assert update_ok is False
@@ -327,7 +360,9 @@ def test_update_user_fail_invalid_field(user_dao, inserted_users):
     target_user = inserted_users[0]
 
     # WHEN
-    update_ok = user_dao.update_user(user_id=target_user.user_id, updates={"invalid_field": "val"})
+    update_ok = user_dao.update_user(
+        user_id=target_user.user_id, updates={"invalid_field": "val"}
+    )
 
     # THEN
     assert update_ok is False
@@ -339,7 +374,9 @@ def test_update_user_fail_invalid_role(user_dao, inserted_users):
     target_user = inserted_users[0]
 
     # WHEN
-    update_ok = user_dao.update_user(user_id=target_user.user_id, updates={"role": "SUPERUSER"})
+    update_ok = user_dao.update_user(
+        user_id=target_user.user_id, updates={"role": "SUPERUSER"}
+    )
 
     # THEN
     assert update_ok is False
@@ -352,7 +389,9 @@ def test_update_user_fail_duplicate_username(user_dao, inserted_users):
     target_user = inserted_users[1]
 
     # WHEN
-    update_ok = user_dao.update_user(user_id=target_user.user_id, updates={"username": "alice"})
+    update_ok = user_dao.update_user(
+        user_id=target_user.user_id, updates={"username": "alice"}
+    )
 
     # THEN
     assert update_ok is False
@@ -391,3 +430,135 @@ def test_delete_user_fail_invalid_id_type(user_dao, inserted_users):
     # WHEN / THEN
     assert user_dao.delete_user("invalid_string_id") is False
     assert user_dao.delete_user(True) is False
+
+
+def test_update_user_fail_invalid_user_id_type(user_dao, inserted_users):
+    """Mise à jour impossible car le type de user_id est invalide"""
+    # WHEN / THEN
+    assert (
+        user_dao.update_user(user_id="invalid", updates={"email": "a@b.com"}) is False
+    )
+    assert user_dao.update_user(user_id=True, updates={"email": "a@b.com"}) is False
+
+
+def test_update_user_fail_empty_or_non_dict_updates(user_dao, inserted_users):
+    """Mise à jour impossible car updates est vide ou n'est pas un dictionnaire"""
+    # GIVEN
+    target_id = inserted_users[0].user_id
+
+    # WHEN / THEN
+    assert user_dao.update_user(user_id=target_id, updates={}) is False
+    assert user_dao.update_user(user_id=target_id, updates="not_a_dict") is False
+    assert user_dao.update_user(user_id=target_id, updates=None) is False
+
+
+def test_update_user_fail_wrong_value_type(user_dao, inserted_users):
+    """Mise à jour impossible car le type de la valeur à mettre à jour est invalide"""
+    # GIVEN
+    target_id = inserted_users[0].user_id
+
+    # WHEN / THEN
+    assert user_dao.update_user(user_id=target_id, updates={"email": 12345}) is False
+    assert (
+        user_dao.update_user(user_id=target_id, updates={"is_active": "yes"}) is False
+    )
+
+
+def test_update_user_fail_empty_string_fields(user_dao, inserted_users):
+    """Mise à jour impossible car les champs texte obligatoires sont vides ou ne contiennent que des espaces"""
+    # GIVEN
+    target_id = inserted_users[0].user_id
+
+    # WHEN / THEN
+    assert user_dao.update_user(user_id=target_id, updates={"username": "   "}) is False
+    assert user_dao.update_user(user_id=target_id, updates={"email": ""}) is False
+    assert (
+        user_dao.update_user(user_id=target_id, updates={"password_hashed": "  "})
+        is False
+    )
+
+
+def test_delete_user_fail_foreign_key_violation():
+    """Suppression impossible lors d'une violation de contrainte d'intégrité"""
+    mock_db = MagicMock()
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_db.get_connection.return_value.__enter__.return_value = mock_conn
+    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+    mock_cursor.execute.side_effect = psycopg2.IntegrityError("FK violation")
+
+    dao = UserDAO(mock_db)
+    assert dao.delete_user(1) is False
+
+
+def test_user_dao_valider_method(user_dao):
+    """Vérification des branches de validation de requêtes de UserDAO._valider"""
+    assert (
+        user_dao._valider(
+            {"username": "alice", "limit": 10, "offset": 0, "role": "ADMIN"}
+        )
+        is True
+    )
+    assert user_dao._valider({"role": "INVALID_ROLE"}) is False
+    assert user_dao._valider({"limit": -1}) is False
+    assert user_dao._valider({"limit": "not_an_int"}) is False
+    assert user_dao._valider({"offset": -1}) is False
+    assert user_dao._valider({"offset": "not_an_int"}) is False
+    assert user_dao._valider({"user_id": "not_an_int"}) is False
+    assert user_dao._valider({"user_id": 123}) is True
+    assert user_dao._valider({"username": 123}) is False
+    assert user_dao._valider({"unknown_key": "val"}) is False
+    assert user_dao._valider("not_a_dict") is False
+
+
+def test_user_dao_construire_requete_method(user_dao):
+    """Vérification de la construction SQL dans UserDAO._construire_requete"""
+    query, params = user_dao._construire_requete(
+        {"username": "alice", "limit": 5, "offset": 10}
+    )
+    assert "WHERE username = %(username)s" in query
+    assert "LIMIT %(limit)s" in query
+    assert "OFFSET %(offset)s" in query
+    assert params["username"] == "alice"
+    assert params["limit"] == 5
+    assert params["offset"] == 10
+
+    # Sans conditions, avec ou sans limit / offset
+    q_empty, _ = user_dao._construire_requete({})
+    assert "WHERE" not in q_empty
+    assert "LIMIT" not in q_empty
+    assert "OFFSET" not in q_empty
+
+    q_limit_only, _ = user_dao._construire_requete({"limit": 10})
+    assert "WHERE" not in q_limit_only
+    assert "LIMIT %(limit)s" in q_limit_only
+    assert "OFFSET" not in q_limit_only
+
+    q_offset_only, _ = user_dao._construire_requete({"offset": 2})
+    assert "WHERE" not in q_offset_only
+    assert "LIMIT" not in q_offset_only
+    assert "OFFSET %(offset)s" in q_offset_only
+
+
+def test_create_user_fail_no_result():
+    """Vérifie le retour False si le fetchone ne retourne aucun résultat"""
+    mock_db = MagicMock()
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_db.get_connection.return_value.__enter__.return_value = mock_conn
+    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+    mock_cursor.fetchone.return_value = None
+
+    dao = UserDAO(mock_db)
+    u = User(username="test", password_hashed="hash", email="test@test.fr", role="USER")
+    assert dao.create_user(u) is False
+
+
+def test_list_users_raises_on_db_exception():
+    """Vérifie que list_users propage l'exception après affichage de l'erreur"""
+    mock_db = MagicMock()
+    mock_db.get_connection.side_effect = Exception("Erreur DB list_users")
+    dao = UserDAO(mock_db)
+
+    with pytest.raises(Exception, match="Erreur DB list_users"):
+        dao.list_users()

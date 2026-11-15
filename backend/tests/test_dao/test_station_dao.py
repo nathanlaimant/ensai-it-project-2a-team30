@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,7 +14,9 @@ test_env_path = Path(__file__).resolve().parents[2] / ".test_env"
 @pytest.fixture(scope="session")
 def db_connection():
     """Fournit un pool de connexion à la base de données de test."""
-    settings = Settings(_env_file=test_env_path if test_env_path.exists() else ".test_env")
+    settings = Settings(
+        _env_file=test_env_path if test_env_path.exists() else ".test_env"
+    )
     return DbConnection(settings)
 
 
@@ -147,6 +150,54 @@ def test_upsert_station_info_update_conflict(station_dao, sample_stations):
     assert retrieved.short_name == "A101_MOD"
     assert retrieved.capacity == 25
     assert retrieved.is_charging_station is False
+
+
+def test_upsert_station_info_with_station_area(station_dao):
+    """Insertion réussie d'une station avec station_area au format JSON"""
+    # GIVEN
+    area_payload = {
+        "type": "Polygon",
+        "coordinates": [[[7.7, 48.6], [7.8, 48.6], [7.8, 48.7], [7.7, 48.6]]],
+    }
+    station = StationInformation(
+        station_id="104_area",
+        name="Station Zone",
+        short_name="Z104",
+        lat=48.65,
+        lon=7.75,
+        address="Rue de la Zone",
+        is_virtual_station=True,
+        station_area=area_payload,
+        contact_phone=None,
+        capacity=5,
+        is_charging_station=None,
+    )
+
+    # WHEN
+    added = station_dao.upsert_station_info(station)
+
+    # THEN
+    assert added is True
+    retrieved = station_dao.get_by_id(station.station_id)
+    assert retrieved is not None
+    assert retrieved.station_area == area_payload
+
+
+def test_upsert_station_info_db_exception():
+    """upsert_station_info retourne False lors d'une exception de base de données"""
+    mock_db = MagicMock()
+    mock_db.get_connection.side_effect = Exception("Erreur de connexion DB")
+    dao = StationDAO(mock_db)
+
+    station = StationInformation(
+        station_id="fail_id",
+        name="Station Fail",
+        short_name="F",
+        lat=0.0,
+        lon=0.0,
+        capacity=1,
+    )
+    assert dao.upsert_station_info(station) is False
 
 
 def test_upsert_station_info_fail_none(station_dao):
@@ -318,3 +369,58 @@ def test_list_stations_no_match(station_dao, inserted_stations):
 
     # THEN
     assert stations == []
+
+
+def test_list_stations_filter_by_extra_attributes(station_dao, inserted_stations):
+    """Filtrage réussi par station_id, address, contact_phone, lat, lon et capacity exacte"""
+    # station 101: address="1 Rue de Paris", contact_phone="0102030405", lat=48.8566, lon=2.3522, capacity=20
+    by_id = station_dao.list_stations(station_id="101")
+    assert len(by_id) == 1 and by_id[0].station_id == "101"
+
+    by_addr = station_dao.list_stations(address="Paris")
+    assert len(by_addr) == 2
+
+    by_phone = station_dao.list_stations(contact_phone="010203")
+    assert len(by_phone) == 1 and by_phone[0].station_id == "101"
+
+    by_coords = station_dao.list_stations(lat=48.8566, lon=2.3522)
+    assert len(by_coords) == 1 and by_coords[0].station_id == "101"
+
+    by_exact_cap = station_dao.list_stations(capacity=20)
+    assert len(by_exact_cap) == 1 and by_exact_cap[0].station_id == "101"
+
+
+def test_station_dao_methods_raise_on_db_exception():
+    """Les méthodes de lecture de StationDAO lèvent l'exception en cas d'erreur DB"""
+    mock_db = MagicMock()
+    mock_db.get_connection.side_effect = Exception("Erreur DB lecture")
+    dao = StationDAO(mock_db)
+
+    with pytest.raises(Exception, match="Erreur DB lecture"):
+        dao.get_by_id("101")
+
+    with pytest.raises(Exception, match="Erreur DB lecture"):
+        dao.get_nearby(48.85, 2.35, 100.0)
+
+    with pytest.raises(Exception, match="Erreur DB lecture"):
+        dao.list_stations()
+
+
+def test_upsert_station_info_fetchone_none():
+    """Vérifie le retour False si le fetchone ne retourne aucun enregistrement"""
+    mock_db = MagicMock()
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_db.get_connection.return_value.__enter__.return_value = mock_conn
+    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+    mock_cursor.fetchone.return_value = None
+
+    dao = StationDAO(mock_db)
+    st = StationInformation(
+        station_id="st_none",
+        name="Test",
+        lat=48.0,
+        lon=2.0,
+        capacity=10,
+    )
+    assert dao.upsert_station_info(st) is False
