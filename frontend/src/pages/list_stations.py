@@ -37,7 +37,7 @@ terme_recherche = st.sidebar.text_input(
 )
 
 size_wanted = st.number_input(
-    label="Nombre de stations à afficher", min_value=5, max_value=50, value=10
+    label="Nombre de stations à afficher", min_value=10, max_value=50, value=10
 )
 page_wanted = st.number_input(label="Afficher la page :", min_value=1, max_value=20, value=1)
 

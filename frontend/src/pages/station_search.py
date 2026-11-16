@@ -18,9 +18,17 @@ research = st.text_input("Entrer un lieu ou une adresse :", type="search")
 if research:
     try:
         # Recherche des stations auprès du backend
+        size_wanted = st.number_input(
+        label="Nombre de stations à afficher", min_value=10, max_value=50, value=10
+        )
+        page_wanted = st.number_input(label="Afficher la page :", min_value=1, max_value=20, value=1)
         stations_searched = api_client.post(
             "/station",
-            data={"name": research},
+            data={
+                "name": research,
+                "size": size_wanted,
+                "page": page_wanted
+            },
         )
 
         if not stations_searched:
