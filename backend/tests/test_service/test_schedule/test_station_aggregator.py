@@ -5,7 +5,7 @@ _compute_reliability_score, _aggregate_station_stats, aggregate_hourly_stats).
 """
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -57,7 +57,9 @@ class TestResolveTimeBucket:
         """Si aucune borne n'est fournie, le créneau doit être [h-1, h]
         avec h = heure courante tronquée à l'heure pile.
         """
-        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(None, None)
+        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(
+            None, None
+        )
 
         assert resolved_end.minute == 0
         assert resolved_end.second == 0
@@ -77,7 +79,9 @@ class TestResolveTimeBucket:
         """Si les deux bornes sont fournies, elles doivent être retournées
         telles quelles, sans recalcul.
         """
-        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(START, END)
+        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(
+            START, END
+        )
 
         assert resolved_start == START
         assert resolved_end == END
@@ -102,7 +106,9 @@ class TestComputeBasicAverages:
             ),
         ]
 
-        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(statuses)
+        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(
+            statuses
+        )
 
         assert avg_cap == 20.0
         assert avg_bikes == 5.0
@@ -129,7 +135,9 @@ class TestComputeBasicAverages:
             ),
         ]
 
-        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(statuses)
+        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(
+            statuses
+        )
 
         assert avg_cap == 20.0  # une seule valeur non-None
         assert avg_bikes == 10.0  # une seule valeur non-None
@@ -146,7 +154,9 @@ class TestComputeBasicAverages:
             ),
         ]
 
-        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(statuses)
+        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(
+            statuses
+        )
 
         assert (avg_cap, avg_bikes, avg_docks) == (0.0, 0.0, 0.0)
 
@@ -170,7 +180,9 @@ class TestComputeDurationsAndEvents:
             make_status(StationState.FULL, START + timedelta(minutes=50)),
         ]
 
-        empty_dur, full_dur, empty_cnt, full_cnt = StationAggregator._compute_durations_and_events(statuses, START, END)
+        empty_dur, full_dur, empty_cnt, full_cnt = (
+            StationAggregator._compute_durations_and_events(statuses, START, END)
+        )
 
         assert empty_dur == 1800
         assert full_dur == 600
@@ -181,7 +193,9 @@ class TestComputeDurationsAndEvents:
         """Avec un seul relevé, sa durée doit couvrir tout le créneau."""
         statuses = [make_status(StationState.EMPTY, START + timedelta(minutes=30))]
 
-        empty_dur, full_dur, empty_cnt, full_cnt = StationAggregator._compute_durations_and_events(statuses, START, END)
+        empty_dur, full_dur, empty_cnt, full_cnt = (
+            StationAggregator._compute_durations_and_events(statuses, START, END)
+        )
 
         assert empty_dur == 3600  # toute l'heure
         assert full_dur == 0
@@ -194,7 +208,9 @@ class TestComputeDurationsAndEvents:
             make_status(StationState.FUNCTIONAL, START + timedelta(minutes=40)),
         ]
 
-        empty_dur, full_dur, empty_cnt, full_cnt = StationAggregator._compute_durations_and_events(statuses, START, END)
+        empty_dur, full_dur, empty_cnt, full_cnt = (
+            StationAggregator._compute_durations_and_events(statuses, START, END)
+        )
 
         assert (empty_dur, full_dur, empty_cnt, full_cnt) == (0, 0, 0, 0)
 
@@ -208,9 +224,29 @@ class TestComputeDurationsAndEvents:
             make_status(StationState.EMPTY, START + timedelta(minutes=30)),
         ]
 
-        _, _, empty_cnt, _ = StationAggregator._compute_durations_and_events(statuses, START, END)
+        _, _, empty_cnt, _ = StationAggregator._compute_durations_and_events(
+            statuses, START, END
+        )
 
         assert empty_cnt == 1
+
+    def test_defensive_correction_duration_positive_but_zero_events(self):
+        """Vérifie la correction défensive quand la durée est positive mais le compteur d'événements à zéro."""
+        statuses = [
+            make_status(StationState.FUNCTIONAL, START + timedelta(minutes=10)),
+        ]
+        with patch(
+            "service.schedule.data_aggregation.station_aggregator.round",
+            side_effect=[100, 200],
+        ):
+            empty_dur, full_dur, empty_cnt, full_cnt = (
+                StationAggregator._compute_durations_and_events(statuses, START, END)
+            )
+
+        assert empty_dur == 100
+        assert empty_cnt == 1
+        assert full_dur == 200
+        assert full_cnt == 1
 
 
 class TestComputeReliabilityScore:
@@ -335,9 +371,13 @@ class TestAggregateHourlyStats:
         result = await aggregator.aggregate_hourly_stats(START, END)
 
         assert result == 2
-        aggregator.station_status_dao.get_all_station_history.assert_called_once_with(start_time=START, end_time=END)
+        aggregator.station_status_dao.get_all_station_history.assert_called_once_with(
+            start_time=START, end_time=END
+        )
 
-        persisted_records = aggregator.station_hourly_dao.bulk_upsert_hourly_stats.call_args[0][0]
+        persisted_records = (
+            aggregator.station_hourly_dao.bulk_upsert_hourly_stats.call_args[0][0]
+        )
         assert len(persisted_records) == 2
         persisted_station_ids = {record.station_id for record in persisted_records}
         assert persisted_station_ids == {"station_1", "station_2"}
@@ -355,7 +395,9 @@ class TestAggregateHourlyStats:
 
         await aggregator.aggregate_hourly_stats(START, END)
 
-        persisted_records = aggregator.station_hourly_dao.bulk_upsert_hourly_stats.call_args[0][0]
+        persisted_records = (
+            aggregator.station_hourly_dao.bulk_upsert_hourly_stats.call_args[0][0]
+        )
         assert len(persisted_records) == 1
         assert persisted_records[0].station_id == "station_2"
 

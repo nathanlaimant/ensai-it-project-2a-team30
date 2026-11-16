@@ -4,7 +4,9 @@ from unittest.mock import AsyncMock, MagicMock
 import httpx
 import pytest
 
-from service.schedule.data_ingestion.feed_ingestion_strategy import BaseIngestionStrategy
+from service.schedule.data_ingestion.feed_ingestion_strategy import (
+    BaseIngestionStrategy,
+)
 
 
 class DummyIngestionStrategy(BaseIngestionStrategy[dict]):

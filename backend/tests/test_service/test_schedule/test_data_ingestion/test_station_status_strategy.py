@@ -7,7 +7,9 @@ import pytest
 from business_object.station_state import StationState
 from business_object.station_status import StationStatus
 from dao.station_status_dao import StationStatusDAO
-from service.schedule.data_ingestion.station_status_strategy import StationStatusStrategy
+from service.schedule.data_ingestion.station_status_strategy import (
+    StationStatusStrategy,
+)
 
 
 @pytest.fixture
@@ -215,7 +217,9 @@ def test_from_json_dict_recomputes_bikes_from_vehicle_types(strategy):
         ({"is_returning": False}, StationState.FULL),
     ],
 )
-def test_from_json_dict_station_state_classification(strategy, override_fields, expected_state):
+def test_from_json_dict_station_state_classification(
+    strategy, override_fields, expected_state
+):
     """Vérifie les critères de classification en EMPTY et FULL."""
     base_payload = {
         "station_id": "st_test",
