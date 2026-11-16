@@ -1,0 +1,17 @@
+# ===============================================
+# Véloscope Backend - Test Environment Configuration
+# ===============================================
+
+# --- PostgreSQL Test Database Configuration ---
+# Targets the isolated 'veloscope_test' schema created by data/init_db_test.sql
+postgres_host=localhost
+postgres_port=5432
+postgres_database=defaultdb
+postgres_user=postgres
+postgres_password=postgres
+postgres_schema=veloscope_test
+
+# --- Mock GBFS Feeds for Testing ---
+system_information_feed_url=http://mock
+station_information_feed_url=http://mock
+station_status_feed_url=http://mock

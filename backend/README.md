@@ -111,7 +111,13 @@ station_status_feed_url=https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_ae/fr/st
 
 ### 2. Test Environment (`.test_env`)
 
-Create or update `.test_env` in `backend/` targeting the dedicated `veloscope_test` schema:
+Tests run in isolation on the `veloscope_test` schema. Copy the test environment template:
+
+```bash
+cp .test_env.example .test_env
+```
+
+The test `.test_env` targets the dedicated test schema:
 
 ```ini
 postgres_host=your_postgres_host
@@ -160,11 +166,17 @@ uv run src/main.py
 
 ## Running Tests
 
-All tests read configuration from `.test_env` and run in isolation.
+All tests read configuration from `.test_env` and run in complete isolation against the `veloscope_test` schema.
+
+> **Note on Test Environment Setup**:
+> Before running tests, ensure you have initialized the test schema by running `data/init_db_test.sql` (and optionally `data/pop_db_test.sql`) in PostgreSQL, and created `backend/.test_env` (e.g. `cp .test_env.example .test_env`).
 
 ```bash
 # Run all tests
 uv run pytest
+
+# Run only service & aggregation tests
+uv run pytest tests/test_service
 
 # Run only DAO tests
 uv run pytest tests/test_dao
