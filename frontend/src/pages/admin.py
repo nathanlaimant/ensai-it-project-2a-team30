@@ -6,9 +6,7 @@ from utils.api_client import api_client
 
 PAGE_CONNEXION = "pages/connexion.py"  # à adapter au nom exact de ton fichier
 
-st.set_page_config(
-    page_title="Administration - VeloScope", page_icon="🛡️", layout="wide"
-)
+st.set_page_config(page_title="Administration - VeloScope", page_icon="🛡️", layout="wide")
 
 for cle, defaut in {
     "token": None,
@@ -121,16 +119,10 @@ if not users:
 
 # --- 5. Tableau et pagination ---------------------------------------------
 df = pd.DataFrame(users)
-colonnes = [
-    c
-    for c in ["user_id", "username", "email", "role", "is_active", "created_at"]
-    if c in df.columns
-]
+colonnes = [c for c in ["user_id", "username", "email", "role", "is_active", "created_at"] if c in df.columns]
 df = df[colonnes]
 if "created_at" in df.columns:
-    df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce").dt.strftime(
-        "%d/%m/%Y %H:%M"
-    )
+    df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce").dt.strftime("%d/%m/%Y %H:%M")
 
 st.metric("Utilisateurs affichés sur cette page", len(df))
 st.dataframe(
@@ -167,8 +159,7 @@ choix = st.selectbox(
     "Sélectionner un utilisateur :",
     options=list(options.keys()),
     format_func=lambda uid: (
-        f"{options[uid]['username']} (ID {uid}, "
-        f"{'actif' if options[uid]['is_active'] else 'inactif'})"
+        f"{options[uid]['username']} (ID {uid}, {'actif' if options[uid]['is_active'] else 'inactif'})"
     ),
 )
 cible = options[choix]
@@ -204,9 +195,7 @@ st.divider()
 st.subheader("🗑️ Suppression définitive")
 st.caption("Irréversible : le compte et ses stations favorites sont supprimés.")
 
-confirme = st.checkbox(
-    f"Je confirme la suppression définitive de « {nom} »", key=f"confirm_{choix}"
-)
+confirme = st.checkbox(f"Je confirme la suppression définitive de « {nom} »", key=f"confirm_{choix}")
 if st.button("Supprimer le compte", type="primary", disabled=est_moi or not confirme):
     executer(
         lambda: api_client.delete(f"/admin/users/{choix}", headers=headers),

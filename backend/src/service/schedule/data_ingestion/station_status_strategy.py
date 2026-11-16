@@ -1,6 +1,6 @@
 import re
 import unicodedata
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import httpx

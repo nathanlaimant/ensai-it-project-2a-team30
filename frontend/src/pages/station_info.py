@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 import requests
@@ -49,9 +49,7 @@ if not station_id and st.session_state.get("selected_station_id"):
     st.query_params["station_id"] = station_id
 
 if not station_id:
-    with st.expander(
-        "Saisir l'identifiant d'une station", expanded=True
-    ):
+    with st.expander("Saisir l'identifiant d'une station", expanded=True):
         with st.form("select_station_form"):
             saisie_id = st.text_input(
                 "Identifiant de la station (station_id) :",
@@ -71,9 +69,7 @@ if not station_id:
     )
     st.stop()
 else:
-    with st.expander(
-        "Changer de station", expanded=False
-    ):
+    with st.expander("Changer de station", expanded=False):
         with st.form("select_station_form"):
             saisie_id = st.text_input(
                 label="Identifiant de la station (station_id) :",
@@ -158,9 +154,7 @@ with col_fav:
                 except requests.exceptions.RequestException as e:
                     st.error(f"Impossible de retirer la station : {e}")
         else:
-            if st.button(
-                "⭐ Ajouter aux favoris", type="primary", use_container_width=True
-            ):
+            if st.button("⭐ Ajouter aux favoris", type="primary", use_container_width=True):
                 try:
                     api_client.get(f"/favorites/{station_id}", headers=headers)
                     st.success("Station ajoutée aux favoris !")
@@ -183,7 +177,11 @@ if station_status:
     else:
         st.info(f"ℹ️ **État de la station : {etat}**")
 
-    taux_remplissage = 100 * station_status["num_docks_available"] / station_status["operational_capacity"] if station_status["operational_capacity"] > 0 else 0
+    taux_remplissage = (
+        100 * station_status["num_docks_available"] / station_status["operational_capacity"]
+        if station_status["operational_capacity"] > 0
+        else 0
+    )
 
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     kpi1.metric(
@@ -211,25 +209,22 @@ if station_status:
     col_stat1.metric(
         "🎯 Score de fiabilité",
         f"{int(station_status.get('reliability_score'))} %"
-        if station_status.get("reliability_score") else "Non calculé",
+        if station_status.get("reliability_score")
+        else "Non calculé",
     )
     if station_status.get("last_reported"):
-        last_rep = str(station_status['last_reported']).replace("T", " ").replace("Z", "")
+        last_rep = str(station_status["last_reported"]).replace("T", " ").replace("Z", "")
         try:
             dt_reported = datetime.strptime(last_rep, "%Y-%m-%d %H:%M:%S")
             periode = datetime.now() - dt_reported
             mins = "minute" if periode.seconds // 60 <= 1 else "minutes"
-            col_stat2.write(
-                f"**Dernier relevé :** Il y a `{periode.seconds // 60} {mins}`."
-            )
+            col_stat2.write(f"**Dernier relevé :** Il y a `{periode.seconds // 60} {mins}`.")
         except Exception:
             col_stat2.write(f"**Dernier relevé :** `{last_rep}`")
     else:
         col_stat2.write("**Dernier relevé :** `N/A`")
 else:
-    st.info(
-        "Les données de statut en temps réel (`StationStatus`) ne sont pas disponibles pour cette station."
-    )
+    st.info("Les données de statut en temps réel (`StationStatus`) ne sont pas disponibles pour cette station.")
 
 st.divider()
 
@@ -239,33 +234,23 @@ col_info1, col_info2 = st.columns(2)
 
 with col_info1:
     st.markdown(f"* **Adresse :** {station_info.get('address') or 'Non renseignée'}")
-    st.markdown(
-        f"* **Capacité théorique :** {station_info.get('capacity', 'Non renseignée')} places"
-    )
-    st.markdown(
-        f"* **Téléphone de contact :** {station_info.get('contact_phone') or 'Non renseigné'}"
-    )
+    st.markdown(f"* **Capacité théorique :** {station_info.get('capacity', 'Non renseignée')} places")
+    st.markdown(f"* **Téléphone de contact :** {station_info.get('contact_phone') or 'Non renseigné'}")
 
 with col_info2:
     est_virtuelle = "Oui" if station_info.get("is_virtual_station") else "Non"
     est_recharge = "Oui ⚡" if station_info.get("is_charging_station") else "Non"
     st.markdown(f"* **Station virtuelle :** {est_virtuelle}")
     st.markdown(f"* **Borne de recharge électrique :** {est_recharge}")
-    st.markdown(
-        f"* **Coordonnées GPS :** `{station_info.get('lat', 'N/A')}, {station_info.get('lon', 'N/A')}`"
-    )
+    st.markdown(f"* **Coordonnées GPS :** `{station_info.get('lat', 'N/A')}, {station_info.get('lon', 'N/A')}`")
 
 st.divider()
 st.subheader("📈 Historique horaire et métriques de fiabilité")
 
 periode_voulue = st.multiselect(
     label="Période",
-    options=[
-        "Dans les dernières 24 heures",
-        "Dans les 7 derniers jours",
-        "Dans les 30 derniers jours"
-    ],
-    max_selections=1
+    options=["Dans les dernières 24 heures", "Dans les 7 derniers jours", "Dans les 30 derniers jours"],
+    max_selections=1,
 )
 if not periode_voulue:
     st.info("Choisir une période à observer sur la station.")

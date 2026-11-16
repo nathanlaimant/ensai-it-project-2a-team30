@@ -87,18 +87,12 @@ class StationService:
     @staticmethod
     def _compute_full_ratio(num_bikes: float, operational_capacity: float) -> float:
         """Calcule le taux de remplissage borné à 1.0, ou 0.0 si la capacité est nulle."""
-        return (
-            min(num_bikes / operational_capacity, 1.0)
-            if operational_capacity > 0
-            else 0.0
-        )
+        return min(num_bikes / operational_capacity, 1.0) if operational_capacity > 0 else 0.0
 
     @staticmethod
     def _build_current_status_dict(statut, s_horaire) -> dict:
         """Construit le dictionnaire de statut courant d'une station."""
-        full_ratio = StationService._compute_full_ratio(
-            statut.num_bikes_available, statut.operational_capacity
-        )
+        full_ratio = StationService._compute_full_ratio(statut.num_bikes_available, statut.operational_capacity)
         return {
             "num_bikes_available": statut.num_bikes_available,
             "num_docks_available": statut.num_docks_available,
@@ -154,17 +148,12 @@ class StationService:
         if not statuses:
             return {}
 
-        hourly_statuses = self.hourly_dao.get_latest_hourly_statuses(
-            list(statuses.keys())
-        )
+        hourly_statuses = self.hourly_dao.get_latest_hourly_statuses(list(statuses.keys()))
         return {
-            sid: self._build_current_status_dict(statut, hourly_statuses.get(sid))
-            for sid, statut in statuses.items()
+            sid: self._build_current_status_dict(statut, hourly_statuses.get(sid)) for sid, statut in statuses.items()
         }
 
-    def get_station_history(
-        self, station_id: str, time_period: TimePeriod
-    ) -> list[dict]:
+    def get_station_history(self, station_id: str, time_period: TimePeriod) -> list[dict]:
         """
         Récupère l'historique d'état d'une station sur une période donnée.
 
@@ -184,12 +173,8 @@ class StationService:
         end_time = datetime.now(UTC)
         if time_period == TimePeriod.une_heure:
             start_time = datetime.now(UTC) - timedelta(hours=1)
-            statut = self.status_dao.get_one_station_history(
-                station_id, start_time, end_time
-            )
-            s_horaire = self.hourly_dao.get_hourly_stats(
-                station_id, start_time, end_time
-            )
+            statut = self.status_dao.get_one_station_history(station_id, start_time, end_time)
+            s_horaire = self.hourly_dao.get_hourly_stats(station_id, start_time, end_time)
             if not statut:
                 return []
             reliability_score = s_horaire[0].reliability_score if s_horaire else None
@@ -201,18 +186,14 @@ class StationService:
                     "last_reported": s.last_reported,
                     "station_state": s.station_state,
                     "operational_capacity": s.operational_capacity,
-                    "full_ratio": self._compute_full_ratio(
-                        s.num_bikes_available, s.operational_capacity
-                    ),
+                    "full_ratio": self._compute_full_ratio(s.num_bikes_available, s.operational_capacity),
                     "reliability_score": reliability_score,
                 }
                 for s in statut
             ]
         elif time_period == TimePeriod.vingt_quatre_heures:
             start_time = datetime.now(UTC) - timedelta(days=1)
-            s_horaire = self.hourly_dao.get_hourly_stats(
-                station_id, start_time, end_time
-            )
+            s_horaire = self.hourly_dao.get_hourly_stats(station_id, start_time, end_time)
             if not s_horaire:
                 return []
             return [
@@ -222,20 +203,12 @@ class StationService:
                     "num_docks_available": round(s.avg_num_docks_available),
                     "last_reported": s.bucket_hour,
                     "operational_capacity": round(s.avg_operational_capacity),
-                    "full_ratio": self._compute_full_ratio(
-                        s.avg_num_bikes_available, s.avg_operational_capacity
-                    ),
+                    "full_ratio": self._compute_full_ratio(s.avg_num_bikes_available, s.avg_operational_capacity),
                     "full_duration_ratio": s.full_duration_sec / 3600,
-                    "avg_full_duration": (
-                        (s.full_duration_sec / s.full_events_cnt)
-                        if s.full_events_cnt > 0
-                        else 0
-                    ),
+                    "avg_full_duration": ((s.full_duration_sec / s.full_events_cnt) if s.full_events_cnt > 0 else 0),
                     "empty_duration_ratio": s.empty_duration_sec / 3600,
                     "avg_empty_duration": (
-                        (s.empty_duration_sec / s.empty_events_cnt)
-                        if s.empty_events_cnt > 0
-                        else 0
+                        (s.empty_duration_sec / s.empty_events_cnt) if s.empty_events_cnt > 0 else 0
                     ),
                     "reliability_score": s.reliability_score,
                 }
@@ -243,13 +216,9 @@ class StationService:
             ]
         elif time_period in [TimePeriod.sept_jours, TimePeriod.trente_jours]:
             start_time = datetime.now(UTC) - (
-                timedelta(days=7)
-                if time_period == TimePeriod.sept_jours
-                else timedelta(days=30)
+                timedelta(days=7) if time_period == TimePeriod.sept_jours else timedelta(days=30)
             )
-            s_quotidienne = self.hourly_dao.aggregate_daily_stats(
-                station_id, start_time.date(), end_time.date()
-            )
+            s_quotidienne = self.hourly_dao.aggregate_daily_stats(station_id, start_time.date(), end_time.date())
             if not s_quotidienne:
                 return []
             return [
@@ -257,24 +226,16 @@ class StationService:
                     "station_id": s["station_id"],
                     "num_bikes_available": s["avg_num_bikes_available"],
                     "num_docks_available": s["avg_num_docks_available"],
-                    "last_reported": datetime.combine(
-                        s["stat_date"], datetime.min.time(), tzinfo=UTC
-                    ),
+                    "last_reported": datetime.combine(s["stat_date"], datetime.min.time(), tzinfo=UTC),
                     "operational_capacity": round(s["avg_operational_capacity"]),
-                    "full_ratio": self._compute_full_ratio(
-                        s["avg_num_bikes_available"], s["avg_operational_capacity"]
-                    ),
+                    "full_ratio": self._compute_full_ratio(s["avg_num_bikes_available"], s["avg_operational_capacity"]),
                     "full_duration_ratio": s["full_duration_sec"] / 3600,
                     "avg_full_duration": (
-                        (s["full_duration_sec"] / s["full_events_cnt"])
-                        if s["full_events_cnt"] > 0
-                        else 0
+                        (s["full_duration_sec"] / s["full_events_cnt"]) if s["full_events_cnt"] > 0 else 0
                     ),
                     "empty_duration_ratio": s["empty_duration_sec"] / 3600,
                     "avg_empty_duration": (
-                        (s["empty_duration_sec"] / s["empty_events_cnt"])
-                        if s["empty_events_cnt"] > 0
-                        else 0
+                        (s["empty_duration_sec"] / s["empty_events_cnt"]) if s["empty_events_cnt"] > 0 else 0
                     ),
                     "reliability_score": s["avg_reliability_score"],
                 }
@@ -284,33 +245,22 @@ class StationService:
             return []
 
     @staticmethod
-    def _matches_status_filters(
-        latest_status, criteria: StationRecommendationRequest
-    ) -> bool:
+    def _matches_status_filters(latest_status, criteria: StationRecommendationRequest) -> bool:
         """Vérifie si le statut courant d'une station respecte les filtres demandés."""
-        if criteria.op_cap is not None and (
-            not latest_status or latest_status.operational_capacity < criteria.op_cap
-        ):
+        if criteria.op_cap is not None and (not latest_status or latest_status.operational_capacity < criteria.op_cap):
             return False
 
-        if criteria.station_state and (
-            not latest_status or latest_status.station_state != criteria.station_state
-        ):
+        if criteria.station_state and (not latest_status or latest_status.station_state != criteria.station_state):
             return False
 
         if criteria.vehicle_type != VehicleTypeFilter.ALL:
             vtypes = latest_status.vehicle_types_available if latest_status else None
-            if (
-                not isinstance(vtypes, dict)
-                or (vtypes.get(criteria.vehicle_type.value) or 0) <= 0
-            ):
+            if not isinstance(vtypes, dict) or (vtypes.get(criteria.vehicle_type.value) or 0) <= 0:
                 return False
 
         return True
 
-    def get_nearby_recommendations(
-        self, criteria: StationRecommendationRequest
-    ) -> list[dict]:
+    def get_nearby_recommendations(self, criteria: StationRecommendationRequest) -> list[dict]:
         """
         Recommande des stations à proximité d'une position donnée.
 
@@ -327,9 +277,7 @@ class StationService:
             Ne renvoie rien si l'un des critères n'est pas dans le bon format.
         """
         # 1. Find nearby stations based on location and radius
-        stations = self.station_dao.get_nearby(
-            criteria.lat, criteria.lon, criteria.radius_meters
-        )
+        stations = self.station_dao.get_nearby(criteria.lat, criteria.lon, criteria.radius_meters)
         if not stations:
             return []
         nearby_stations: list[tuple[str, StationInformation]] = [
@@ -341,22 +289,17 @@ class StationService:
         nearby_ids = [sid for sid, _ in nearby_stations]
         latest_statuses = self.status_dao.get_latest_statuses(nearby_ids)
         status_filtered = [
-            (sid, s)
-            for sid, s in nearby_stations
-            if self._matches_status_filters(latest_statuses.get(sid), criteria)
+            (sid, s) for sid, s in nearby_stations if self._matches_status_filters(latest_statuses.get(sid), criteria)
         ]
         if not status_filtered:
             return []
         # 3. Filter stations using reliability score (from station_status_hourly)
-        hourly_statuses = self.hourly_dao.get_latest_hourly_statuses(
-            [sid for sid, _ in status_filtered]
-        )
+        hourly_statuses = self.hourly_dao.get_latest_hourly_statuses([sid for sid, _ in status_filtered])
         final_stations = []
         for sid, s in status_filtered:
             hourly_status = hourly_statuses.get(sid)
             if criteria.score_min is not None and (
-                not hourly_status
-                or hourly_status.reliability_score < criteria.score_min
+                not hourly_status or hourly_status.reliability_score < criteria.score_min
             ):
                 continue
             final_stations.append((sid, s))
@@ -382,26 +325,12 @@ class StationService:
                     "name": s.name,
                     "lat": la,
                     "lon": lo,
-                    "distance_meters": haversine(
-                        (la, lo), (criteria.lat, criteria.lon), unit="m"
-                    ),
-                    "operational_capacity": (
-                        latest_status.operational_capacity if latest_status else None
-                    ),
-                    "station_state": (
-                        latest_status.station_state if latest_status else None
-                    ),
-                    "vehicle_types_available": (
-                        latest_status.vehicle_types_available if latest_status else None
-                    ),
-                    "last_hour_reliability": (
-                        hourly_status.reliability_score if hourly_status else None
-                    ),
-                    "last_day_reliability": (
-                        daily_status[-1]["avg_reliability_score"]
-                        if daily_status
-                        else None
-                    ),
+                    "distance_meters": haversine((la, lo), (criteria.lat, criteria.lon), unit="m"),
+                    "operational_capacity": (latest_status.operational_capacity if latest_status else None),
+                    "station_state": (latest_status.station_state if latest_status else None),
+                    "vehicle_types_available": (latest_status.vehicle_types_available if latest_status else None),
+                    "last_hour_reliability": (hourly_status.reliability_score if hourly_status else None),
+                    "last_day_reliability": (daily_status[-1]["avg_reliability_score"] if daily_status else None),
                 }
             )
         return sorted(res, key=lambda r: r["distance_meters"])

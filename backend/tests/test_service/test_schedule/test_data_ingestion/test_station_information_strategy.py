@@ -182,7 +182,5 @@ async def test_execute_e2e(strategy, mock_dao, mock_http_client):
 
     await strategy.execute()
 
-    mock_http_client.get.assert_called_once_with(
-        "https://api.test/station_information.json"
-    )
+    mock_http_client.get.assert_called_once_with("https://api.test/station_information.json")
     assert mock_dao.upsert_station_info.call_count == 1

@@ -18,4 +18,3 @@ class StationState(StrEnum):
     FULL = "FULL"
     EMPTY = "EMPTY"
     FUNCTIONAL = "FUNCTIONAL"
-

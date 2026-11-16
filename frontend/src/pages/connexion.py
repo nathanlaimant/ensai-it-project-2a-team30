@@ -1,9 +1,10 @@
 import requests
 import streamlit as st
+
 from utils.api_client import APIClient
 
 # Modification : pointe vers la page d'accueil gérée par st.navigation
-PAGE_PRINCIPALE = "pages/home.py" 
+PAGE_PRINCIPALE = "pages/home.py"
 
 st.set_page_config(page_title="Connexion - VeloScope", page_icon="🚲")
 
@@ -46,9 +47,7 @@ if btn_login:
                 st.error("L'identifiant ou le mot de passe est incorrect.")
             else:
                 try:
-                    detail = str(
-                        e.response.json().get("detail", "Erreur lors de la connexion.")
-                    )
+                    detail = str(e.response.json().get("detail", "Erreur lors de la connexion."))
                 except ValueError:
                     detail = "Erreur lors de la connexion."
                 st.error(f"Échec ({e.response.status_code}) : {detail}")

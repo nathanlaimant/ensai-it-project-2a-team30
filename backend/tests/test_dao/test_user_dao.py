@@ -15,9 +15,7 @@ test_env_path = Path(__file__).resolve().parents[2] / ".test_env"
 @pytest.fixture(scope="session")
 def db_connection():
     """Fournit un pool de connexion à la base de données de test."""
-    settings = Settings(
-        _env_file=test_env_path if test_env_path.exists() else ".test_env"
-    )
+    settings = Settings(_env_file=test_env_path if test_env_path.exists() else ".test_env")
     return DbConnection(settings)
 
 
@@ -329,9 +327,7 @@ def test_update_user_ok(user_dao, inserted_users):
     new_email = "alice_updated@test.fr"
 
     # WHEN
-    update_ok = user_dao.update_user(
-        user_id=target_user.user_id, updates={"email": new_email}
-    )
+    update_ok = user_dao.update_user(user_id=target_user.user_id, updates={"email": new_email})
 
     # THEN
     assert update_ok is True
@@ -346,9 +342,7 @@ def test_update_user_fail_unknown_id(user_dao, inserted_users):
     unknown_id = 999999
 
     # WHEN
-    update_ok = user_dao.update_user(
-        user_id=unknown_id, updates={"email": "new@test.fr"}
-    )
+    update_ok = user_dao.update_user(user_id=unknown_id, updates={"email": "new@test.fr"})
 
     # THEN
     assert update_ok is False
@@ -360,9 +354,7 @@ def test_update_user_fail_invalid_field(user_dao, inserted_users):
     target_user = inserted_users[0]
 
     # WHEN
-    update_ok = user_dao.update_user(
-        user_id=target_user.user_id, updates={"invalid_field": "val"}
-    )
+    update_ok = user_dao.update_user(user_id=target_user.user_id, updates={"invalid_field": "val"})
 
     # THEN
     assert update_ok is False
@@ -374,9 +366,7 @@ def test_update_user_fail_invalid_role(user_dao, inserted_users):
     target_user = inserted_users[0]
 
     # WHEN
-    update_ok = user_dao.update_user(
-        user_id=target_user.user_id, updates={"role": "SUPERUSER"}
-    )
+    update_ok = user_dao.update_user(user_id=target_user.user_id, updates={"role": "SUPERUSER"})
 
     # THEN
     assert update_ok is False
@@ -389,9 +379,7 @@ def test_update_user_fail_duplicate_username(user_dao, inserted_users):
     target_user = inserted_users[1]
 
     # WHEN
-    update_ok = user_dao.update_user(
-        user_id=target_user.user_id, updates={"username": "alice"}
-    )
+    update_ok = user_dao.update_user(user_id=target_user.user_id, updates={"username": "alice"})
 
     # THEN
     assert update_ok is False
@@ -435,9 +423,7 @@ def test_delete_user_fail_invalid_id_type(user_dao, inserted_users):
 def test_update_user_fail_invalid_user_id_type(user_dao, inserted_users):
     """Mise à jour impossible car le type de user_id est invalide"""
     # WHEN / THEN
-    assert (
-        user_dao.update_user(user_id="invalid", updates={"email": "a@b.com"}) is False
-    )
+    assert user_dao.update_user(user_id="invalid", updates={"email": "a@b.com"}) is False
     assert user_dao.update_user(user_id=True, updates={"email": "a@b.com"}) is False
 
 
@@ -459,9 +445,7 @@ def test_update_user_fail_wrong_value_type(user_dao, inserted_users):
 
     # WHEN / THEN
     assert user_dao.update_user(user_id=target_id, updates={"email": 12345}) is False
-    assert (
-        user_dao.update_user(user_id=target_id, updates={"is_active": "yes"}) is False
-    )
+    assert user_dao.update_user(user_id=target_id, updates={"is_active": "yes"}) is False
 
 
 def test_update_user_fail_empty_string_fields(user_dao, inserted_users):
@@ -472,10 +456,7 @@ def test_update_user_fail_empty_string_fields(user_dao, inserted_users):
     # WHEN / THEN
     assert user_dao.update_user(user_id=target_id, updates={"username": "   "}) is False
     assert user_dao.update_user(user_id=target_id, updates={"email": ""}) is False
-    assert (
-        user_dao.update_user(user_id=target_id, updates={"password_hashed": "  "})
-        is False
-    )
+    assert user_dao.update_user(user_id=target_id, updates={"password_hashed": "  "}) is False
 
 
 def test_delete_user_fail_foreign_key_violation():
@@ -493,12 +474,7 @@ def test_delete_user_fail_foreign_key_violation():
 
 def test_user_dao_valider_method(user_dao):
     """Vérification des branches de validation de requêtes de UserDAO._valider"""
-    assert (
-        user_dao._valider(
-            {"username": "alice", "limit": 10, "offset": 0, "role": "ADMIN"}
-        )
-        is True
-    )
+    assert user_dao._valider({"username": "alice", "limit": 10, "offset": 0, "role": "ADMIN"}) is True
     assert user_dao._valider({"role": "INVALID_ROLE"}) is False
     assert user_dao._valider({"limit": -1}) is False
     assert user_dao._valider({"limit": "not_an_int"}) is False
@@ -513,9 +489,7 @@ def test_user_dao_valider_method(user_dao):
 
 def test_user_dao_construire_requete_method(user_dao):
     """Vérification de la construction SQL dans UserDAO._construire_requete"""
-    query, params = user_dao._construire_requete(
-        {"username": "alice", "limit": 5, "offset": 10}
-    )
+    query, params = user_dao._construire_requete({"username": "alice", "limit": 5, "offset": 10})
     assert "WHERE username = %(username)s" in query
     assert "LIMIT %(limit)s" in query
     assert "OFFSET %(offset)s" in query

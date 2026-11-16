@@ -163,9 +163,7 @@ def test_compute_full_ratio():
 # --- Tests de get_station_current_status() ---
 
 
-def test_get_station_current_status_ok(
-    station_service, status_dao, hourly_dao, sample_status, sample_hourly_status
-):
+def test_get_station_current_status_ok(station_service, status_dao, hourly_dao, sample_status, sample_hourly_status):
     """Récupère l'état courant et le score de fiabilité récent."""
     status_dao.get_latest_status.return_value = sample_status
     hourly_dao.get_latest_hourly_status.return_value = sample_hourly_status
@@ -179,9 +177,7 @@ def test_get_station_current_status_ok(
     assert res["reliability_score"] == 85.5
 
 
-def test_get_station_current_status_without_hourly(
-    station_service, status_dao, hourly_dao, sample_status
-):
+def test_get_station_current_status_without_hourly(station_service, status_dao, hourly_dao, sample_status):
     """Récupère l'état courant même en l'absence de statut horaire."""
     status_dao.get_latest_status.return_value = sample_status
     hourly_dao.get_latest_hourly_status.return_value = None
@@ -201,14 +197,10 @@ def test_get_station_current_status_not_found(station_service, status_dao):
 # --- Tests de get_stations_current_statuses() ---
 
 
-def test_get_stations_current_statuses_ok(
-    station_service, status_dao, hourly_dao, sample_status, sample_hourly_status
-):
+def test_get_stations_current_statuses_ok(station_service, status_dao, hourly_dao, sample_status, sample_hourly_status):
     """Récupère l'état de plusieurs stations avec suppression des doublons et IDs vides."""
     status_dao.get_latest_statuses.return_value = {"st_101": sample_status}
-    hourly_dao.get_latest_hourly_statuses.return_value = {
-        "st_101": sample_hourly_status
-    }
+    hourly_dao.get_latest_hourly_statuses.return_value = {"st_101": sample_hourly_status}
 
     res = station_service.get_stations_current_statuses(["st_101", "st_101", ""])
 
@@ -229,9 +221,7 @@ def test_get_stations_current_statuses_empty_or_none(station_service, status_dao
 # --- Tests de get_station_history() ---
 
 
-def test_get_station_history_1h(
-    station_service, status_dao, hourly_dao, sample_status, sample_hourly_status
-):
+def test_get_station_history_1h(station_service, status_dao, hourly_dao, sample_status, sample_hourly_status):
     """Récupère l'historique sur 1h."""
     status_dao.get_one_station_history.return_value = [sample_status]
     hourly_dao.get_hourly_stats.return_value = [sample_hourly_status]
@@ -267,9 +257,7 @@ def test_get_station_history_24h(station_service, hourly_dao, sample_hourly_stat
     )
     hourly_dao.get_hourly_stats.return_value = [sample_hourly_status, zero_event_hourly]
 
-    history = station_service.get_station_history(
-        "st_101", TimePeriod.vingt_quatre_heures
-    )
+    history = station_service.get_station_history("st_101", TimePeriod.vingt_quatre_heures)
 
     assert len(history) == 2
     # Événements > 0
@@ -283,10 +271,7 @@ def test_get_station_history_24h(station_service, hourly_dao, sample_hourly_stat
 def test_get_station_history_24h_empty(station_service, hourly_dao):
     """Retourne [] si aucune donnée horaire n'est trouvée sur 24h."""
     hourly_dao.get_hourly_stats.return_value = []
-    assert (
-        station_service.get_station_history("st_101", TimePeriod.vingt_quatre_heures)
-        == []
-    )
+    assert station_service.get_station_history("st_101", TimePeriod.vingt_quatre_heures) == []
 
 
 def test_get_station_history_daily(station_service, hourly_dao):
@@ -365,23 +350,15 @@ def test_matches_status_filters():
     assert StationService._matches_status_filters(None, req_cap_ok) is False
 
     # Filtrage station_state
-    req_state_ok = StationRecommendationRequest(
-        lat=48.8, lon=2.3, station_state=StationState.FUNCTIONAL
-    )
-    req_state_fail = StationRecommendationRequest(
-        lat=48.8, lon=2.3, station_state=StationState.EMPTY
-    )
+    req_state_ok = StationRecommendationRequest(lat=48.8, lon=2.3, station_state=StationState.FUNCTIONAL)
+    req_state_fail = StationRecommendationRequest(lat=48.8, lon=2.3, station_state=StationState.EMPTY)
     assert StationService._matches_status_filters(status, req_state_ok) is True
     assert StationService._matches_status_filters(status, req_state_fail) is False
     assert StationService._matches_status_filters(None, req_state_ok) is False
 
     # Filtrage vehicle_type
-    req_mech = StationRecommendationRequest(
-        lat=48.8, lon=2.3, vehicle_type=VehicleTypeFilter.MECHANICAL
-    )
-    req_elec = StationRecommendationRequest(
-        lat=48.8, lon=2.3, vehicle_type=VehicleTypeFilter.ELECTRIC
-    )
+    req_mech = StationRecommendationRequest(lat=48.8, lon=2.3, vehicle_type=VehicleTypeFilter.MECHANICAL)
+    req_elec = StationRecommendationRequest(lat=48.8, lon=2.3, vehicle_type=VehicleTypeFilter.ELECTRIC)
     assert StationService._matches_status_filters(status, req_mech) is True
     assert StationService._matches_status_filters(status, req_elec) is True
 
@@ -490,9 +467,7 @@ def test_get_nearby_recommendations_filters(
     """Filtre correctement selon le score de fiabilité minimal et les filtres de statut."""
     station_dao.get_nearby.return_value = [sample_station]
     status_dao.get_latest_statuses.return_value = {"st_101": sample_status}
-    hourly_dao.get_latest_hourly_statuses.return_value = {
-        "st_101": sample_hourly_status
-    }
+    hourly_dao.get_latest_hourly_statuses.return_value = {"st_101": sample_hourly_status}
     hourly_dao.aggregate_daily_stats_for_stations.return_value = {}
 
     # Score min supérieur au score réel (85.5 < 90) -> exclus
@@ -506,9 +481,7 @@ def test_get_nearby_recommendations_filters(
     assert recs[0]["station_id"] == "st_101"
 
 
-def test_get_nearby_recommendations_empty_cases(
-    station_service, station_dao, status_dao, hourly_dao
-):
+def test_get_nearby_recommendations_empty_cases(station_service, station_dao, status_dao, hourly_dao):
     """Gestion des cas où aucune station n'est à proximité ou toutes sont filtrées."""
     req = StationRecommendationRequest(lat=48.8, lon=2.3)
 
@@ -537,7 +510,5 @@ def test_get_nearby_recommendations_empty_cases(
     )
     station_dao.get_nearby.return_value = [station_ok]
     status_dao.get_latest_statuses.return_value = {}
-    req_state = StationRecommendationRequest(
-        lat=48.8, lon=2.3, station_state=StationState.EMPTY
-    )
+    req_state = StationRecommendationRequest(lat=48.8, lon=2.3, station_state=StationState.EMPTY)
     assert station_service.get_nearby_recommendations(req_state) == []

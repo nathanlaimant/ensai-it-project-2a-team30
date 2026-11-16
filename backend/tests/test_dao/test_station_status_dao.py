@@ -18,9 +18,7 @@ test_env_path = Path(__file__).resolve().parents[2] / ".test_env"
 @pytest.fixture(scope="session")
 def db_connection():
     """Fournit un pool de connexion à la base de données de test."""
-    settings = Settings(
-        _env_file=test_env_path if test_env_path.exists() else ".test_env"
-    )
+    settings = Settings(_env_file=test_env_path if test_env_path.exists() else ".test_env")
     return DbConnection(settings)
 
 
@@ -274,9 +272,7 @@ def test_get_one_station_history_ok(station_status_dao, sample_statuses):
     start_time = datetime.fromisoformat("2026-11-01 00:24:24+00:00")
     end_time = datetime.fromisoformat("2026-11-01 00:44:24+00:00")
     # WHEN
-    status_history = station_status_dao.get_one_station_history(
-        target_station_id, start_time, end_time
-    )
+    status_history = station_status_dao.get_one_station_history(target_station_id, start_time, end_time)
     # THEN
     assert status_history
     assert len(status_history) == 1
@@ -292,9 +288,7 @@ def test_get_status_history_fail_fakeid(station_status_dao, sample_statuses):
     start_time = datetime.fromisoformat("2026-11-01 00:24:24+00:00")
     end_time = datetime.fromisoformat("2026-11-01 00:44:24+00:00")
     # WHEN
-    status_history = station_status_dao.get_one_station_history(
-        station_id, start_time, end_time
-    )
+    status_history = station_status_dao.get_one_station_history(station_id, start_time, end_time)
     # THEN
     assert status_history == []
 
@@ -307,9 +301,7 @@ def test_get_status_history_fail_nothing(station_status_dao, sample_statuses):
     start_time = datetime.fromisoformat("2026-11-02 00:24:24+00:00")
     end_time = datetime.fromisoformat("2026-11-02 00:44:24+00:00")
     # WHEN
-    status_history = station_status_dao.get_one_station_history(
-        target_station_id, start_time, end_time
-    )
+    status_history = station_status_dao.get_one_station_history(target_station_id, start_time, end_time)
     # THEN
     assert status_history == []
 

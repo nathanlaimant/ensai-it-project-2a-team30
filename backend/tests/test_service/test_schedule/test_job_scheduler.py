@@ -80,9 +80,7 @@ def test_job_scheduler_setup_jobs(
         job_scheduler.setup_jobs()
 
         assert mock_add_job.call_count == 4
-        registered_job_ids = [
-            call.kwargs.get("id") for call in mock_add_job.call_args_list
-        ]
+        registered_job_ids = [call.kwargs.get("id") for call in mock_add_job.call_args_list]
         assert "job_system_information" in registered_job_ids
         assert "job_station_information" in registered_job_ids
         assert "job_station_status" in registered_job_ids

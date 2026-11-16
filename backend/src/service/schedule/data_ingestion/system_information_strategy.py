@@ -56,11 +56,7 @@ class SystemInformationStrategy(BaseIngestionStrategy[SystemInformation]):
             language=json_dict["language"],
             name=json_dict["name"],
             url=json_dict.get("url"),
-            start_date=(
-                date.fromisoformat(json_dict["start_date"])
-                if json_dict.get("start_date")
-                else None
-            ),
+            start_date=(date.fromisoformat(json_dict["start_date"]) if json_dict.get("start_date") else None),
             phone_number=json_dict.get("phone_number"),
             email=json_dict.get("email"),
             timezone=json_dict["timezone"],

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from business_object.user import User
 from dao.user_dao import UserDAO
@@ -40,10 +40,13 @@ class UserService:
         username = dto.get("username")
         email = dto.get("email")
         password = dto.get("password")
-        if not all(isinstance(value, str) and value.strip() for value in (username, email, password)):
+        if not all(
+            isinstance(value, str) and value.strip()
+            for value in (username, email, password)
+        ):
             return False
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         user = User(
             username=username.strip(),
             password_hashed=hash_password(password),
@@ -78,7 +81,12 @@ class UserService:
             return None
 
         user = self.user_dao.get_by_username(username)
-        if user is None or not user.is_active or user.password_hashed != password_hashed or user.user_id is None:
+        if (
+            user is None
+            or not user.is_active
+            or user.password_hashed != password_hashed
+            or user.user_id is None
+        ):
             return None
 
         access_token = generate_user_token()

@@ -217,9 +217,7 @@ def test_from_json_dict_recomputes_bikes_from_vehicle_types(strategy):
         ({"is_returning": False}, StationState.FULL),
     ],
 )
-def test_from_json_dict_station_state_classification(
-    strategy, override_fields, expected_state
-):
+def test_from_json_dict_station_state_classification(strategy, override_fields, expected_state):
     """Vérifie les critères de classification en EMPTY et FULL."""
     base_payload = {
         "station_id": "st_test",

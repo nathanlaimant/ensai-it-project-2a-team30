@@ -95,9 +95,7 @@ class StationAggregator:
                 )
             )
 
-        inserted_records = self.station_hourly_dao.bulk_upsert_hourly_stats(
-            hourly_records
-        )
+        inserted_records = self.station_hourly_dao.bulk_upsert_hourly_stats(hourly_records)
 
         elapsed_sec = time.perf_counter() - agg_start_perf
         logger.info(
@@ -167,12 +165,12 @@ class StationAggregator:
         """
         sample_count = len(statuses)
 
-        avg_operational_capacity, avg_num_bikes_available, avg_num_docks_available = (
-            self._compute_basic_averages(statuses)
+        avg_operational_capacity, avg_num_bikes_available, avg_num_docks_available = self._compute_basic_averages(
+            statuses
         )
 
-        empty_duration_sec, full_duration_sec, empty_events_cnt, full_events_cnt = (
-            self._compute_durations_and_events(statuses, start_time, end_time)
+        empty_duration_sec, full_duration_sec, empty_events_cnt, full_events_cnt = self._compute_durations_and_events(
+            statuses, start_time, end_time
         )
 
         total_duration_sec = (end_time - start_time).total_seconds()
@@ -234,15 +232,9 @@ class StationAggregator:
                 sum_docks += s.num_docks_available
                 count_docks += 1
 
-        avg_operational_capacity = (
-            round(sum_op_cap / count_op_cap, 2) if count_op_cap else 0.0
-        )
-        avg_num_bikes_available = (
-            round(sum_bikes / count_bikes, 2) if count_bikes else 0.0
-        )
-        avg_num_docks_available = (
-            round(sum_docks / count_docks, 2) if count_docks else 0.0
-        )
+        avg_operational_capacity = round(sum_op_cap / count_op_cap, 2) if count_op_cap else 0.0
+        avg_num_bikes_available = round(sum_bikes / count_bikes, 2) if count_bikes else 0.0
+        avg_num_docks_available = round(sum_docks / count_docks, 2) if count_docks else 0.0
         return avg_operational_capacity, avg_num_bikes_available, avg_num_docks_available
 
     @staticmethod
@@ -363,16 +355,8 @@ class StationAggregator:
         p_full = (full_duration_sec / total_duration_sec) * 100.0
 
         # Durée moyenne (en minutes) des épisodes vide/plein
-        d_empty = (
-            (empty_duration_sec / 60.0) / empty_events_cnt
-            if empty_events_cnt > 0
-            else 0.0
-        )
-        d_full = (
-            (full_duration_sec / 60.0) / full_events_cnt
-            if full_events_cnt > 0
-            else 0.0
-        )
+        d_empty = (empty_duration_sec / 60.0) / empty_events_cnt if empty_events_cnt > 0 else 0.0
+        d_full = (full_duration_sec / 60.0) / full_events_cnt if full_events_cnt > 0 else 0.0
         d_penalty = d_empty + d_full
 
         score = max(

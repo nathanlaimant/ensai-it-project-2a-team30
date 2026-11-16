@@ -30,7 +30,7 @@ def query_params(
     end_time: datetime = None,
     reliability_score: float = None,
     nb_pages: int = None,
-    per_page: int = None
+    per_page: int = None,
 ) -> dict:
     return {
         user_id,
@@ -59,5 +59,5 @@ def query_params(
         vehicule_docks_available,
         reliability_score,
         nb_pages,
-        per_page
+        per_page,
     }

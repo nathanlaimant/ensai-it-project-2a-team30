@@ -33,9 +33,7 @@ class UserDAO:
         affectations = [f"{cle} = %({cle})s" for cle in updates]
         affectations.append("updated_at = now()")
 
-        requete = (
-            f'UPDATE "user" SET {", ".join(affectations)} WHERE user_id = %(user_id)s'
-        )
+        requete = f'UPDATE "user" SET {", ".join(affectations)} WHERE user_id = %(user_id)s'
 
         valeurs = {**updates, "user_id": user_id}
         return requete, valeurs
@@ -101,11 +99,7 @@ class UserDAO:
             'FROM "user"'
         )
 
-        conditions = [
-            f"{cle} = %({cle})s"
-            for cle in query_params
-            if cle in self.filtres_autorises
-        ]
+        conditions = [f"{cle} = %({cle})s" for cle in query_params if cle in self.filtres_autorises]
         if conditions:
             requete += " WHERE " + " AND ".join(conditions)
 
@@ -305,31 +299,21 @@ class UserDAO:
             offset = params_dict.get("offset")
             nb_pages = params_dict.get("nb_pages")
 
-        if user_id is not None and (
-            isinstance(user_id, bool) or not isinstance(user_id, int) or user_id <= 0
-        ):
+        if user_id is not None and (isinstance(user_id, bool) or not isinstance(user_id, int) or user_id <= 0):
             return []
         if username is not None and not isinstance(username, str):
             return []
         if email is not None and not isinstance(email, str):
             return []
-        if role is not None and (
-            not isinstance(role, str) or role not in ("ADMIN", "USER")
-        ):
+        if role is not None and (not isinstance(role, str) or role not in ("ADMIN", "USER")):
             return []
         if is_active is not None and not isinstance(is_active, bool):
             return []
-        if limit is not None and (
-            isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0
-        ):
+        if limit is not None and (isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0):
             return []
-        if offset is not None and (
-            isinstance(offset, bool) or not isinstance(offset, int) or offset < 0
-        ):
+        if offset is not None and (isinstance(offset, bool) or not isinstance(offset, int) or offset < 0):
             return []
-        if nb_pages is not None and (
-            isinstance(nb_pages, bool) or not isinstance(nb_pages, int) or nb_pages <= 0
-        ):
+        if nb_pages is not None and (isinstance(nb_pages, bool) or not isinstance(nb_pages, int) or nb_pages <= 0):
             return []
 
         conditions: list[str] = []

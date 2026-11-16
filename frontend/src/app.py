@@ -1,12 +1,9 @@
 import streamlit as st
+
 from utils.env_variables import display_values, load_environment_variables
 from utils.log_init import initialize_logs
 
-st.set_page_config(
-    page_title="VeloScope",
-    page_icon="🚲",
-    layout="wide"
-)
+st.set_page_config(page_title="VeloScope", page_icon="🚲", layout="wide")
 
 if "logs_initialized" not in st.session_state:
     initialize_logs("Streamlit App")

@@ -84,7 +84,13 @@ cd backend
 
 ### 1. Runtime Environment (`.env`)
 
-Create a `.env` file in `backend/` with your PostgreSQL database credentials and target GBFS feeds:
+Copy the provided template and fill in your PostgreSQL database credentials:
+
+```bash
+cp .env.example .env
+```
+
+The runtime `.env` contains:
 
 ```ini
 postgres_host=your_postgres_host
@@ -93,6 +99,9 @@ postgres_database=your_database_name
 postgres_user=your_username
 postgres_password=your_password
 postgres_schema=veloscope
+
+# Server Port (defaults to 5000)
+uvicorn_port=5000
 
 # GBFS feed endpoints (e.g., Vélhop Strasbourg v2.3)
 system_information_feed_url=https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_ae/fr/system_information.json
@@ -143,9 +152,9 @@ uv run src/main.py
 
 ### Verification & Documentation
 
-- **Health / DB Connectivity check**: [http://localhost:8000/db](http://localhost:8000/db)
-- **Interactive API Documentation (Swagger UI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Alternative Documentation (ReDoc)**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **Health / DB Connectivity check**: [http://localhost:5000/db](http://localhost:5000/db)
+- **Interactive API Documentation (Swagger UI)**: [http://localhost:5000/docs](http://localhost:5000/docs)
+- **Alternative Documentation (ReDoc)**: [http://localhost:5000/redoc](http://localhost:5000/redoc)
 
 ---
 

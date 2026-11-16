@@ -56,23 +56,11 @@ def test_signup_rejects_non_dict(user_service):
 
 def test_signup_rejects_blank_or_invalid_fields(user_service):
     """L'inscription échoue si des champs obligatoires sont absents, vides ou non-chaînes."""
-    assert (
-        user_service.signup({"username": "user", "email": "a@a.com", "password": "   "})
-        is False
-    )
-    assert (
-        user_service.signup({"username": "  ", "email": "a@a.com", "password": "pass"})
-        is False
-    )
-    assert (
-        user_service.signup({"username": "user", "email": "", "password": "pass"})
-        is False
-    )
+    assert user_service.signup({"username": "user", "email": "a@a.com", "password": "   "}) is False
+    assert user_service.signup({"username": "  ", "email": "a@a.com", "password": "pass"}) is False
+    assert user_service.signup({"username": "user", "email": "", "password": "pass"}) is False
     assert user_service.signup({"username": "user", "password": "pass"}) is False
-    assert (
-        user_service.signup({"username": 123, "email": "a@a.com", "password": "pass"})
-        is False
-    )
+    assert user_service.signup({"username": 123, "email": "a@a.com", "password": "pass"}) is False
 
 
 def test_signup_dao_failure(user_service, user_dao):
@@ -109,9 +97,7 @@ def test_login_ok(user_service, user_dao):
     assert response.user_id == 42
     assert response.username == "alice"
     assert bool(response.access_token)
-    user_dao.update_user.assert_called_once_with(
-        42, {"access_token": response.access_token}
-    )
+    user_dao.update_user.assert_called_once_with(42, {"access_token": response.access_token})
     assert app_token_cache.get(response.access_token) == (42, "ADMIN")
 
 

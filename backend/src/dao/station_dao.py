@@ -79,9 +79,7 @@ class StationDAO:
             "lon": station.lon,
             "address": station.address,
             "is_virtual_station": station.is_virtual_station,
-            "station_area": (
-                Json(station.station_area) if station.station_area else None
-            ),
+            "station_area": (Json(station.station_area) if station.station_area else None),
             "contact_phone": station.contact_phone,
             "capacity": station.capacity,
             "is_charging_station": station.is_charging_station,
@@ -148,9 +146,7 @@ class StationDAO:
             )
         return station
 
-    def get_nearby(
-        self, lat: float, lon: float, radius_meters: float
-    ) -> list[StationInformation]:
+    def get_nearby(self, lat: float, lon: float, radius_meters: float) -> list[StationInformation]:
         """
         Récupère les stations situées à proximité d'une position donnée.
 
@@ -310,20 +306,14 @@ class StationDAO:
                         "AND ((%(is_charging_station)s IS NULL) OR (is_charging_station = %(is_charging_station)s)) "
                         "ORDER BY station_id LIMIT %(size)s OFFSET %(offset)s;",
                         {
-                            "station_id": (
-                                "%" + station_id + "%" if station_id else None
-                            ),
+                            "station_id": ("%" + station_id + "%" if station_id else None),
                             "name": "%" + name + "%" if name else None,
-                            "short_name": (
-                                "%" + short_name + "%" if short_name else None
-                            ),
+                            "short_name": ("%" + short_name + "%" if short_name else None),
                             "lat": lat,
                             "lon": lon,
                             "address": "%" + address + "%" if address else None,
                             "is_virtual_station": is_virtual_station,
-                            "contact_phone": (
-                                "%" + contact_phone + "%" if contact_phone else None
-                            ),
+                            "contact_phone": ("%" + contact_phone + "%" if contact_phone else None),
                             "capacity": capacity,
                             "min_capacity": min_capacity,
                             "max_capacity": max_capacity,

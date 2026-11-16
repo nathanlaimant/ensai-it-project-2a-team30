@@ -1,7 +1,13 @@
 [project]
 name = "VeloScope_FE_team30"
 version = "0.1.0"
-authors = [{ name = "Lastname Firstname" }, { name = "Lastname Firstname" }]
+authors = [
+    { name = "Antonin PRADEL" },
+    { name = "Martin DUBOS-DANIELLI" },
+    { name = "Minh Quang KIEU" },
+    { name = "Nathan LAIMANT" },
+    { name = "Victor NEMBRINI" },
+]
 requires-python = ">=3.13"
 
 dependencies = [
@@ -67,4 +73,3 @@ show_missing = true
 
 [tool.coverage.html]
 directory = "coverage_report"
-

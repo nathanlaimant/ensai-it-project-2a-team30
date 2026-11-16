@@ -14,9 +14,7 @@ test_env_path = Path(__file__).resolve().parents[2] / ".test_env"
 @pytest.fixture(scope="session")
 def db_connection():
     """Fournit un pool de connexion à la base de données de test."""
-    settings = Settings(
-        _env_file=test_env_path if test_env_path.exists() else ".test_env"
-    )
+    settings = Settings(_env_file=test_env_path if test_env_path.exists() else ".test_env")
     return DbConnection(settings)
 
 
