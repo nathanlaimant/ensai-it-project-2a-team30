@@ -36,12 +36,9 @@ def make_status(
         num_docks_available=num_docks_available,
         num_docks_disabled=0,
         operational_capacity=operational_capacity,
-        is_installed=True,
-        is_renting=True,
-        is_returning=True,
         last_reported=last_reported,
-        vehicle_types_available=[],
-        vehicle_docks_available=[],
+        vehicle_types_available=None,
+        vehicle_docks_available=None,
         station_state=station_state,
     )
 
@@ -60,9 +57,7 @@ class TestResolveTimeBucket:
         """Si aucune borne n'est fournie, le créneau doit être [h-1, h]
         avec h = heure courante tronquée à l'heure pile.
         """
-        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(
-            None, None
-        )
+        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(None, None)
 
         assert resolved_end.minute == 0
         assert resolved_end.second == 0
@@ -73,9 +68,7 @@ class TestResolveTimeBucket:
         """Si seul end_time est fourni, start_time doit être calculé
         comme end_time - 1 heure.
         """
-        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(
-            None, END
-        )
+        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(None, END)
 
         assert resolved_end == END
         assert resolved_start == END - timedelta(hours=1)
@@ -84,12 +77,11 @@ class TestResolveTimeBucket:
         """Si les deux bornes sont fournies, elles doivent être retournées
         telles quelles, sans recalcul.
         """
-        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(
-            START, END
-        )
+        resolved_start, resolved_end = StationAggregator._resolve_time_bucket(START, END)
 
         assert resolved_start == START
         assert resolved_end == END
+
 
 class TestComputeBasicAverages:
     def test_averages_with_all_values_present(self):
@@ -110,9 +102,7 @@ class TestComputeBasicAverages:
             ),
         ]
 
-        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(
-            statuses
-        )
+        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(statuses)
 
         assert avg_cap == 20.0
         assert avg_bikes == 5.0
@@ -139,9 +129,7 @@ class TestComputeBasicAverages:
             ),
         ]
 
-        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(
-            statuses
-        )
+        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(statuses)
 
         assert avg_cap == 20.0  # une seule valeur non-None
         assert avg_bikes == 10.0  # une seule valeur non-None
@@ -158,11 +146,10 @@ class TestComputeBasicAverages:
             ),
         ]
 
-        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(
-            statuses
-        )
+        avg_cap, avg_bikes, avg_docks = StationAggregator._compute_basic_averages(statuses)
 
         assert (avg_cap, avg_bikes, avg_docks) == (0.0, 0.0, 0.0)
+
 
 class TestComputeDurationsAndEvents:
     def test_known_sequence_matches_expected_durations_and_events(self):
@@ -183,9 +170,7 @@ class TestComputeDurationsAndEvents:
             make_status(StationState.FULL, START + timedelta(minutes=50)),
         ]
 
-        empty_dur, full_dur, empty_cnt, full_cnt = (
-            StationAggregator._compute_durations_and_events(statuses, START, END)
-        )
+        empty_dur, full_dur, empty_cnt, full_cnt = StationAggregator._compute_durations_and_events(statuses, START, END)
 
         assert empty_dur == 1800
         assert full_dur == 600
@@ -196,9 +181,7 @@ class TestComputeDurationsAndEvents:
         """Avec un seul relevé, sa durée doit couvrir tout le créneau."""
         statuses = [make_status(StationState.EMPTY, START + timedelta(minutes=30))]
 
-        empty_dur, full_dur, empty_cnt, full_cnt = (
-            StationAggregator._compute_durations_and_events(statuses, START, END)
-        )
+        empty_dur, full_dur, empty_cnt, full_cnt = StationAggregator._compute_durations_and_events(statuses, START, END)
 
         assert empty_dur == 3600  # toute l'heure
         assert full_dur == 0
@@ -211,9 +194,7 @@ class TestComputeDurationsAndEvents:
             make_status(StationState.FUNCTIONAL, START + timedelta(minutes=40)),
         ]
 
-        empty_dur, full_dur, empty_cnt, full_cnt = (
-            StationAggregator._compute_durations_and_events(statuses, START, END)
-        )
+        empty_dur, full_dur, empty_cnt, full_cnt = StationAggregator._compute_durations_and_events(statuses, START, END)
 
         assert (empty_dur, full_dur, empty_cnt, full_cnt) == (0, 0, 0, 0)
 
@@ -227,11 +208,10 @@ class TestComputeDurationsAndEvents:
             make_status(StationState.EMPTY, START + timedelta(minutes=30)),
         ]
 
-        _, _, empty_cnt, _ = StationAggregator._compute_durations_and_events(
-            statuses, START, END
-        )
+        _, _, empty_cnt, _ = StationAggregator._compute_durations_and_events(statuses, START, END)
 
         assert empty_cnt == 1
+
 
 class TestComputeReliabilityScore:
     def test_score_matches_manual_calculation(self):
@@ -299,6 +279,7 @@ class TestComputeReliabilityScore:
 
         assert score == 0.0
 
+
 class TestAggregateStationStats:
     def test_combines_all_substeps_into_a_station_status_hourly(self, aggregator):
         statuses = [
@@ -325,8 +306,9 @@ class TestAggregateStationStats:
         assert result.full_events_cnt == 1
         assert result.reliability_score == 62.67
 
+
 class TestAggregateHourlyStats:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_returns_zero_and_skips_upsert_when_no_data(self, aggregator):
         aggregator.station_status_dao.get_all_station_history.return_value = {}
 
@@ -335,7 +317,7 @@ class TestAggregateHourlyStats:
         assert result == 0
         aggregator.station_hourly_dao.bulk_upsert_hourly_stats.assert_not_called()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_aggregates_each_station_and_persists_all_records(self, aggregator):
         statuses_station_1 = [
             make_status(StationState.FUNCTIONAL, START + timedelta(minutes=5)),
@@ -353,18 +335,14 @@ class TestAggregateHourlyStats:
         result = await aggregator.aggregate_hourly_stats(START, END)
 
         assert result == 2
-        aggregator.station_status_dao.get_all_station_history.assert_called_once_with(
-            start_time=START, end_time=END
-        )
+        aggregator.station_status_dao.get_all_station_history.assert_called_once_with(start_time=START, end_time=END)
 
-        persisted_records = (
-            aggregator.station_hourly_dao.bulk_upsert_hourly_stats.call_args[0][0]
-        )
+        persisted_records = aggregator.station_hourly_dao.bulk_upsert_hourly_stats.call_args[0][0]
         assert len(persisted_records) == 2
         persisted_station_ids = {record.station_id for record in persisted_records}
         assert persisted_station_ids == {"station_1", "station_2"}
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_skips_stations_with_empty_status_list(self, aggregator):
         """Une station associée à une liste de statuts vide ne doit pas
         être incluse dans les enregistrements persistés.
@@ -377,21 +355,15 @@ class TestAggregateHourlyStats:
 
         await aggregator.aggregate_hourly_stats(START, END)
 
-        persisted_records = (
-            aggregator.station_hourly_dao.bulk_upsert_hourly_stats.call_args[0][0]
-        )
+        persisted_records = aggregator.station_hourly_dao.bulk_upsert_hourly_stats.call_args[0][0]
         assert len(persisted_records) == 1
         assert persisted_records[0].station_id == "station_2"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_uses_default_time_bucket_when_none_provided(self, aggregator):
         aggregator.station_status_dao.get_all_station_history.return_value = {}
 
         await aggregator.aggregate_hourly_stats()
 
-        call_kwargs = aggregator.station_status_dao.get_all_station_history.call_args[
-            1
-        ]
-        assert call_kwargs["end_time"] - call_kwargs["start_time"] == timedelta(
-            hours=1
-        )
+        call_kwargs = aggregator.station_status_dao.get_all_station_history.call_args[1]
+        assert call_kwargs["end_time"] - call_kwargs["start_time"] == timedelta(hours=1)
