@@ -2,6 +2,7 @@ import geocoder
 import pandas as pd
 import requests
 import streamlit as st
+
 from utils.api_client import APIClient
 
 st.title("🎯 Je veux trouver un vélo à proximité")
@@ -59,7 +60,7 @@ def locate_from_address(address: str):
         if results:
             return float(results[0]["latitude"]), float(results[0]["longitude"])
     except requests.RequestException as e:
-        raise ValueError(f"service de géocodage injoignable : {e}")
+        raise ValueError(f"service de géocodage injoignable : {e}") from e
 
     raise ValueError("aucun résultat pour cette adresse")
 
@@ -122,8 +123,7 @@ except requests.exceptions.ConnectionError:
 else:
     if not stations_nearby:
         st.info(
-            f"Aucune station trouvée dans un rayon de {radius} m. "
-            "Essayez d'agrandir le rayon."
+            f"Aucune station trouvée dans un rayon de {radius} m. Essayez d'agrandir le rayon."
         )
     else:
         df = pd.DataFrame(stations_nearby)

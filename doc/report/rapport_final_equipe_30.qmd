@@ -1,0 +1,211 @@
+---
+bibliography: refs.bib
+citeproc: false
+nocite: "@*"
+format:
+  typst:
+    papersize: a4
+    margin:
+      x: 1.5cm
+      y: 2.0cm
+    section-numbering: 1.1.a
+    mainfont: "Libertinus Serif"
+    fontsize: 11pt
+---
+
+
+```{=typst}
+#import "model.typ": project_template
+
+#show: body => project_template(
+  title: [Rapport de projet informatique\ \ VeloScope],
+  team: [Équipe 30],
+  authors: ([Martin DUBOS-DANIELLI], [Minh Quang KIEU], [Nathan LAIMANT], [Victor NEMBRINI], [Antonin PRADEL]),
+  teacher: [Ludovic DENEUVILLE],
+  tutor: [André RIVIÈRE],
+  project: [Projet informatique de 2e année - Année 2026-2027],
+  body
+)
+```
+
+# **Contexte** {.unnumbered}
+
+$ À reformuler
+
+Les vélos en libre-service sont disponibles en temps réel dans de nombreuses villes. Pourtant, une simple carte des stations ne permet pas vraiment de répondre à des questions utiles : À quelle heure vais-je réellement trouver un vélo ? Quelles stations sont souvent pleines ? Quels trajets sont les plus fiables ? Est-ce qu’une station est régulièrement vide le matin mais pleine le soir ? Le projet VeloScope consiste à développer une API permettant de collecter, historiser et analyser les données de vélos en libre-service d’une ville. L’application récupère périodiquement les informations d’une API de vélos en libre-service compatible avec le standard GBFS : stations, nombre de vélos disponibles, nombre de places libres, vélos électriques, etc. Contrairement à une simple application de consultation, VeloScope construit son propre historique afin de permettre des analyses temporelles et de produire des indicateurs de fiabilité des stations. 
+
+{{< pagebreak >}}
+
+# **Présentation du projet**
+
+## **Cahier des charges**
+
+Le projet VeloScope consiste à développer une API permettant de collecter, historiser et analyser les données de vélos en libre-service d’une ville. L’application est utile à toute personne cherchant des informations sur des stations de vélos dans une ville. L’intérêt principal de l’application réside dans son analyse de la fiabilité des stations. Elle construit un score de fiabilité pour chaque station. Elle permet par ailleurs de visualiser ces informations pour chaque station afin d’éclairer le choix de l’utilisateur. Des fonctionnalités plus avancées sont disponibles pour les utilisateurs ayant créé un compte. 
+
+$\implies$ mettre cahier des charges github
+
+## **Organisation du travail**
+
+### Organisation temporelle
+
+$\implies$ Diagramme de Gantt 
+
+Au début du projet, il était important pour nous de connaître l’ensemble des dates importantes pour savoir à quelle vitesse nous devions avancer dans notre projet. A partir de là, nous avons pu créer une liste asez générale des tâches à réaliser en nous imposant entre nous des dates à respecter. 
+
+Le premier mois du projet était consacré à la modélisation du projet (nous avons très peu codé durant cette période). En effet, nous voulions privilégier une structure claire et solide sur laquelle notre code devait reposer, ce qui nous permettrait de gagner du temps plus tard. La modélisation était aussi le pilier du dossier d’analyse qui était à rendre mi-septembre, ce qui nous imposait arbitrairement une date limite pour réaliser notre modélisation.  
+
+Ensuite, jusqu’à la rentrée des vacances de la Toussaint, nous nous sommes fixés pour objectif de coder le backend dans son ensemble. Pour gagner du temps, nous nous sommes répartis les tâches, et avons essayé de coder les tests le plus tôt que possible. Nous avons vérifié l’ensemble du fonctionnement du backend et des tests lors de la semaine de la rentrée. 
+
+Le frontend était une partie importante de notre projet, donc nous avons cherché à y consacrer suffisamment de temps pour qu’il fonctionne au mieux. Nous y avons passé deux semaines (le code étant plus simple à implémenter que dans le backend). L’avantage d’avoir à coder le frontend est que cela nous a permis de repérer des erreurs dans notre backend que nous devions impérativement corriger.  
+
+Le dernier rendu sur lequel nous nous sommes concentrés est le rapport final. Pour pouvoir avoir assez de temps pour l’écrire, donc nous nous sommes laissés deux semaines pour nous y consacrés entièrement, sans avoir à coder d’importantes fonctionnalités en même temps. 
+
+### Répartition du travail
+
+$\implies$ Pas de types de tâches assignées par défaut, tout le monde a touché à tout. 
+
+La répartition du travail a davantage été présente au début de notre projet. En effet, nous avions divers diagrammes à réaliser, et nous nous les sommes répartis entre nous pour gagner du temps. Ainsi, les diagrammes nécessaires à l’avancée du projet : diagramme de Gantt, diagramme de cas d’utilisation, diagrammes d’activité et diagrammes de classes ont été réalisés dans les trois premières semaines (certains étant plus long à réaliser que d’autres). A partir de là, notre objectif était de préparer la structure de notre code (signature et documentation des fonction en grande partie) : deux d’entre nous y avons été consacré.  
+
+Au départ, nous avions eu l’intention de pratiquer le “Test Driven Development”, c’est-à-dire que nous voulions d’abord coder les tests avant de coder l’intérieur de ces fonctions testées. Néanmoins, comme cela se révélait assez chronophage si une seule personne s’y consacrait (car cela impliquait de devoir comprendre toutes les fonctions testées et leur implémentation sans code encore écrit), nous avons finalement décidé de n’écrire uniquement les tests des fonctions que chacun de nous implémentait. 
+
+L’ensemble des membres du groupe a codé dans chaque bloc (DAO, Services et Controller). Pour faciliter le passage au bloc supérieur, nous nous sommes répartis les différentes bases de données existantes à trois pour gagner du temps, et gagner en efficacité. Une personne s’est occupé des services externes (appels à l’API externe, calculs internes à réaliser dans les bases de données) et une autre avait commencé à modéliser le frontend après s’être occupé d’une DAO. L’idée de notre organisation était de faire en sorte que chaque membre du groupe se familiarise à tous les blocs pour gagner en expertise et pouvoir corriger plus facilement les erreurs que peuvent faire les autres. 
+
+Dans le cas du frontend, nous n’avions pas d’organisation particulière. Certaines personnes se sont concentrées plus certaines pages que d’autres, et d’autres membres ont préféré s’assurer que l’ensemble du code fonctionne, qu’il n’y ait pas d’erreurs. C’est grâce à une communication efficace que nous avons réussi à ne pas interférer dans le travail des autres, ce qui aurait pu poser des problèmes au niveau du dépôt distant sur github. 
+
+{{< pagebreak >}}
+
+# **Modélisation UML**
+
+## **Diagramme de cas d'utilisation**
+
+$\implies$ Diagramme + explications dossier d’analyse 
+
+ANTONIN 
+
+## **Architecture globale**
+
+$\implies$ Diagrammes de classes + explications
+
+## **Les fonctionnalités**
+
+Les fonctionnalités principales de l’application sont les suivantes : 
+
+- Création d’un compte / connexion 
+- Recherche de stations en fonction d’un nom ou d’un identifiant 
+- Accès aux informations sur les stations : score de fiabilité, adresse, capacité théorique, coordonnées GPS, ... 
+
+Des fonctionnalités plus avancées sont disponibles pour les utilisateurs connectés : 
+
+- Gestion du compte utilisateur (possibilité de changer les informations) 
+- Proposition d’une station à proximité, selon la distance de l’utilisateur à cette station et le score de fiabilité de celle-ci 
+- Gestion des stations favorites 
+
+Les administrateurs ont la possibilité de gérer les comptes existants, notamment les supprimer si besoin. 
+
+$\implies$ Pour chaque fonctionnalité, un diagramme d’activité + un peu d’explications. 
+
+### Authentification et gestion des informations utilisateur
+
+$\implies$ Diagramme à faire (création de compte, connexion, ...) : voir s'il est réellement à faire
+
+L’authentification est l’une des premières fonctionnalités auxquelles un utilisateur a accès (c’est la raison pour laquelle, dans le frontend, ce sont les deux premières pages accessibles après la page d’accueil). Cela concerne trois actions différentes : l’inscription (la création d’un compte), la connexion à un compte et la gestion des informations après connexion. 
+
+Lorsqu’un utilisateur n’a pas encore de compte, il peut en créer un : pour cela, il a besoin d’entrer un nom d’utilisateur, un email et un mot de passe. Le nom d’utilisateur ne peut pas correspondre à celui d’un utilisateur déjà existant (un message d’erreur s’affiche dans ce cas). Lorsque ces informations sont rentrées, l’utilisateur est automatiquement connecté à ce compte et peut utiliser les fonctionnalités propres à un utilisateur connecté, voire à celles d’un administrateur en fonction. 
+
+Lorsque l’utilisateur possède déjà un compte et qu’il n’y est pas encore connecté, celui-ci peut le faire sur la page de connexion. Sur cette page, il faut entrer son nom d’utilisateur et son mot de passe pour pouvoir se connecter. Si l’une des deux informations est fausse, un message d’erreur s’affiche et un bouton pour accéder à la page d’inscription apparaît. Si les informations sont bonnes, l’utilisateur est connecté à son compte. 
+
+Lorsqu’un utilisateur est connecté, il peut tout d’abord se déconnecter en allant sur la page d’accueil. Il peut aussi changer ses informations (nom d’utilisateur, email et mot de passe) dans la page « Mon profil ». En effet, sur cette page, l’utilisateur peut consulter ses informations et les modifier. Pour changer ces informations, il suffit juste d’entrer de nouvelles informations (différentes des originales) dans les zones de texte indiquées et correspondant à l’information à modifier. Lorsque du texte est entré, il suffit de recliquer sur la page dans la barre latérale pour voir la nouvelle information ainsi modifiée. 
+
+### Recherche et consultation de stations
+
+$\implies$ Diagramme à faire
+
+### Gestion des stations favorites
+
+$\implies$ diagramme d’activité Nathan
+
+Avoir liste de stations favorites est une fonctionnalité clé de toute application de transports en commun, dans notre cas, de stations de vélos urbains. Ainsi, nous avons dû assez rapidement réfléchir à son implémentation au sein de notre application VeloScope. Grâce à cette fonctionnalité, un utilisateur peut plus rapidement accéder à certaines stations en particulier. 
+
+La première limite que nous avons posée pour pouvoir accéder à une liste de stations favorites est celle d’avoir à être connecté à un compte. En effet, au niveau de la base de données, pour qu’une station soit considérée comme préférée par un utilisateur, il pouvoir identifier ce dernier, le meilleur moyen disponible pour le faire étant la connexion à un compte. A partir de cela, nous modélisons la gestion des stations favorites par deux actions à réaliser : l’ajout ou la suppression d’une station à cette liste.  
+
+Pour ajouter une station à la liste des favoris, il faut accéder au menu des informations de la station, dans lequel un bouton permet d’ajouter la station à la liste des favoris. Néanmoins, ce menu n’est pas accessible à partir de celui de la liste des favoris, ainsi, un bouton permettant d’accéder à la liste des stations et un autre au menu de recherche règlent ce problème. Lorsque la station que l’utilisateur veut ajouter est trouvée dans l’un de ces deux menus, celui-ci peut accéder aux informations de la station pour pouvoir l’ajouter aux favoris. 
+
+Il est possible de suivre la même démarche pour supprimer une station de la liste des favoris, le bouton d’ajout étant un bouton de suppression si la station appartient à la liste. Toutefois, le bas de la page permet de choisir l’une des stations de la liste et d’immédiatement la supprimer. Ainsi, la station disparaît de la liste. 
+
+### Score de fiabilité
+
+$\implies$ Détail du score de fiabilité en fonction de la méthode dans `data_aggregation`.
+
+### « Je veux un vélo à proximité » : Recommendation de vélo à proximité d'un lieu donné
+
+$\implies$ Diagramme d’activité de Nathan
+
+### Administrateur : gestion des comptes utilisateurs existants
+
+$\implies$ Diagramme à faire
+
+## **Maintien à jour de la base de données**
+
+$\implies$ explication du schedule (notamment `data_ingestion`)
+
+# **Requêtes SQL utilisées**
+
+$\implies$ Explications sur notre gestion de la base de données, l’objectifs de nos différents scripts SQL, ... + mettre des bouts de code pour illustrer. 
+
+$\implies$ Une sous-partie par fichier
+
+# **Point intéressant à détaillé sur l'appli**
+
+# **Guide d'utilisation**
+
+$\implies$ Mise en contexte d’un utilisateur qui navigue dans l’application. Screenshots + explications des étapes pour chaque menu. L’idée de RF_groupe_19 avec les couleurs est vraiment pas mal. 
+
+ANTONIN
+
+{{< pagebreak >}}
+
+# **Conclusion** {.unnumbered}
+
+{{< pagebreak >}}
+
+# **Annexes** {.unnumbered}
+
+## **Bilan de groupe** {.unnumbered}
+
+### Difficultés rencontrées {.unnumbered}
+
+Les difficultés que nous avons pu rencontrer n’ont jamais été très importantes. Nous avons tout de même fait face à de petits contretemps tout au long du projet. 
+
+La répartition du travail a parfois été inégale. Comme les tâches sont très dépendantes les unes des autres, il a parfois été difficile de ne pas donner plus de travail à un membre qu'à un autre. Par exemple, lorsque l'un de nous avait plus avancé sur la compréhension d'un problème ou d'une partie du sujet, il était facile de lui léguer le travail que cela engendrait par la suite. Ceci a pu provoquer des différences de charge de travail à certains moments du projet. 
+
+La compréhension du sujet n'a pas été constamment aisée non plus. Comme aucun de nous n'avions travaillé sur des données de norme GBFS auparavant, nous n'étions pas familiarisés avec le sujet dès le début. Il nous a parfois fallu prendre du temps pour comprendre les particularités de la structure de la base de données. Par exemple, au commencement du projet, nous avons dû cerner la différence entre la capacité virtuelle d'une station et sa capacité physique. Nous avons réfléchi davantage à la manière de prendre en compte cette différence dans notre application. 
+
+Enfin, tout au long du projet, nous avons naturellement fait face à des erreurs dans notre code (tests, liens frontend/backend, dépendances, etc). Ces problèmes ont été réglés rapidement la plupart du temps, et réfléchir à plusieurs sur leur résolution nous a permis de tous comprendre le code plus profondément. 
+
+### Points forts et points à améliorer pour de futurs projets {.unnumbered}
+
+Les points forts de notre équipe ont été multiples et nous ont permis d'avancer efficacement dans le projet. 
+
+La communication a été de mise : nous avons naturellement créé un groupe WhatsApp entre nous pour nous communiquer régulièrement nos avancées et les problèmes rencontrés. Cela nous permettait d'échanger à distance quand il le fallait, par exemple au moment des différentes échéances ou encore quand un retour par mail nous était fait par le tuteur. 
+
+Nous avons tenu à nous voir en présentiel assez souvent, avec une réunion par semaine durant la première phase du projet (en plus des cours avec le tuteur les vendredis). Cela a permis d'être sûrs que tout le monde était investi et motivé dans le projet, et de ne pas perdre cette motivation dans le temps. 
+
+Concernant notre gestion de l'application, les conflits git ont été très rares. Chacun de nous a veillé à toujours récupérer le travail des autres avant de faire ses modifications. De plus, notre répartition du travail a permis de ne jamais avoir deux membres qui travaillaient sur le même fichier en même temps. 
+
+Enfin, nous sommes satisfaits de la façon dont nous sommes "rentrés" dans le sujet au début du projet. Nous avons tous su comprendre rapidement les enjeux de celui-ci et les différents besoins auxquels répond l'application. 
+
+$\implies$ Points à améliorer 
+
+## **Bilans individuels** {.unnumbered}
+
+### Martin {.unnumbered}
+
+### Quang {.unnumbered}
+
+### Nathan {.unnumbered}
+
+### Victor {.unnumbered}
+
+### Antonin {.unnumbered}
+
+{{< pagebreak >}}

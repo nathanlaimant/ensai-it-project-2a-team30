@@ -156,9 +156,7 @@ class StationStatusHourlyDAO:
             return self._row_to_hourly_status(row)
         return None
 
-    def get_latest_hourly_statuses(
-        self, station_ids: list[str]
-    ) -> dict[str, StationStatusHourly]:
+    def get_latest_hourly_statuses(self, station_ids: list[str]) -> dict[str, StationStatusHourly]:
         """
         Récupère le dernier enregistrement d'agrégation horaire pour une liste de stations.
 
@@ -200,9 +198,7 @@ class StationStatusHourlyDAO:
             return {}
         return {row["station_id"]: self._row_to_hourly_status(row) for row in rows}
 
-    def get_hourly_stats(
-        self, station_id: str, start_time: datetime, end_time: datetime
-    ) -> list[StationStatusHourly]:
+    def get_hourly_stats(self, station_id: str, start_time: datetime, end_time: datetime) -> list[StationStatusHourly]:
         """Récupère les agrégations horaires d'une station sur une période donnée.
 
         Parameters
@@ -256,9 +252,7 @@ class StationStatusHourlyDAO:
                 station_statuses.append(station_status)
         return station_statuses
 
-    def aggregate_daily_stats(
-        self, station_id: str, start_date: date, end_date: date
-    ) -> list[dict]:
+    def aggregate_daily_stats(self, station_id: str, start_date: date, end_date: date) -> list[dict]:
         """
         Agrège les statistiques horaires d'une station à l'échelle journalière.
 
@@ -283,9 +277,7 @@ class StationStatusHourlyDAO:
         """
         if not station_id:
             return []
-        return self.aggregate_daily_stats_for_stations(
-            [station_id], start_date, end_date
-        ).get(station_id, [])
+        return self.aggregate_daily_stats_for_stations([station_id], start_date, end_date).get(station_id, [])
 
     def aggregate_daily_stats_for_stations(
         self, station_ids: list[str], start_date: date, end_date: date

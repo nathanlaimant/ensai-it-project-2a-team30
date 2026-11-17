@@ -183,9 +183,7 @@ class StationStatusDAO:
             return {}
         return {row["station_id"]: self._row_to_station_status(row) for row in rows}
 
-    def get_one_station_history(
-        self, station_id: str, start_time: datetime, end_time: datetime
-    ) -> list[StationStatus]:
+    def get_one_station_history(self, station_id: str, start_time: datetime, end_time: datetime) -> list[StationStatus]:
         """
         Récupère l'historique des statuts d'une station sur une période donnée.
 
@@ -242,9 +240,7 @@ class StationStatusDAO:
                 station_statuses.append(station_status)
         return station_statuses
 
-    def get_all_station_history(
-        self, start_time: datetime, end_time: datetime
-    ) -> dict[str, list[StationStatus]]:
+    def get_all_station_history(self, start_time: datetime, end_time: datetime) -> dict[str, list[StationStatus]]:
         """
         Récupère l'historique des statuts des stations sur une période donnée.
 

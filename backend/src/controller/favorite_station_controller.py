@@ -34,9 +34,7 @@ async def add_favorite(
     MessageResponse
         Message de confirmation de l'ajout.
     """
-    logger.info(
-        "Ajout de la station %s aux favoris de l'utilisateur %s", station_id, user_id
-    )
+    logger.info("Ajout de la station %s aux favoris de l'utilisateur %s", station_id, user_id)
     if not favorite_service.add_favorite_station(user_id, station_id):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -98,9 +96,7 @@ async def remove_favorite(
     MessageResponse
         Message de confirmation du retrait.
     """
-    logger.info(
-        "Retrait de la station %s des favoris de l'utilisateur %s", station_id, user_id
-    )
+    logger.info("Retrait de la station %s des favoris de l'utilisateur %s", station_id, user_id)
     if not favorite_service.remove_favorite_station(user_id, station_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

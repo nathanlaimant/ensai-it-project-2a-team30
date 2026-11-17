@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 import requests
@@ -49,9 +49,7 @@ if not station_id and st.session_state.get("selected_station_id"):
     st.query_params["station_id"] = station_id
 
 if not station_id:
-    with st.expander(
-        "Changer ou saisir l'identifiant d'une station", expanded=True
-    ):
+    with st.expander("Saisir l'identifiant d'une station", expanded=True):
         with st.form("select_station_form"):
             saisie_id = st.text_input(
                 "Identifiant de la station (station_id) :",
@@ -71,9 +69,7 @@ if not station_id:
     )
     st.stop()
 else:
-    with st.expander(
-        "Changer de station", expanded=False
-    ):
+    with st.expander("Changer de station", expanded=False):
         with st.form("select_station_form"):
             saisie_id = st.text_input(
                 label="Identifiant de la station (station_id) :",
@@ -88,15 +84,17 @@ else:
             btn_charger = st.form_submit_button("Afficher les informations")
 
         if btn_charger and (saisie_id.strip() or saisie_nom.strip()):
-            if len(api_client.post("/station", {"name": saisie_nom})) > 1:
-                st.session_state["in_search"] = saisie_nom
-                st.switch_page("pages/list_stations.py")
             if saisie_id.strip():
                 station_id = saisie_id.strip()
                 st.session_state["selected_station_id"] = station_id
                 st.query_params["station_id"] = station_id
+            elif len(api_client.post("/station", {"name": saisie_nom})) > 1:
+                st.session_state["in_search"] = saisie_nom
+                st.switch_page("pages/list_stations.py")
             else:
-                station_id = api_client.post("/station", {"name": saisie_nom})[0]["station_id"]
+                station_id = api_client.post("/station", {"name": saisie_nom})[0][
+                    "station_id"
+                ]
                 st.session_state["selected_station_id"] = station_id
                 st.query_params["station_id"] = station_id
             st.rerun()
@@ -183,7 +181,13 @@ if station_status:
     else:
         st.info(f"ℹ️ **État de la station : {etat}**")
 
-    taux_remplissage = 100 * station_status["num_docks_available"] / station_status["operational_capacity"] if station_status["operational_capacity"] > 0 else 0
+    taux_remplissage = (
+        100
+        * station_status["num_docks_available"]
+        / station_status["operational_capacity"]
+        if station_status["operational_capacity"] > 0
+        else 0
+    )
 
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     kpi1.metric(
@@ -210,11 +214,16 @@ if station_status:
     col_stat1, col_stat2 = st.columns(2)
     col_stat1.metric(
         "🎯 Score de fiabilité",
-        f"{int(station_status.get('reliability_score'))} %"
-        if station_status.get("reliability_score") else "Non calculé",
+        (
+            f"{int(station_status.get('reliability_score'))} %"
+            if station_status.get("reliability_score")
+            else "Non calculé"
+        ),
     )
     if station_status.get("last_reported"):
-        last_rep = str(station_status['last_reported']).replace("T", " ").replace("Z", "")
+        last_rep = (
+            str(station_status["last_reported"]).replace("T", " ").replace("Z", "")
+        )
         try:
             dt_reported = datetime.strptime(last_rep, "%Y-%m-%d %H:%M:%S")
             periode = datetime.now() - dt_reported
@@ -258,50 +267,370 @@ with col_info2:
 st.divider()
 st.subheader("📈 Historique horaire et métriques de fiabilité")
 
-periode_voulue = st.multiselect(
-    label="Période",
-    options=[
-        "Dans les dernières 24 heures",
-        "Dans les 7 derniers jours",
-        "Dans les 30 derniers jours"
-    ],
-    max_selections=1
-)
-if not periode_voulue:
-    st.info("Choisir une période à observer sur la station.")
+periode_options = {
+    "Dans les 30 derniers jours": "30j",
+    "Dans les 7 derniers jours": "7j",
+    "Dans les dernières 24 heures": "24h",
+    "Dans la dernière heure": "1h",
+}
+
+col_sel_p, _ = st.columns([2, 2])
+with col_sel_p:
+    periode_voulue = st.selectbox(
+        label="Période d'observation",
+        options=list(periode_options.keys()),
+        index=0,
+        help="Choisissez la fenêtre temporelle d'observation pour analyser la disponibilité et la fiabilité.",
+    )
+
+periode_param = periode_options[periode_voulue]
+
+try:
+    hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_param})
+except Exception as e:
+    hourly_stats = []
+    logger.error(f"Erreur lors de la récupération de l'historique : {e}")
+    st.warning(f"Erreur lors de la récupération des données d'historique : {e}")
+
+if not hourly_stats:
+    st.info("Aucun historique disponible pour cette période.")
 else:
-    if periode_voulue[0] == "Dans les dernières 24 heures":
-        periode_param = "24h"
-    elif periode_voulue[0] == "Dans les 7 derniers jours":
-        periode_param = "7j"
+    df_raw = pd.DataFrame(hourly_stats)
+
+    # 1. Normalisation de la colonne temporelle
+    time_col = None
+    for c in ["last_reported", "bucket_hour", "stat_date"]:
+        if c in df_raw.columns:
+            time_col = c
+            break
+
+    if time_col:
+        df_raw["datetime"] = pd.to_datetime(df_raw[time_col], errors="coerce")
+        df_raw = (
+            df_raw.dropna(subset=["datetime"])
+            .sort_values("datetime")
+            .reset_index(drop=True)
+        )
+        if periode_param in ["7j", "30j"]:
+            df_raw["Période"] = df_raw["datetime"].dt.strftime("%d/%m/%Y")
+        else:
+            df_raw["Période"] = df_raw["datetime"].dt.strftime("%d/%m/%Y %H:%M")
     else:
-        periode_param = "30j"
+        df_raw["Période"] = [f"Relevé {i + 1}" for i in range(len(df_raw))]
 
-    try:
-        hourly_stats = api_client.get(ENDPOINT_HOURLY, params={"period": periode_param})
-    except Exception as e:
-        hourly_stats = []
-        st.warning(f"Error {e}")
-        st.stop()
+    # 2. Normalisation des noms de colonnes et types
+    # Gestion des équivalences BE (ex: num_bikes_available ou avg_num_bikes_available)
+    if (
+        "num_bikes_available" not in df_raw.columns
+        and "avg_num_bikes_available" in df_raw.columns
+    ):
+        df_raw["num_bikes_available"] = df_raw["avg_num_bikes_available"]
+    if (
+        "num_docks_available" not in df_raw.columns
+        and "avg_num_docks_available" in df_raw.columns
+    ):
+        df_raw["num_docks_available"] = df_raw["avg_num_docks_available"]
+    if (
+        "operational_capacity" not in df_raw.columns
+        and "avg_operational_capacity" in df_raw.columns
+    ):
+        df_raw["operational_capacity"] = df_raw["avg_operational_capacity"]
+    if (
+        "reliability_score" not in df_raw.columns
+        and "avg_reliability_score" in df_raw.columns
+    ):
+        df_raw["reliability_score"] = df_raw["avg_reliability_score"]
 
-    if hourly_stats:
-        df_hourly = pd.DataFrame(hourly_stats)
+    # Conversion numérique sécurisée
+    num_cols = [
+        "num_bikes_available",
+        "num_docks_available",
+        "operational_capacity",
+        "reliability_score",
+        "full_ratio",
+        "full_duration_ratio",
+        "avg_full_duration",
+        "empty_duration_ratio",
+        "avg_empty_duration",
+    ]
+    for col in num_cols:
+        if col in df_raw.columns:
+            df_raw[col] = pd.to_numeric(df_raw[col], errors="coerce")
 
-        colonnes_traduction = {
-            "bucket_hour": "Tranche horaire",
-            "reliability_score": "Score de fiabilité",
-            "avg_num_bikes_available": "Moy. vélos dispo",
-            "avg_num_docks_available": "Moy. places libres",
-            "avg_operational_capacity": "Capacité op. moyenne",
-            "empty_events_cnt": "Pénuries (0 vélo)",
-            "full_events_cnt": "Saturations (0 place)",
-            "empty_duration_sec": "Durée vide (s)",
-            "full_duration_sec": "Durée saturée (s)",
-        }
+    # Calcul du taux de remplissage si non fourni
+    if (
+        "full_ratio" not in df_raw.columns
+        and "num_bikes_available" in df_raw.columns
+        and "operational_capacity" in df_raw.columns
+    ):
+        df_raw["full_ratio"] = df_raw.apply(
+            lambda r: (
+                min(r["num_bikes_available"] / r["operational_capacity"], 1.0)
+                if r["operational_capacity"] and r["operational_capacity"] > 0
+                else 0.0
+            ),
+            axis=1,
+        )
 
-        colonnes_presentes = [c for c in colonnes_traduction if c in df_hourly.columns]
-        df_affichage = df_hourly[colonnes_presentes].rename(columns=colonnes_traduction)
+    # 3. Synthèse sous forme de KPIs (Métriques globales sur la période)
+    st.markdown("##### 📌 Synthèse sur la période sélectionnée")
+    col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
 
-        st.dataframe(df_affichage, use_container_width=True, hide_index=True)
+    # Score de fiabilité moyen
+    has_rel = (
+        "reliability_score" in df_raw.columns
+        and df_raw["reliability_score"].notna().any()
+    )
+    if has_rel:
+        mean_score = float(df_raw["reliability_score"].dropna().mean())
+        label_score = (
+            "Score de fiabilité"
+            if periode_param == "1h"
+            else "Score de fiabilité moyen"
+        )
+        col_kpi1.metric(
+            label_score,
+            f"{mean_score:.1f} %",
+        )
     else:
-        st.info("Aucun historique disponible pour cette période.")
+        col_kpi1.metric(
+            (
+                "Score de fiabilité"
+                if periode_param == "1h"
+                else "Score de fiabilité moyen"
+            ),
+            "N/A",
+        )
+
+    # Vélos disponibles en moyenne
+    if (
+        "num_bikes_available" in df_raw.columns
+        and df_raw["num_bikes_available"].notna().any()
+    ):
+        mean_bikes = float(df_raw["num_bikes_available"].dropna().mean())
+        col_kpi2.metric("Moy. vélos disponibles", f"{mean_bikes:.1f}")
+    else:
+        col_kpi2.metric("Moy. vélos disponibles", "N/A")
+
+    # Places libres en moyenne
+    if (
+        "num_docks_available" in df_raw.columns
+        and df_raw["num_docks_available"].notna().any()
+    ):
+        mean_docks = float(df_raw["num_docks_available"].dropna().mean())
+        col_kpi3.metric("Moy. places libres", f"{mean_docks:.1f}")
+    else:
+        col_kpi3.metric("Moy. places libres", "N/A")
+
+    # Taux de remplissage moyen
+    if "full_ratio" in df_raw.columns and df_raw["full_ratio"].notna().any():
+        mean_fill = float(df_raw["full_ratio"].dropna().mean()) * 100
+        col_kpi4.metric("Taux de remplissage moyen", f"{mean_fill:.1f} %")
+    else:
+        col_kpi4.metric("Taux de remplissage moyen", "N/A")
+
+    # Tensions de service (pénurie / saturation)
+    has_durations = (
+        "empty_duration_ratio" in df_raw.columns
+        and df_raw["empty_duration_ratio"].notna().any()
+    ) or (
+        "full_duration_ratio" in df_raw.columns
+        and df_raw["full_duration_ratio"].notna().any()
+    )
+
+    if has_durations:
+        col_ten1, col_ten2, col_ten3, col_ten4 = st.columns(4)
+        if (
+            "empty_duration_ratio" in df_raw.columns
+            and df_raw["empty_duration_ratio"].notna().any()
+        ):
+            empty_pct = float(df_raw["empty_duration_ratio"].dropna().mean()) * 100
+            col_ten1.metric("Temps vide (pénurie)", f"{empty_pct:.1f} %")
+        if (
+            "avg_empty_duration" in df_raw.columns
+            and df_raw["avg_empty_duration"].notna().any()
+        ):
+            avg_empty_s = float(df_raw["avg_empty_duration"].dropna().mean())
+            dur_text = (
+                f"{avg_empty_s / 60:.1f} min"
+                if avg_empty_s >= 60
+                else f"{int(avg_empty_s)} s"
+            )
+            col_ten2.metric("Durée moy. pénurie", dur_text)
+        if (
+            "full_duration_ratio" in df_raw.columns
+            and df_raw["full_duration_ratio"].notna().any()
+        ):
+            full_pct = float(df_raw["full_duration_ratio"].dropna().mean()) * 100
+            col_ten3.metric("Temps saturé (plein)", f"{full_pct:.1f} %")
+        if (
+            "avg_full_duration" in df_raw.columns
+            and df_raw["avg_full_duration"].notna().any()
+        ):
+            avg_full_s = float(df_raw["avg_full_duration"].dropna().mean())
+            dur_full_text = (
+                f"{avg_full_s / 60:.1f} min"
+                if avg_full_s >= 60
+                else f"{int(avg_full_s)} s"
+            )
+            col_ten4.metric("Durée moy. saturation", dur_full_text)
+
+    st.write("")
+
+    # 4. Organisation en onglets : Graphiques, Tableau complet
+    tab_graphs, tab_table = st.tabs(
+        [
+            "📊 Graphiques temporels",
+            "📋 Tableau complet des relevés",
+        ]
+    )
+
+    with tab_graphs:
+        st.markdown("###### 🚲 Disponibilité des vélos et places libres")
+        cols_disp = []
+        if "num_bikes_available" in df_raw.columns:
+            df_raw["Vélos disponibles"] = df_raw["num_bikes_available"]
+            cols_disp.append("Vélos disponibles")
+        if "num_docks_available" in df_raw.columns:
+            df_raw["Places libres"] = df_raw["num_docks_available"]
+            cols_disp.append("Places libres")
+
+        if cols_disp:
+            st.line_chart(
+                df_raw,
+                x="Période",
+                y=cols_disp,
+                color=["#2E7D32", "#1976D2"][: len(cols_disp)],
+            )
+
+        cols_score = []
+        if (
+            periode_param != "1h"
+            and "reliability_score" in df_raw.columns
+            and df_raw["reliability_score"].notna().any()
+        ):
+            df_raw["Score de fiabilité (%)"] = df_raw["reliability_score"]
+            cols_score.append("Score de fiabilité (%)")
+        if "full_ratio" in df_raw.columns and df_raw["full_ratio"].notna().any():
+            df_raw["Taux de remplissage (%)"] = (df_raw["full_ratio"] * 100).round(1)
+            cols_score.append("Taux de remplissage (%)")
+
+        if cols_score:
+            titre_score = (
+                "###### 🎯 Score de fiabilité et Taux de remplissage"
+                if "Score de fiabilité (%)" in cols_score
+                else "###### 🎯 Taux de remplissage"
+            )
+            st.markdown(titre_score)
+            st.line_chart(
+                df_raw,
+                x="Période",
+                y=cols_score,
+                color=["#FF9800", "#9C27B0"][: len(cols_score)],
+            )
+
+        # Graphique des durées de tension si disponibles
+        if has_durations:
+            st.markdown("###### ⚠️ Proportion du temps en pénurie ou saturation")
+            tension_cols = []
+            if (
+                "empty_duration_ratio" in df_raw.columns
+                and df_raw["empty_duration_ratio"].notna().any()
+            ):
+                df_raw["Temps vide (%)"] = (df_raw["empty_duration_ratio"] * 100).round(
+                    1
+                )
+                tension_cols.append("Temps vide (%)")
+            if (
+                "full_duration_ratio" in df_raw.columns
+                and df_raw["full_duration_ratio"].notna().any()
+            ):
+                df_raw["Temps saturé (%)"] = (
+                    df_raw["full_duration_ratio"] * 100
+                ).round(1)
+                tension_cols.append("Temps saturé (%)")
+
+            if tension_cols:
+                st.area_chart(
+                    df_raw,
+                    x="Période",
+                    y=tension_cols,
+                    color=["#D32F2F", "#F57C00"][: len(tension_cols)],
+                )
+
+    with tab_table:
+        # Construction d'un affichage complet et bien libellé
+        df_table = pd.DataFrame()
+        df_table["Période"] = df_raw["Période"]
+
+        if "station_state" in df_raw.columns and df_raw["station_state"].notna().any():
+            state_map = {
+                "FUNCTIONAL": "🟢 Fonctionnelle",
+                "EMPTY": "🔴 Vide",
+                "FULL": "🟠 Saturée",
+            }
+            df_table["État"] = df_raw["station_state"].map(
+                lambda s: state_map.get(s, s)
+            )
+
+        if (
+            "reliability_score" in df_raw.columns
+            and df_raw["reliability_score"].notna().any()
+        ):
+            df_table["Fiabilité (%)"] = df_raw["reliability_score"].round(1)
+
+        if "num_bikes_available" in df_raw.columns:
+            df_table["Vélos dispo"] = df_raw["num_bikes_available"].round(1)
+
+        if "num_docks_available" in df_raw.columns:
+            df_table["Places libres"] = df_raw["num_docks_available"].round(1)
+
+        if (
+            "operational_capacity" in df_raw.columns
+            and df_raw["operational_capacity"].notna().any()
+        ):
+            df_table["Capacité"] = (
+                df_raw["operational_capacity"].round(0).astype("Int64")
+            )
+
+        if "full_ratio" in df_raw.columns and df_raw["full_ratio"].notna().any():
+            df_table["Remplissage (%)"] = (df_raw["full_ratio"] * 100).round(1)
+
+        if (
+            "empty_duration_ratio" in df_raw.columns
+            and df_raw["empty_duration_ratio"].notna().any()
+        ):
+            df_table["Temps vide (%)"] = (df_raw["empty_duration_ratio"] * 100).round(1)
+
+        if (
+            "avg_empty_duration" in df_raw.columns
+            and df_raw["avg_empty_duration"].notna().any()
+        ):
+            df_table["Durée moy. vide (s)"] = df_raw["avg_empty_duration"].round(0)
+
+        if (
+            "full_duration_ratio" in df_raw.columns
+            and df_raw["full_duration_ratio"].notna().any()
+        ):
+            df_table["Temps saturé (%)"] = (df_raw["full_duration_ratio"] * 100).round(
+                1
+            )
+
+        if (
+            "avg_full_duration" in df_raw.columns
+            and df_raw["avg_full_duration"].notna().any()
+        ):
+            df_table["Durée moy. saturé (s)"] = df_raw["avg_full_duration"].round(0)
+
+        # Extraction des types de véhicules si disponibles
+        if "vehicle_types_available" in df_raw.columns and any(
+            isinstance(x, dict) and x for x in df_raw["vehicle_types_available"]
+        ):
+            df_table["Vélos mécaniques"] = df_raw["vehicle_types_available"].apply(
+                lambda x: x.get("mechanical") if isinstance(x, dict) else None
+            )
+            df_table["Vélos électriques"] = df_raw["vehicle_types_available"].apply(
+                lambda x: x.get("electric") if isinstance(x, dict) else None
+            )
+
+        st.dataframe(df_table, use_container_width=True, hide_index=True)

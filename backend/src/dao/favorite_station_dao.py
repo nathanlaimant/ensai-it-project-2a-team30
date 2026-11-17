@@ -49,9 +49,7 @@ class FavoriteStationDAO:
                 conn.rollback()
             raise
 
-    def list_favorites(
-        self, user_id: int, page: int = 1, size: int = 10
-    ) -> list[StationInformation] | None:
+    def list_favorites(self, user_id: int, page: int = 1, size: int = 10) -> list[StationInformation] | None:
         """
         Liste les stations favorites d'un utilisateur.
 

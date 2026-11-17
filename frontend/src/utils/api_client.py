@@ -1,5 +1,5 @@
 import os
-from typing import Any, Optional
+from typing import Any
 
 import requests
 
@@ -35,55 +35,49 @@ class APIClient:
     def get(
         self,
         endpoint: str,
-        params: Optional[dict[str, Any]] = None,
-        headers: Optional[dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> Any:
         """
         Envoie une requête HTTP GET à l'API.
         """
         url = self._build_url(endpoint)
-        response = self.session.get(
-            url, params=params, headers=headers, timeout=self.timeout
-        )
+        response = self.session.get(url, params=params, headers=headers, timeout=self.timeout)
         response.raise_for_status()
         return response.json() if response.content else {}
 
     def post(
         self,
         endpoint: str,
-        data: Optional[Any] = None,
-        headers: Optional[dict[str, str]] = None,
+        data: Any | None = None,
+        headers: dict[str, str] | None = None,
     ) -> Any:
         """
         Envoie une requête HTTP POST à l'API.
         """
         url = self._build_url(endpoint)
-        response = self.session.post(
-            url, json=data, headers=headers, timeout=self.timeout
-        )
+        response = self.session.post(url, json=data, headers=headers, timeout=self.timeout)
         response.raise_for_status()
         return response.json() if response.content else {}
 
     def put(
         self,
         endpoint: str,
-        data: Optional[dict[str, Any]] = None,
-        headers: Optional[dict[str, str]] = None,
+        data: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> Any:
         """
         Envoie une requête HTTP PUT à l'API.
         """
         url = self._build_url(endpoint)
-        response = self.session.put(
-            url, json=data, headers=headers, timeout=self.timeout
-        )
+        response = self.session.put(url, json=data, headers=headers, timeout=self.timeout)
         response.raise_for_status()
         return response.json() if response.content else {}
 
     def delete(
         self,
         endpoint: str,
-        headers: Optional[dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
     ) -> int:
         """
         Envoie une requête HTTP DELETE à l'API.

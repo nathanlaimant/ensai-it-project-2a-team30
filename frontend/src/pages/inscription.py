@@ -1,5 +1,6 @@
 import requests
 import streamlit as st
+
 from utils.api_client import APIClient
 
 # Modification : pointe vers la page d'accueil gérée par st.navigation
@@ -33,10 +34,7 @@ if btn_signup:
     else:
         try:
             client.signup(new_user.strip(), new_email.strip(), new_pwd)
-            st.success(
-                "Compte créé avec succès ! Rendez-vous sur la page "
-                "**Connexion** pour vous connecter."
-            )
+            st.success("Compte créé avec succès ! Rendez-vous sur la page **Connexion** pour vous connecter.")
         except requests.exceptions.HTTPError as e:
             status_code = e.response.status_code
             if status_code == 409:
