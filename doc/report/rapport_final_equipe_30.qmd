@@ -84,7 +84,120 @@ ANTONIN
 
 ## **Architecture globale**
 
-$\implies$ Diagrammes de classes + explications
+### Principes directeurs et programmation en couches
+
+Pour répondre aux exigences de robustesse, de maintenabilité et d'évolutivité d'une application de collecte, d'historisation et d'analyse en temps réel, nous avons adopté une architecture logicielle en couches, articulée autour des principes de forte cohésion et de faible couplage (*Separation of Concerns*). 
+
+Dans cette organisation, chaque couche logicielle se voit assigner une responsabilité métier strictement délimitée, et les dépendances sont strictement descendantes :
+
+1. **Couche Présentation (Contrôleurs / Routeurs FastAPI)** : Point d'entrée de l'API web RESTful. Elle gère la réception des requêtes HTTP, la validation formelle des paramètres via les schémas Pydantic, la sérialisation des réponses et le contrôle des autorisations (authentification sécurisée par Bearer token). Elle délègue immédiatement tout traitement métier à la couche service sous-jacente.
+2. **Couche Métier / Applicative (Services)** : Cœur décisionnel de l'application. Elle implémente la logique applicative (authentification, hachage des mots de passe par `bcrypt`, calcul des ratios d'occupation, algorithme de recommandation multicritère, calcul géodésique de distance). Cette couche est totalement agnostique vis-à-vis du protocole de transport (HTTP) et du système de gestion de base de données (PostgreSQL).
+3. **Couche Accès aux Données (DAO - Data Access Objects)** : Abstraction de la persistance relationnelle. Chaque classe DAO encapsule la totalité des requêtes SQL (écrites en SQL brut optimisé via le pilote `psycopg2`), gère la transactionnalité, et convertit les tuples retournés par le SGBD en objets métier ou réciproquement.
+4. **Couche Modèle Domaine (Entités métier / Business Objects)** : Objets purs modélisant le domaine d'affaires (stations, statuts instantanés, utilisateurs, agrégats horaires). Ces classes traversent toutes les couches sans dépendre d'aucun composant applicatif ou d'infrastructure.
+
+Par ailleurs, l'application intègre un **sous-système de traitement asynchrone d'arrière-plan** orchestré par `APScheduler` (`JobScheduler`). Ce sous-système cadence l'ingestion des flux GBFS distants et le calcul par lots (*batch*) des agrégations statistiques et du score de fiabilité, tout en convergeant vers les mêmes classes de persistance (DAO).
+
+{{< pagebreak >}}
+
+### Modèle de données
+
+Le modèle relationnel de VeloScope a été pensé pour allier la rigueur du standard GBFS (v2.*) avec une stratégie d'historisation à haute performance sous PostgreSQL.
+
+![Modèle entité-association](img/ERD.jpg){width=100%}
+
+#### Structuration du schéma et intégrité relationnelle
+
+Le schéma physique de la base de données PostgreSQL applique des contraintes d'intégrité relationnelle rigoureuses :
+
+- **Clés primaires et étrangères avec cascade** : Les tables dépendantes (`station_status`, `station_status_hourly`, `user_favorite_station`) référencent la clé primaire `station_id` de `station_information` avec une clause `ON DELETE CASCADE ON UPDATE CASCADE`. Ainsi, toute évolution d'un identifiant ou suppression d'une station préserve automatiquement la consistance relationnelle de la base sans laisser d'enregistrements orphelins. La table de jointure `user_favorite_station` associe une clé primaire composite `(user_id, station_id)`.
+- **Stratégie d'indexation pour requêtes haute fréquence** :
+  - `idx_station_status_station_reported` : index unique composite sur `(station_id, last_reported)` garantissant à la fois l'idempotence des insertions lors de l'ingestion temps réel et l'extraction instantanée du dernier statut.
+  - `idx_station_hourly_bucket` : index sur `bucket_hour DESC` permettant d'optimiser les requêtes chronologiques d'historique.
+  <!-- - `idx_fav_station` : index sur `station_id` dans `user_favorite_station` pour calculer rapidement le nombre d'utilisateurs ayant mis en favori chaque station (`count_favorites`). -->
+  - `idx_user_access_token` : index unique sur `access_token` pour une résolution immédiate de la session utilisateur lors du passage dans les intercepteurs d'authentification.
+
+#### Évolution du modèle de données suite aux retours intermédiaires
+
+Suite aux remarques du tuteur lors de l’évaluation intermédiaire concernant un modèle de données jugé trop riche, nous avons épuré notre schéma relationnel pour ne conserver que les données essentielles au cœur analytique du projet :
+
+1. **Simplification acceptée : suppression des tables intermédiaires superflues** :
+   Nous avons éliminé quelques tables auxiliaires distinctes (`station_physical_capacity`, `station_virtual_capacity`, `vehicle_type`) pour éviter la surcharge de jointures relationnelles. La distinction physique/virtuelle a été intégrée directement sous forme d'attributs natifs dans `station_information` (`capacity`, `is_virtual_station`). De même, la ventilation par types de véhicules (vélos mécaniques vs vélos à assistance électrique) est stockée de manière compacte via le type PostgreSQL natif `JSONB` (`vehicle_types_available`, `vehicle_docks_available`). Cette modification a rendu le schéma beaucoup plus sobre et lisible, tout en conservant une conformité stricte avec les flux GBFS v2.3.
+2. **Choix architectural maintenu et défendu : isolation de `system_information` en singleton** :
+   La table `system_information` n'est rattachée par aucune clé étrangère aux stations. Comme VeloScope gère le réseau d'une agglomération donnée (mono-opérateur), dupliquer une clé `system_id` sur chaque station aurait constitué une redondance relationnelle artificielle sans valeur ajoutée. L'isoler dans une table singleton dédiée permet d'archiver la version du flux, le fuseau horaire et les coordonnées de l'opérateur sans alourdir le schéma opérationnel.
+
+{{< pagebreak >}}
+
+### Diagrammes de classes du système
+
+Pour garantir une lisibilité optimale et répondre à la critique du dossier d'analyse sur la clarté de la modélisation logicielle, nous décomposons le diagramme de classes en trois diagrammes ciblés et hautement cohésifs :
+
+1. Les classes du modèle domaine métier (Business Objects) ;
+2. Les classes de l'architecture logicielle du Web Service (Contrôleurs, Services et DAOs) ;
+3. Les classes du sous-système asynchrone d'ingestion et d'agrégation (Background Jobs).
+
+#### Modèle de domaine et entités métier (Business Objects)
+
+Les entités métier constituent le socle de l'application. Ce sont des objets purs, dépourvus de toute dépendance vers les bibliothèques d'infrastructure (FastAPI, SQL, HTTP).
+
+![Diagramme de classes du modèle domaine métier](img/CD1.jpg){width=100%}
+
+**Justification de la modélisation métier :**
+
+Face aux interrogations sur la richesse du modèle métier, nous défendons la stricte nécessité de chacun des composants retenus :
+
+1. **Partitionnement temporel entre télémétrie brute (`StationStatus`) et consolidations (`StationStatusHourly`)** :
+   La table `station_status` enregistre un instantané toutes les 5 minutes. Pour un réseau d'une centaine de stations, cela engendre environ 28 800 lignes par jour, soit près d'un million d'enregistrements par mois. Si les requêtes de consultation de l'historique sur 7 jours ou 30 jours devaient balayer et agréger ces millions de lignes brutes à la volée, les temps de réponse de l'API atteindraient plusieurs secondes en provoquant des lectures de table massives (*full table scans*), saturant le serveur PostgreSQL.
+   La création de `StationStatusHourly` résout ce problème à la racine : un traitement par lots calcule une seule fois par heure les moyennes, les durées de pénurie/saturation et le score de fiabilité. Pour restituer l'historique d'une station sur 7 jours, l'API ne lit plus que 168 lignes pré-calculées par simple parcours d'index `(station_id, bucket_hour)`.
+2. **Nécessité fonctionnelle absolue des attributs conservés** :
+   Aucun attribut conservé n'est inutile :
+   - Les coordonnées géographiques (`lat`, `lon`) et la capacité opérationnelle permettent le calcul de la distance orthodromique par formule de Haversine et du taux de disponibilité dans le moteur de recommandation multicritère.
+   - Le champ `vehicle_types_available` (`{"mechanical": int, "electric": int}`) est indispensable pour appliquer le filtre de préférence utilisateur (rechercher spécifiquement un vélo électrique ou mécanique).
+   - Les attributs temporels (`empty_duration_sec`, `full_duration_sec`, `empty_events_cnt`, `full_events_cnt`) sont les paramètres mathématiques d'entrée requis par la formule de fiabilité pour pondérer non seulement la durée de rupture de service, mais aussi la fréquence et la persistance des incidents.
+3. **Sécurité et intégrité du modèle utilisateur** :
+   L'entité `User` stocke l'empreinte chiffrée par `bcrypt` (`password_hashed`), l'état d'activité du compte (`is_active` permettant une désactivation logique sans casser l'historique des favoris), ainsi que l'énumération `UserRole` (`USER` vs `ADMIN`) assurant un contrôle d'accès strict sur les routes d'administration.
+
+<!-- {{< pagebreak >}} -->
+
+#### Architecture logicielle du Web Service (Contrôleurs, Services et DAOs)
+
+Le Web Service VeloScope regroupe l'ensemble des modules concourant au traitement synchrone des requêtes des utilisateurs et des administrateurs. 
+
+Pour répondre directement à la remarque formulée sur le rapport d'analyse intermédiaire, le diagramme ci-dessous organise les classes selon une hiérarchie verticale stricte et unidirectionnelle, sans chevauchement de couches.
+
+<!-- Diagramme de classes de l'architecture logicielle en couches du Web Service ici -->
+
+##### Rationalisation de la couche service suite aux retours
+
+Nous avons pleinement intégré la recommandation du tuteur à travers deux refactorisations majeures :
+
+1. **Suppression de `RecommendationService` et `RecommendationController` au profit de `StationService`** :
+   Dans le dossier d'analyse initial, la recommandation de vélos à proximité formait un couple Contrôleur/Service autonome. Or, ce service réclamait exactement les mêmes données que `StationService` (`StationDAO` pour la géolocalisation, `StationStatusDAO` pour l'état instantané, `StationStatusHourlyDAO` pour la fiabilité récente).
+   La recommandation n'est pas une entité métier distincte, mais une requête spatiale filtrée sur les stations. Nous avons donc fusionné la méthode `get_nearby_recommendations` au sein de `StationService` et exposé la route correspondante (`POST /station/recommendations`) directement dans `StationController`. Cette rationalisation a réduit le nombre de services et de contrôleurs, ramenant l'architecture à 3 services centraux (`UserService`, `StationService`, `FavoriteStationService`).
+2. **Élimination des micro-classes de calcul** :
+   Notre modélisation d'origine comportait des classes d'aide atomiques sans état interne (`StationStateClassifier`, `StationCapacityCalculator`, `StationStateDurationCalculator`). Ces mécanismes ont été encapsulés sous forme de méthodes privées pures au sein de `StationService` et de calculs vectorisés dans l'agrégateur. Le diagramme de classes s'en trouve clarifié et allégé.
+
+<!-- {{< pagebreak >}} -->
+
+#### Sous-système asynchrone d'ingestion et d'agrégation (Background Jobs)
+
+La collecte des données externes et leur consolidation analytique constituent un sous-système autonome au sein de VeloScope. Cadencé par `APScheduler`, il s'exécute en tâche de fond indépendamment des requêtes web.
+
+<!-- Diagramme de classes du sous-système d'ingestion et d'agrégation planifiée ici -->
+
+##### Justification du découplage de l'ingestion par rapport aux services web
+
+L'une des remarques les plus importantes de l'évaluation intermédiaire interrogeait ce découplage. Nous n'avons pas fusionné l'ingestion externe dans `StationService`. Ce choix de conception est délibéré et structurant par rapport aux arguments suivants :
+
+1. **Découplage temporel et réactivité de l'expérience utilisateur** :
+   `StationService` a pour mandat de servir les requêtes interactives des utilisateurs finaux (via Streamlit ou les clients HTTP). L'usager attend une réponse instantanée.
+   Les appels réseau distants vers une API GBFS tierce sont tributaires de la latence Internet, du temps de traitement du serveur tiers et du transfert de volumineux payloads JSON. Si `StationService` interrogeait l'API externe à chaque requête de consultation, l'expérience utilisateur serait pénalisée par des temps d'attente imprévisibles. En interrogeant exclusivement la base locale PostgreSQL, l'API VeloScope garantit une latence minimale constante.
+2. **Isolation des pannes et haute disponibilité** :
+   Les serveurs publics de données de transport sont régulièrement sujets à des indisponibilités temporaires, des maintenances ou des coupures de réseau.
+   Avec notre architecture découplée, si l'API GBFS distante subit une avarie, le service VeloScope reste opérationnel. Les utilisateurs continuent de consulter la carte des stations, de lire l'état le plus récent persisté en base, d'analyser les tendances historiques et de générer des recommandations. Si l'appel externe avait été intégré à `StationService`, toute panne du tiers aurait provoqué l'interruption immédiate de VeloScope pour tous les usagers.
+3. **Principe de Responsabilité Unique (SRP)** :
+   `StationService` est un service transactionnel (OLTP) orienté consultation et lecture pour les clients. Les stratégies d'ingestion et l'agrégateur constituent un pipeline d'ETL orienté écriture par lots. Mélanger ces deux responsabilités au sein d'une même classe aurait violé le principe de responsabilité unique (SRP) et engendré une classe excessivement complexe et difficile à tester unitairement.
+4. **Extensibilité via le patron Stratégie** :
+   L'ingestion repose sur une hiérarchie générique `BaseIngestionStrategy[T]` qui formalise le cycle de vie invariant (`fetch_feed()`, `parse_payload()`, `persist()`). L'intégration d'un nouveau flux GBFS (par exemple `system_pricing_plans`, `system_regions` ou la prise en charge d'un second réseau urbain) s'effectue par simple création d'une nouvelle sous-classe de stratégie, sans modifier ni risquer de déstabiliser `StationService` ou les contrôleurs existants (respect du principe Ouvert/Fermé).
 
 ## **Les fonctionnalités**
 
