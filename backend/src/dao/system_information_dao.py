@@ -83,3 +83,47 @@ class SystemInformationDAO:
             return False
 
         return isinstance(res, dict)
+
+    def get_system_info(self, system_id: str | None = None) -> SystemInformation | None:
+        """
+        Récupère les informations d'un système.
+
+        Parameters
+        ----------
+        system_id : str | None, optional
+            Identifiant unique du système à rechercher. Si non spécifié ou None,
+            récupère le premier système enregistré.
+
+        Returns
+        -------
+        SystemInformation | None
+            Instance représentant le système, ou None si introuvable.
+        """
+        try:
+            with self._db_connection.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    if system_id:
+                        cursor.execute(
+                            "SELECT * FROM system_information WHERE system_id = %(system_id)s;",
+                            {"system_id": system_id},
+                        )
+                    else:
+                        cursor.execute("SELECT * FROM system_information LIMIT 1;")
+                    res = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            return None
+
+        if not res:
+            return None
+
+        return SystemInformation(
+            system_id=res["system_id"],
+            language=res["language"],
+            name=res["name"],
+            url=res["url"],
+            start_date=res["start_date"],
+            phone_number=res["phone_number"],
+            email=res["email"],
+            timezone=res["timezone"],
+        )
