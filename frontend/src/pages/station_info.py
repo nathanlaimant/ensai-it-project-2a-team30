@@ -112,6 +112,8 @@ else:
 
 if saisie_id.strip():
     st.info(f"Résultat unique pour la recherche : « {saisie_id} »")
+if "in_search" in st.session_state:
+    st.info(f"Résultat unique pour la recherche : « {st.session_state["in_search"]} »")
 
 ENDPOINT_INFO = f"/station/{station_id}"
 ENDPOINT_STATUS = f"/station/{station_id}/status"
