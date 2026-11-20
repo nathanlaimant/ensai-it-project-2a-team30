@@ -30,7 +30,7 @@ format:
 
 # **Contexte** {.unnumbered}
 
-$ À reformuler
+$\implies$ À reformuler
 
 Les vélos en libre-service sont disponibles en temps réel dans de nombreuses villes. Pourtant, une simple carte des stations ne permet pas vraiment de répondre à des questions utiles : À quelle heure vais-je réellement trouver un vélo ? Quelles stations sont souvent pleines ? Quels trajets sont les plus fiables ? Est-ce qu’une station est régulièrement vide le matin mais pleine le soir ? Le projet VeloScope consiste à développer une API permettant de collecter, historiser et analyser les données de vélos en libre-service d’une ville. L’application récupère périodiquement les informations d’une API de vélos en libre-service compatible avec le standard GBFS : stations, nombre de vélos disponibles, nombre de places libres, vélos électriques, etc. Contrairement à une simple application de consultation, VeloScope construit son propre historique afin de permettre des analyses temporelles et de produire des indicateurs de fiabilité des stations. 
 
@@ -72,6 +72,8 @@ L’ensemble des membres du groupe a codé dans chaque bloc (DAO, Services et Co
 
 Dans le cas du frontend, nous n’avions pas d’organisation particulière. Certaines personnes se sont concentrées plus certaines pages que d’autres, et d’autres membres ont préféré s’assurer que l’ensemble du code fonctionne, qu’il n’y ait pas d’erreurs. C’est grâce à une communication efficace que nous avons réussi à ne pas interférer dans le travail des autres, ce qui aurait pu poser des problèmes au niveau du dépôt distant sur github. 
 
+## **Outils de développement**
+
 {{< pagebreak >}}
 
 # **Modélisation UML**
@@ -82,7 +84,15 @@ $\implies$ Diagramme + explications dossier d’analyse
 
 ANTONIN 
 
-## **Architecture globale**
+## **Diagramme de packages**
+
+## **Diagramme de classes**
+
+## **Présentation de l'API externe**
+
+## **Structure de la base de données**
+
+## **Architecture globale** (?)
 
 ### Principes directeurs et programmation en couches
 
@@ -199,7 +209,7 @@ L'une des remarques les plus importantes de l'évaluation intermédiaire interro
 4. **Extensibilité via le patron Stratégie** :
    L'ingestion repose sur une hiérarchie générique `BaseIngestionStrategy[T]` qui formalise le cycle de vie invariant (`fetch_feed()`, `parse_payload()`, `persist()`). L'intégration d'un nouveau flux GBFS (par exemple `system_pricing_plans`, `system_regions` ou la prise en charge d'un second réseau urbain) s'effectue par simple création d'une nouvelle sous-classe de stratégie, sans modifier ni risquer de déstabiliser `StationService` ou les contrôleurs existants (respect du principe Ouvert/Fermé).
 
-## **Les fonctionnalités**
+# **Les fonctionnalités**
 
 Les fonctionnalités principales de l’application sont les suivantes : 
 
@@ -217,7 +227,7 @@ Les administrateurs ont la possibilité de gérer les comptes existants, notamme
 
 $\implies$ Pour chaque fonctionnalité, un diagramme d’activité + un peu d’explications. 
 
-### Authentification et gestion des informations utilisateur
+## **Authentification et gestion des informations utilisateur**
 
 $\implies$ Diagramme à faire (création de compte, connexion, ...) : voir s'il est réellement à faire
 
@@ -229,13 +239,13 @@ Lorsque l’utilisateur possède déjà un compte et qu’il n’y est pas encor
 
 Lorsqu’un utilisateur est connecté, il peut tout d’abord se déconnecter en allant sur la page d’accueil. Il peut aussi changer ses informations (nom d’utilisateur, email et mot de passe) dans la page « Mon profil ». En effet, sur cette page, l’utilisateur peut consulter ses informations et les modifier. Pour changer ces informations, il suffit juste d’entrer de nouvelles informations (différentes des originales) dans les zones de texte indiquées et correspondant à l’information à modifier. Lorsque du texte est entré, il suffit de recliquer sur la page dans la barre latérale pour voir la nouvelle information ainsi modifiée. 
 
-### Recherche et consultation de stations
+## **Recherche et consultation de stations**
 
 $\implies$ Diagramme à faire
 
-### Gestion des stations favorites
+## **Gestion des stations favorites**
 
-$\implies$ diagramme d’activité Nathan
+![](img/diag_gestion_fav.png)
 
 Avoir liste de stations favorites est une fonctionnalité clé de toute application de transports en commun, dans notre cas, de stations de vélos urbains. Ainsi, nous avons dû assez rapidement réfléchir à son implémentation au sein de notre application VeloScope. Grâce à cette fonctionnalité, un utilisateur peut plus rapidement accéder à certaines stations en particulier. 
 
@@ -245,15 +255,15 @@ Pour ajouter une station à la liste des favoris, il faut accéder au menu des i
 
 Il est possible de suivre la même démarche pour supprimer une station de la liste des favoris, le bouton d’ajout étant un bouton de suppression si la station appartient à la liste. Toutefois, le bas de la page permet de choisir l’une des stations de la liste et d’immédiatement la supprimer. Ainsi, la station disparaît de la liste. 
 
-### Score de fiabilité
+## **Score de fiabilité**
 
 $\implies$ Détail du score de fiabilité en fonction de la méthode dans `data_aggregation`.
 
-### « Je veux un vélo à proximité » : Recommendation de vélo à proximité d'un lieu donné
+## **« Je veux un vélo à proximité » :** Recommendation de vélo à proximité d'un lieu donné
 
-$\implies$ Diagramme d’activité de Nathan
+![](img/diag_f5.png)
 
-### Administrateur : gestion des comptes utilisateurs existants
+## **Administrateur :** gestion des comptes utilisateurs existants
 
 $\implies$ Diagramme à faire
 
