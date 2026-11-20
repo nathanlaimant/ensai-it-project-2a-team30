@@ -187,6 +187,7 @@ uv run pytest tests/test_dao/test_user_dao.py
 uv run pytest tests/test_dao/test_favorite_station_dao.py
 uv run pytest tests/test_dao/test_station_status_dao.py
 uv run pytest tests/test_dao/test_station_status_hourly_dao.py
+uv run pytest tests/test_dao/test_system_information_dao.py
 
 # Run a specific test case by name
 uv run pytest tests/test_dao/test_station_dao.py -k test_get_by_id_ok

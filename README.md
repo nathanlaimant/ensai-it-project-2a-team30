@@ -24,8 +24,8 @@ The platform continuously ingests real-time bike and dock availability, performs
 
 ### Key Features
 
-1. **Live GBFS Feed Ingestion**: Autonomous ingestion of `station_information`, and `station_status` feeds powered by an asynchronous background scheduler (**APScheduler**).
-2. **Station Reliability Score & Analytics**: Automated hourly bucket calculation assessing station downtime, empty/full events, and computing a reliability score ($0$ to $100$).
+1. **Live GBFS Feed Ingestion**: Autonomous ingestion of `station_information`, `station_status` and `system_information` feeds powered by an asynchronous background scheduler (**APScheduler**).
+2. **Station Reliability Score & Analytics**: Automated hourly bucket calculation assessing station empty/full events, and computing a reliability score ($0$ to $100$).
 3. **Smart Proximity Recommendation**: Locate the closest optimal station based on any address using Haversine distance, with custom filters.
 4. **Interactive Web Dashboard**: Streamlit frontend featuring interactive maps, real-time availability filters, and historical trend charts.
 5. **User Accounts & Favorites**: Secure user authentication (bcrypt password hashing, Bearer tokens) allowing users to save and track favorite stations.

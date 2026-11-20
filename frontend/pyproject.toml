@@ -17,6 +17,7 @@ dependencies = [
     "PyYAML",
     "requests",
     "streamlit",
+    "streamlit-js-eval",
 ]
 
 # Dependencies used only for development, not for runtime

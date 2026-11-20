@@ -261,11 +261,33 @@ $\implies$ Diagramme à faire
 
 $\implies$ explication du schedule (notamment `data_ingestion`)
 
-# **Requêtes SQL utilisées**
+# **Structure du code**
 
-$\implies$ Explications sur notre gestion de la base de données, l’objectifs de nos différents scripts SQL, ... + mettre des bouts de code pour illustrer. 
-
-$\implies$ Une sous-partie par fichier
+```text
+ensai-it-project-2a-team30/
+├── backend/                  # REST API & background services
+│   ├── src/
+│   │   ├── business_object/  # Domain entities (User, StationStatus, etc.)
+│   │   ├── controller/       # FastAPI endpoints & routers
+│   │   ├── dao/              # PostgreSQL Data Access Objects
+│   │   ├── dependencies/     # Dependency injection (DB, HTTP, Scheduler)
+│   │   ├── schema/           # Pydantic request & response models
+│   │   ├── service/          # Business logic, aggregations, recommendation
+│   │   └── utils/            # DB connection pool, configuration & logging
+│   ├── tests/                # Unit and integration tests (pytest)
+│   └── README.md             # Developer documentation
+├── frontend/                 # Interactive Streamlit application
+│   ├── src/
+│   │   ├── pages/            # Multi-page views (Search, Favorites, etc.)
+│   │   └── utils/            # API client & session helpers
+│   └── README.md             # Frontend guide
+├── data/                     # Database creation & seed scripts
+│   ├── init_db.sql           # Schema definition (veloscope)
+│   ├── pop_db.sql            # Initial test dataset
+│   ├── init_db_test.sql      # Isolated test schema (veloscope_test)
+│   └── pop_db_test.sql       # Test dataset
+└── README.md                 # User guide (this document)
+```
 
 # **Point intéressant à détaillé sur l'appli**
 
@@ -308,17 +330,5 @@ Concernant notre gestion de l'application, les conflits git ont été très rare
 Enfin, nous sommes satisfaits de la façon dont nous sommes "rentrés" dans le sujet au début du projet. Nous avons tous su comprendre rapidement les enjeux de celui-ci et les différents besoins auxquels répond l'application. 
 
 $\implies$ Points à améliorer 
-
-## **Bilans individuels** {.unnumbered}
-
-### Martin {.unnumbered}
-
-### Quang {.unnumbered}
-
-### Nathan {.unnumbered}
-
-### Victor {.unnumbered}
-
-### Antonin {.unnumbered}
 
 {{< pagebreak >}}
