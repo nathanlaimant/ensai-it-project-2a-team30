@@ -105,15 +105,17 @@ else:
                     st.switch_page("pages/station_search.py")
                 else:
                     station_id = str(resultats[0]["station_id"])
+                    st.session_state["in_search"] = nom_recherche
                     st.session_state["selected_station_id"] = station_id
                     st.query_params["station_id"] = station_id
                     st.info(f"Résultat unique pour la recherche : « {nom_recherche} »")
                     st.rerun()
 
-if saisie_id.strip():
-    st.info(f"Résultat unique pour la recherche : « {saisie_id} »")
+
 if "in_search" in st.session_state:
     st.info(f"Résultat unique pour la recherche : « {st.session_state["in_search"]} »")
+elif "selected_station_id" in st.session_state:
+    st.info(f"Résultat unique pour la recherche : « {st.session_state["selected_station_id"]} »")
 
 ENDPOINT_INFO = f"/station/{station_id}"
 ENDPOINT_STATUS = f"/station/{station_id}/status"
