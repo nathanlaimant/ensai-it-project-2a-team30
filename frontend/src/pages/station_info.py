@@ -181,13 +181,6 @@ if station_status:
     else:
         st.info(f"ℹ️ **État de la station : {etat}**")
 
-    taux_remplissage = (
-        100
-        * station_status["num_docks_available"]
-        / station_status["operational_capacity"]
-        if station_status["operational_capacity"] > 0
-        else 0
-    )
 
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     kpi1.metric(
@@ -208,7 +201,7 @@ if station_status:
     )
     kpi4.metric(
         "Taux de remplissage :",
-        f"{int(taux_remplissage)} %",
+        f"{int(station_status["full_ratio"])} %",
     )
 
     col_stat1, col_stat2 = st.columns(2)
