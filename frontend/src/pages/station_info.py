@@ -101,7 +101,7 @@ else:
                     st.error(f"Aucune station trouvée avec le nom « {nom_recherche} ».")
                 elif len(resultats) > 1:
                     st.session_state["in_search"] = nom_recherche
-                    st.switch_page("pages/list_stations.py")
+                    st.switch_page("pages/station_search.py")
                 else:
                     station_id = str(resultats[0]["station_id"])
                     st.session_state["selected_station_id"] = station_id

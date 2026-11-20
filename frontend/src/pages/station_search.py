@@ -11,9 +11,12 @@ st.set_page_config(
 
 st.title("🔍 Rechercher une station")
 
+if "in_search" not in st.session_state:
+    st.session_state["in_search"] = None
+
 logger = get_page_logger("station_search")
 
-research = st.text_input("Entrer un lieu ou une adresse :", type="search")
+research = st.text_input("Entrer un lieu ou une adresse :", type="search", value=st.session_state["in_search"])
 
 if research:
     try:

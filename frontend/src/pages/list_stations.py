@@ -8,8 +8,6 @@ st.title("🚲 Liste des stations VeloScope")
 
 if "api_client" not in st.session_state:
     st.session_state["api_client"] = APIClient()
-if "in_search" not in st.session_state:
-    st.session_state["in_search"] = None
 
 client: APIClient = st.session_state["api_client"]
 
@@ -24,21 +22,12 @@ def get_stations_states(station_ids: tuple[str, ...]) -> dict[str, str | None]:
     statuses = APIClient().get_stations_statuses(list(station_ids))
     return {sid: (status.get("station_state") if status else None) for sid, status in statuses.items()}
 
-
-st.sidebar.header("Filtres")
-terme_recherche = st.sidebar.text_input(
-    "Recherche par nom",
-    placeholder="Ex : République...",
-    value=st.session_state["in_search"],
-)
-
 size_wanted = st.number_input(label="Nombre de stations à afficher", min_value=10, max_value=50, value=10)
 page_wanted = st.number_input(label="Afficher la page :", min_value=1, max_value=20, value=1)
 
 stations = client.post(
     "/station",
     data={
-        "name": terme_recherche,
         "page": page_wanted,
         "size": size_wanted,
     },
