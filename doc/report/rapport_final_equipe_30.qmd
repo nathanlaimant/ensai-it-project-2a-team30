@@ -150,7 +150,7 @@ Face aux interrogations sur la richesse du modèle métier, nous défendons la s
    La création de `StationStatusHourly` résout ce problème à la racine : un traitement par lots calcule une seule fois par heure les moyennes, les durées de pénurie/saturation et le score de fiabilité. Pour restituer l'historique d'une station sur 7 jours, l'API ne lit plus que 168 lignes pré-calculées par simple parcours d'index `(station_id, bucket_hour)`.
 2. **Nécessité fonctionnelle absolue des attributs conservés** :
    Aucun attribut conservé n'est inutile :
-   - Les coordonnées géographiques (`lat`, `lon`) et la capacité opérationnelle permettent le calcul de la distance orthodromique par formule de Haversine et du taux de disponibilité dans le moteur de recommandation multicritère.
+   - Les coordonnées géographiques (`lat`, `lon`) et la capacité opérationnelle permettent le calcul de la distance orthodromique par formule de \textrm{hav}ersine et du taux de disponibilité dans le moteur de recommandation multicritère.
    - Le champ `vehicle_types_available` (`{"mechanical": int, "electric": int}`) est indispensable pour appliquer le filtre de préférence utilisateur (rechercher spécifiquement un vélo électrique ou mécanique).
    - Les attributs temporels (`empty_duration_sec`, `full_duration_sec`, `empty_events_cnt`, `full_events_cnt`) sont les paramètres mathématiques d'entrée requis par la formule de fiabilité pour pondérer non seulement la durée de rupture de service, mais aussi la fréquence et la persistance des incidents.
 3. **Sécurité et intégrité du modèle utilisateur** :
@@ -330,5 +330,26 @@ Concernant notre gestion de l'application, les conflits git ont été très rare
 Enfin, nous sommes satisfaits de la façon dont nous sommes "rentrés" dans le sujet au début du projet. Nous avons tous su comprendre rapidement les enjeux de celui-ci et les différents besoins auxquels répond l'application. 
 
 $\implies$ Points à améliorer 
+
+## Calcul de la proximité des stations {.unnumbered}
+
+Dans l’API externe, chaque station a des coordonnées géographiques qui lui sont associées. Avec cela, nous avons accès à la latitude et à la longitude de chaque station. C’est notre cinquième fonctionnalité, « Je veux un vélo à proximité », qui en fait usage (des fonctionnalités optionnelles aussi mais nous ne les avons pas implémenté). Pour pouvoir faire des calculs de distance à partir d’un rayon donné, il nous a fallu utiliser une formule pour utiliser des coordonnées et ainsi obtenir une distance. C’est pour cela que nous avons fait le choix de la **formule de Haversine**. À partir de deux points dont nous avons les coordonnées géographiques en radians, nous pouvons calculer la distance qui les sépare en kilomètres. La latitude et la longitude étant donnés en degrés, il a aussi fallu convertir ces deux mesures en radians en les multipliant par $\frac{\pi}{180}$.
+
+Avec : 
+
+- $\textrm{hav}$ : la fonction haversine 
+- $\theta$ : angle en radians quelconque 
+- $d$ est la distance du grand cercle entre les deux points 
+- $r$ est le rayon de la sphère, 
+- $\phi_1,\phi_2$: latitude du point 1 et latitude du point 2, en radians 
+- $\lambda_1,\lambda_2$: longitude du point 1 et longitude du point 2, en radians 
+$$\textrm{hav}(\theta)=\sin^2\left(\frac{\theta}{2}\right)=\frac{1-\cos(\theta)}{2}$$ 
+$$\textrm{hav}\left(\frac{d}{r}\right)=\textrm{hav}(\phi_2-\phi_1)+\cos(\phi_1)\cos(\phi_2)\textrm{hav}(\lambda_2-\lambda_1)$$ 
+$$\iff d=2r\arcsin\left(\sqrt{\sin^2\left(\frac{\phi_2-\phi_1}{2}\right)+\cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\lambda_2-\lambda_1}{2}\right)}\right)$$
+
+Cette formule est implémentée deux fois dans l’application : 
+
+- **Dans la chouche DAO**, à partir de coordonnées fixes (les arguments de la méthode en question), nous pouvons calculer la distance qui sépare ce point fixé de chaque station. Si la distance évaluée est inférieure au rayon donné, la station est choisie 
+- **Dans la couche Service**, la fonction `haversine` du package du même nom calcule le rayon à prendre en compte pour choisir la station entre un point donné dans les arguments de la méthode en question et chaque station. La distance calculée est ensuite affichée dans le frontend. 
 
 {{< pagebreak >}}
