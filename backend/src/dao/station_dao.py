@@ -1,3 +1,5 @@
+from math import pi
+
 from psycopg2.extras import Json
 
 from business_object.station_information import StationInformation
@@ -166,7 +168,7 @@ class StationDAO:
         """
         res = None
 
-        t = 0.01745329251994  # nombre de radian dans 1°
+        t = pi / 180  # nombre de radian dans 1°
         query = """
             SELECT *
             FROM station_information

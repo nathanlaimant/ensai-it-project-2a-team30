@@ -88,16 +88,25 @@ else:
                 station_id = saisie_id.strip()
                 st.session_state["selected_station_id"] = station_id
                 st.query_params["station_id"] = station_id
-            elif len(api_client.post("/station", {"name": saisie_nom})) > 1:
-                st.session_state["in_search"] = saisie_nom
-                st.switch_page("pages/list_stations.py")
+                st.rerun()
             else:
-                station_id = api_client.post("/station", {"name": saisie_nom})[0][
-                    "station_id"
-                ]
-                st.session_state["selected_station_id"] = station_id
-                st.query_params["station_id"] = station_id
-            st.rerun()
+                nom_recherche = saisie_nom.strip()
+                try:
+                    resultats = api_client.post("/station", {"name": nom_recherche})
+                except requests.exceptions.RequestException as e:
+                    st.error(f"Erreur lors de la recherche de la station : {e}")
+                    st.stop()
+
+                if not resultats:
+                    st.error(f"Aucune station trouvée avec le nom « {nom_recherche} ».")
+                elif len(resultats) > 1:
+                    st.session_state["in_search"] = nom_recherche
+                    st.switch_page("pages/list_stations.py")
+                else:
+                    station_id = str(resultats[0]["station_id"])
+                    st.session_state["selected_station_id"] = station_id
+                    st.query_params["station_id"] = station_id
+                    st.rerun()
 
 ENDPOINT_INFO = f"/station/{station_id}"
 ENDPOINT_STATUS = f"/station/{station_id}/status"
@@ -181,13 +190,12 @@ if station_status:
     else:
         st.info(f"ℹ️ **État de la station : {etat}**")
 
-    taux_remplissage = (
-        100
-        * station_status["num_docks_available"]
-        / station_status["operational_capacity"]
-        if station_status["operational_capacity"] > 0
-        else 0
-    )
+    if station_status.get("full_ratio") is not None:
+        taux_remplissage = float(station_status["full_ratio"])
+    else:
+        cap_op = station_status.get("operational_capacity") or 0
+        docks_dispo = station_status.get("num_docks_available") or 0
+        taux_remplissage = (100 * docks_dispo / cap_op) if cap_op > 0 else 0
 
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     kpi1.metric(
@@ -216,7 +224,7 @@ if station_status:
         "🎯 Score de fiabilité",
         (
             f"{int(station_status.get('reliability_score'))} %"
-            if station_status.get("reliability_score")
+            if station_status.get("reliability_score") is not None
             else "Non calculé"
         ),
     )
@@ -319,7 +327,6 @@ else:
         df_raw["Période"] = [f"Relevé {i + 1}" for i in range(len(df_raw))]
 
     # 2. Normalisation des noms de colonnes et types
-    # Gestion des équivalences BE (ex: num_bikes_available ou avg_num_bikes_available)
     if (
         "num_bikes_available" not in df_raw.columns
         and "avg_num_bikes_available" in df_raw.columns
@@ -341,7 +348,6 @@ else:
     ):
         df_raw["reliability_score"] = df_raw["avg_reliability_score"]
 
-    # Conversion numérique sécurisée
     num_cols = [
         "num_bikes_available",
         "num_docks_available",
@@ -357,7 +363,6 @@ else:
         if col in df_raw.columns:
             df_raw[col] = pd.to_numeric(df_raw[col], errors="coerce")
 
-    # Calcul du taux de remplissage si non fourni
     if (
         "full_ratio" not in df_raw.columns
         and "num_bikes_available" in df_raw.columns
@@ -376,7 +381,6 @@ else:
     st.markdown("##### 📌 Synthèse sur la période sélectionnée")
     col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
 
-    # Score de fiabilité moyen
     has_rel = (
         "reliability_score" in df_raw.columns
         and df_raw["reliability_score"].notna().any()
@@ -402,7 +406,6 @@ else:
             "N/A",
         )
 
-    # Vélos disponibles en moyenne
     if (
         "num_bikes_available" in df_raw.columns
         and df_raw["num_bikes_available"].notna().any()
@@ -412,7 +415,6 @@ else:
     else:
         col_kpi2.metric("Moy. vélos disponibles", "N/A")
 
-    # Places libres en moyenne
     if (
         "num_docks_available" in df_raw.columns
         and df_raw["num_docks_available"].notna().any()
@@ -422,14 +424,12 @@ else:
     else:
         col_kpi3.metric("Moy. places libres", "N/A")
 
-    # Taux de remplissage moyen
     if "full_ratio" in df_raw.columns and df_raw["full_ratio"].notna().any():
         mean_fill = float(df_raw["full_ratio"].dropna().mean()) * 100
         col_kpi4.metric("Taux de remplissage moyen", f"{mean_fill:.1f} %")
     else:
         col_kpi4.metric("Taux de remplissage moyen", "N/A")
 
-    # Tensions de service (pénurie / saturation)
     has_durations = (
         "empty_duration_ratio" in df_raw.columns
         and df_raw["empty_duration_ratio"].notna().any()
@@ -529,7 +529,6 @@ else:
                 color=["#FF9800", "#9C27B0"][: len(cols_score)],
             )
 
-        # Graphique des durées de tension si disponibles
         if has_durations:
             st.markdown("###### ⚠️ Proportion du temps en pénurie ou saturation")
             tension_cols = []
@@ -559,7 +558,6 @@ else:
                 )
 
     with tab_table:
-        # Construction d'un affichage complet et bien libellé
         df_table = pd.DataFrame()
         df_table["Période"] = df_raw["Période"]
 
@@ -622,7 +620,6 @@ else:
         ):
             df_table["Durée moy. saturé (s)"] = df_raw["avg_full_duration"].round(0)
 
-        # Extraction des types de véhicules si disponibles
         if "vehicle_types_available" in df_raw.columns and any(
             isinstance(x, dict) and x for x in df_raw["vehicle_types_available"]
         ):

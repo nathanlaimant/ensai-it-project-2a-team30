@@ -25,9 +25,7 @@ if st.session_state.get("token") is not None:
             st.session_state["token"] = None
             st.session_state["username"] = None
 
-            st.success("Vous avez été déconnecté avec succès.")
-
-            st.switch_page("app.py")
+            st.rerun()
 
         except Exception as e:
             st.error(f"Erreur lors de la déconnexion : {e}")
