@@ -88,6 +88,7 @@ else:
                 station_id = saisie_id.strip()
                 st.session_state["selected_station_id"] = station_id
                 st.query_params["station_id"] = station_id
+                st.info(f"Résultat unique pour la recherche : « {saisie_id} »")
                 st.rerun()
             else:
                 nom_recherche = saisie_nom.strip()
@@ -106,6 +107,7 @@ else:
                     station_id = str(resultats[0]["station_id"])
                     st.session_state["selected_station_id"] = station_id
                     st.query_params["station_id"] = station_id
+                    st.info(f"Résultat unique pour la recherche : « {nom_recherche} »")
                     st.rerun()
 
 ENDPOINT_INFO = f"/station/{station_id}"
