@@ -124,7 +124,7 @@ classDiagram
 
 ## 2. Architecture logicielle du Web Service (Contrôleurs, Services et DAOs)
 
-Le Web Service VeloScope regroupe les composants concourant au traitement synchrone des requêtes des utilisateurs et des administrateurs. 
+Le Web Service VeloScope regroupe les composants concourant au traitement synchrone des requêtes des utilisateurs et des administrateurs.
 
 Afin de répondre directement aux remarques formulées sur l'architecture en couches, les classes sont présentées de manière strictement ordonnée de haut en bas (**Contrôleurs $\to$ Services $\to$ DAOs $\to$ Base de données**), sans dispersion.
 
@@ -283,6 +283,7 @@ classDiagram
 ### Rationalisation et simplifications adoptées
 
 Suite aux retours de l'évaluation intermédiaire soulignant un « *diagramme de classes difficilement lisible avec trop de classes Service appelant les mêmes classes DAO* », nous avons apporté les corrections suivantes :
+
 1. **Suppression de `RecommendationService` et `RecommendationController`** : Intégrés directement dans `StationService` (`get_nearby_recommendations`) et `StationController` (`POST /station/recommendations`), car une recommandation est une requête filtrée sur les stations et ne justifiait pas un service séparé accédant aux mêmes DAO.
 2. **Élimination des micro-classes utilitaires** : Les classes atomiques sans état (`StationStateClassifier`, `StationCapacityCalculator`, etc.) ont été réécrites sous forme de méthodes privées au sein de `StationService` (`_compute_full_ratio`, `_build_current_status_dict`, `_matches_status_filters`), allégeant considérablement le modèle objet.
 
@@ -306,9 +307,9 @@ classDiagram
         -StationInformationStrategy station_information_strategy
         -StationStatusStrategy station_status_strategy
         -StationAggregator station_aggregator
-        +setup_jobs() void
-        +start() void
-        +shutdown() void
+        +setup_jobs() None
+        +start() None
+        +shutdown() None
     }
 
     class BaseIngestionStrategy~T~ {
@@ -319,7 +320,7 @@ classDiagram
         +fetch_feed() Any
         +parse_payload(raw_data: Any)* list~T~
         +persist(records: list~T~)* int
-        +execute() void
+        +execute() None
     }
 
     class SystemInformationStrategy {
@@ -428,6 +429,6 @@ Face à la question : « *pourquoi l'API externe n'est-elle pas appelée par les
 | **Ajout d'une station favorite** | `GET /favorites/{id}` (`FavoriteStationController`) | `FavoriteStationService` | `FavoriteStationDAO` | `UserFavoriteStation` (`user_favorite_station`) |
 | **Liste des favoris utilisateur** | `GET /favorites` (`FavoriteStationController`) | `FavoriteStationService` | `FavoriteStationDAO` | `StationInformation`, `UserFavoriteStation` |
 | **Suppression d'un favori** | `DELETE /favorites/{id}` (`FavoriteStationController`) | `FavoriteStationService` | `FavoriteStationDAO` | `UserFavoriteStation` (`user_favorite_station`) |
-| **Ingestion flux GBFS (Système & Stations)**| `CronTrigger(min=0)` (`JobScheduler`) | `SystemInformationStrategy`, `StationInformationStrategy` | `SystemInformationDAO`, `StationDAO` | `system_information`, `station_information` |
-| **Ingestion flux GBFS (Statuts temps réel)**| `CronTrigger(min=*/5)` (`JobScheduler`) | `StationStatusStrategy` | `StationStatusDAO` | `station_status` |
+| **Ingestion flux GBFS (Système & Stations)** | `CronTrigger(min=0)` (`JobScheduler`) | `SystemInformationStrategy`, `StationInformationStrategy` | `SystemInformationDAO`, `StationDAO` | `system_information`, `station_information` |
+| **Ingestion flux GBFS (Statuts temps réel)** | `CronTrigger(min=*/5)` (`JobScheduler`) | `StationStatusStrategy` | `StationStatusDAO` | `station_status` |
 | **Agrégation horaire & Calcul fiabilité** | `CronTrigger(min=5)` (`JobScheduler`) | `StationAggregator` | `StationStatusDAO`, `StationStatusHourlyDAO` | `station_status`, `station_status_hourly` |
