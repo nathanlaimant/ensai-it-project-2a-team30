@@ -33,9 +33,7 @@ class FavoriteStationService:
         """
         return self.favorite_dao.add_favorite(user_id, station_id)
 
-    def list_favorites(
-        self, user_id: int, page: int = 1, size: int = 10
-    ) -> list[StationInformation] | None:
+    def list_favorites(self, user_id: int, page: int = 1, size: int = 10) -> list[StationInformation] | None:
         """
         Liste les stations favorites selon des critères de recherche.
 

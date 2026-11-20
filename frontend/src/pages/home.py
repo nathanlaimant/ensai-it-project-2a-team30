@@ -1,34 +1,19 @@
-
 import streamlit as st
+
 from utils.api_client import APIClient
 
-st.set_page_config(
-    page_title="VeloScope",
-    page_icon="🚲",
-    layout="wide"
-)
+st.set_page_config(page_title="VeloScope", page_icon="🚲", layout="wide")
 
 st.title("🚲 Bienvenue sur VeloScope")
 
-st.write(
-    "Bienvenue sur VeloScope, votre application de recherche "
-    "et de consultation de stations de vélos."
-)
+st.write("Bienvenue sur VeloScope, votre application de recherche et de consultation de stations de vélos.")
 
-st.info(
-    "Utilisez le menu latéral pour accéder aux différentes "
-    "fonctionnalités de l'application."
-)
+st.info("Utilisez le menu latéral pour accéder aux différentes fonctionnalités de l'application.")
 
 if st.session_state.get("token") is not None:
-
-    st.success(
-        f"Vous êtes connecté en tant que "
-        f"{st.session_state.get('username', 'utilisateur')}."
-    )
+    st.success(f"Vous êtes connecté en tant que {st.session_state.get('username', 'utilisateur')}.")
 
     if st.button("🚪 Se déconnecter", use_container_width=True):
-
         try:
             client = st.session_state.get("api_client")
 

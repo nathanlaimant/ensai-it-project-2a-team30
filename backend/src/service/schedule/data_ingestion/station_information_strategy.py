@@ -55,21 +55,13 @@ class StationInformationStrategy(BaseIngestionStrategy[StationInformation]):
             lon=float(json_dict["lon"]),
             address=json_dict.get("address"),
             is_virtual_station=(
-                bool(json_dict["is_virtual_station"])
-                if json_dict.get("is_virtual_station") is not None
-                else None
+                bool(json_dict["is_virtual_station"]) if json_dict.get("is_virtual_station") is not None else None
             ),
             station_area=json_dict.get("station_area"),
             contact_phone=json_dict.get("contact_phone"),
-            capacity=(
-                int(json_dict["capacity"])
-                if json_dict.get("capacity") is not None
-                else None
-            ),
+            capacity=(int(json_dict["capacity"]) if json_dict.get("capacity") is not None else None),
             is_charging_station=(
-                bool(json_dict["is_charging_station"])
-                if json_dict.get("is_charging_station") is not None
-                else None
+                bool(json_dict["is_charging_station"]) if json_dict.get("is_charging_station") is not None else None
             ),
             station_id=json_dict["station_id"],
         )

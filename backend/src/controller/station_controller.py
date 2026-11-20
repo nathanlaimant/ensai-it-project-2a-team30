@@ -22,9 +22,7 @@ logger = get_logger(__name__)
 
 
 @router.get("/{station_id}", response_model=StationInfoResponse)
-async def get_station_info(
-    station_id: str, station_service: StationService = Depends(get_station_service)
-) -> Any:
+async def get_station_info(station_id: str, station_service: StationService = Depends(get_station_service)) -> Any:
     """
     Récupère les informations fixes d'une station.
 

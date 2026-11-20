@@ -192,9 +192,7 @@ def log(func):
             if any(keyword in param_name for keyword in SENSITIVE_KEYWORDS):
                 args_list.append("*****")
             else:
-                args_list.append(
-                    str(arg) if not isinstance(arg, numbers.Number) else arg
-                )
+                args_list.append(str(arg) if not isinstance(arg, numbers.Number) else arg)
 
         for k, v in kwargs.items():
             if any(keyword in k.lower() for keyword in SENSITIVE_KEYWORDS):

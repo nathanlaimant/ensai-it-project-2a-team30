@@ -1,7 +1,8 @@
-import geocoder
 import pandas as pd
 import requests
 import streamlit as st
+from streamlit_js_eval import get_geolocation
+
 from utils.api_client import APIClient
 
 st.title("🎯 Je veux trouver un vélo à proximité")
@@ -14,13 +15,12 @@ if not st.session_state.get(SESSION_TOKEN_KEY):
     st.stop()
 
 
-@st.cache_data(ttl=600)
-def locate_from_ip():
-    """Position approximative d'après l'adresse IP (peu fiable)."""
-    g = geocoder.ip("me")
-    if g.latlng is None:
-        raise ValueError("Position IP introuvable")
-    return g.latlng
+def locate_from_browser():
+    """Position d'après la géolocalisation du navigateur client (HTML5 Geolocation)."""
+    loc = get_geolocation()
+    if loc and "coords" in loc:
+        return loc["coords"]["latitude"], loc["coords"]["longitude"]
+    raise ValueError("Position non disponible ou en attente d'autorisation.")
 
 
 @st.cache_data(ttl=600)
@@ -59,14 +59,14 @@ def locate_from_address(address: str):
         if results:
             return float(results[0]["latitude"]), float(results[0]["longitude"])
     except requests.RequestException as e:
-        raise ValueError(f"service de géocodage injoignable : {e}")
+        raise ValueError(f"service de géocodage injoignable : {e}") from e
 
     raise ValueError("aucun résultat pour cette adresse")
 
 
 mode = st.radio(
     "Ma position",
-    ["Saisir une adresse ou une ville", "Position approximative (IP)"],
+    ["Saisir une adresse ou une ville", "Position approximative (navigateur)"],
 )
 
 coordinates = None
@@ -79,7 +79,7 @@ if mode == "Saisir une adresse ou une ville":
             st.error(f"Adresse introuvable ({e}).")
 else:
     try:
-        coordinates = locate_from_ip()
+        coordinates = locate_from_browser()
     except ValueError:
         st.error("Impossible de récupérer votre position.")
 
@@ -122,8 +122,7 @@ except requests.exceptions.ConnectionError:
 else:
     if not stations_nearby:
         st.info(
-            f"Aucune station trouvée dans un rayon de {radius} m. "
-            "Essayez d'agrandir le rayon."
+            f"Aucune station trouvée dans un rayon de {radius} m. Essayez d'agrandir le rayon."
         )
     else:
         df = pd.DataFrame(stations_nearby)

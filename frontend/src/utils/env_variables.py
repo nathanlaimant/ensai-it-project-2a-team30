@@ -1,4 +1,3 @@
-
 import logging
 import os
 from pathlib import Path
@@ -44,11 +43,7 @@ def load_environment_variables():
             value = value.strip()
 
             # Retire les guillemets éventuels
-            if (
-                len(value) >= 2
-                and value[0] == value[-1]
-                and value[0] in ("'", '"')
-            ):
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
                 value = value[1:-1]
 
             # Ne remplace pas une variable déjà définie
@@ -68,10 +63,7 @@ def display_values(include_prefix: str = ""):
 
     for key, value in sorted(os.environ.items()):
         if key.startswith(include_prefix):
-            if any(
-                sensitive in key.upper()
-                for sensitive in ("PASSWORD", "SECRET", "TOKEN", "KEY")
-            ):
+            if any(sensitive in key.upper() for sensitive in ("PASSWORD", "SECRET", "TOKEN", "KEY")):
                 value = "********"
 
             logger.info("%s = %s", key, value)

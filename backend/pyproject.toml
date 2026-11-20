@@ -1,7 +1,13 @@
 [project]
 name = "VeloScope_BE_team30"
 version = "0.1.0"
-authors = [{ name = "Lastname Firstname" }, { name = "Lastname Firstname" }]
+authors = [
+    { name = "Antonin PRADEL" },
+    { name = "Martin DUBOS-DANIELLI" },
+    { name = "Minh Quang KIEU" },
+    { name = "Nathan LAIMANT" },
+    { name = "Victor NEMBRINI" },
+]
 requires-python = ">=3.13"
 
 dependencies = [
@@ -68,11 +74,11 @@ warn_required_dynamic_aliases = true
 pythonpath = ["src"]
 testpaths = ["tests"]
 python_files = ["*test*.py"]
-addopts = "-v -s -x"
+addopts = "-v -s -x --cov=src/service --cov=src/dao --cov-report=term-missing"
 
 [tool.coverage.run]
 branch = true
-include = ["src/service/*", "src/dao/*"]
+source = ["src/service", "src/dao"]
 omit = ["*/__init__.py"]
 
 [tool.coverage.report]

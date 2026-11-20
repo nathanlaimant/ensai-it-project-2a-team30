@@ -1,11 +1,10 @@
 import pandas as pd
 import requests
 import streamlit as st
+
 from utils.api_client import APIClient, api_client
 
-st.set_page_config(
-    page_title="Stations Favorites - VeloScope", page_icon="⭐", layout="wide"
-)
+st.set_page_config(page_title="Stations Favorites - VeloScope", page_icon="⭐", layout="wide")
 
 if "api_client" not in st.session_state:
     st.session_state["api_client"] = APIClient()
@@ -60,9 +59,7 @@ else:
     st.subheader("Retirer une station des favoris")
 
     options_stations = {
-        f"{station.get('name', 'Station')} (ID : {station['station_id']})": station[
-            "station_id"
-        ]
+        f"{station.get('name', 'Station')} (ID : {station['station_id']})": station["station_id"]
         for station in favorites
     }
 

@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -16,9 +17,7 @@ test_env_path = Path(__file__).resolve().parents[2] / ".test_env"
 @pytest.fixture(scope="session")
 def db_connection():
     """Fournit un pool de connexion à la base de données de test."""
-    settings = Settings(
-        _env_file=test_env_path if test_env_path.exists() else ".test_env"
-    )
+    settings = Settings(_env_file=test_env_path if test_env_path.exists() else ".test_env")
     return DbConnection(settings)
 
 
@@ -154,16 +153,12 @@ def test_bulk_upsert_hourly_stats_ok(station_status_hourly_dao, sample_hourly_st
     # GIVEN
     number_records = len(sample_hourly_stats)
     # WHEN
-    upserted_count = station_status_hourly_dao.bulk_upsert_hourly_stats(
-        sample_hourly_stats
-    )
+    upserted_count = station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
     # THEN
     assert upserted_count == number_records
 
 
-def test_bulk_upsert_hourly_stats_update_conflict(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_bulk_upsert_hourly_stats_update_conflict(station_status_hourly_dao, sample_hourly_stats):
     """Mise à jour réussie lors d'un conflit de clé primaire (station_id, bucket_hour)"""
     # GIVEN
     station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
@@ -182,9 +177,7 @@ def test_bulk_upsert_hourly_stats_update_conflict(
         reliability_score=70.0,
     )
     # WHEN
-    upserted_count = station_status_hourly_dao.bulk_upsert_hourly_stats(
-        [updated_record]
-    )
+    upserted_count = station_status_hourly_dao.bulk_upsert_hourly_stats([updated_record])
     # THEN
     assert upserted_count == 1
     # Vérifier que les nouvelles valeurs sont mises à jour
@@ -205,31 +198,23 @@ def test_bulk_upsert_hourly_stats_fail_none(station_status_hourly_dao):
     assert station_status_hourly_dao.bulk_upsert_hourly_stats([]) == 0
 
 
-def test_bulk_upsert_hourly_stats_skip_none_record(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_bulk_upsert_hourly_stats_skip_none_record(station_status_hourly_dao, sample_hourly_stats):
     """Les éléments None sont ignorés et les enregistrements valides sont insérés"""
     # GIVEN
     number_records = len(sample_hourly_stats)
     sample_hourly_stats.append(None)
     # WHEN
-    upserted_count = station_status_hourly_dao.bulk_upsert_hourly_stats(
-        sample_hourly_stats
-    )
+    upserted_count = station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
     # THEN
     assert upserted_count == number_records
 
 
-def test_bulk_upsert_hourly_stats_fail_none_attr(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_bulk_upsert_hourly_stats_fail_none_attr(station_status_hourly_dao, sample_hourly_stats):
     """L'insertion est complètement annulée (retourne 0) si un champ NOT NULL est None"""
     # GIVEN
     sample_hourly_stats[0].sample_count = None
     # WHEN
-    upserted_count = station_status_hourly_dao.bulk_upsert_hourly_stats(
-        sample_hourly_stats
-    )
+    upserted_count = station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
     # THEN
     assert upserted_count == 0
 
@@ -249,9 +234,7 @@ def test_get_latest_hourly_status_ok(station_status_hourly_dao, sample_hourly_st
     assert latest.reliability_score == 90.0
 
 
-def test_get_latest_hourly_status_fail_unknown_station(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_get_latest_hourly_status_fail_unknown_station(station_status_hourly_dao, sample_hourly_stats):
     """Retourne None si l'identifiant de station n'existe pas"""
     # GIVEN
     station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
@@ -262,9 +245,7 @@ def test_get_latest_hourly_status_fail_unknown_station(
 
 
 # Tests de get_latest_hourly_statuses()
-def test_get_latest_hourly_statuses_ok(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_get_latest_hourly_statuses_ok(station_status_hourly_dao, sample_hourly_stats):
     """Récupère en une requête le dernier statut horaire de chaque station demandée"""
     # GIVEN
     station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
@@ -274,13 +255,9 @@ def test_get_latest_hourly_statuses_ok(
     # THEN
     assert len(results) == 2
     assert "unknown_id" not in results
-    assert results["245557155"].bucket_hour == datetime.fromisoformat(
-        "2026-11-01 02:00:00+00:00"
-    )
+    assert results["245557155"].bucket_hour == datetime.fromisoformat("2026-11-01 02:00:00+00:00")
     assert results["245557155"].reliability_score == 90.0
-    assert results["245557947"].bucket_hour == datetime.fromisoformat(
-        "2026-11-01 01:00:00+00:00"
-    )
+    assert results["245557947"].bucket_hour == datetime.fromisoformat("2026-11-01 01:00:00+00:00")
     assert results["245557947"].reliability_score == 100.0
 
 
@@ -292,9 +269,7 @@ def test_get_latest_hourly_statuses_empty_input(station_status_hourly_dao):
     assert results == {}
 
 
-def test_get_latest_hourly_statuses_unknown_ids(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_get_latest_hourly_statuses_unknown_ids(station_status_hourly_dao, sample_hourly_stats):
     """Retourne {} si aucun identifiant n'existe"""
     # GIVEN
     station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
@@ -313,9 +288,7 @@ def test_get_hourly_stats_ok(station_status_hourly_dao, sample_hourly_stats):
     start_time = datetime.fromisoformat("2026-11-01 00:00:00+00:00")
     end_time = datetime.fromisoformat("2026-11-01 03:00:00+00:00")
     # WHEN
-    records = station_status_hourly_dao.get_hourly_stats(
-        station_id, start_time, end_time
-    )
+    records = station_status_hourly_dao.get_hourly_stats(station_id, start_time, end_time)
     # THEN
     assert len(records) == 2
     for r in records:
@@ -330,9 +303,7 @@ def test_get_hourly_stats_wrong_id(station_status_hourly_dao, sample_hourly_stat
     start_time = datetime.fromisoformat("2026-11-01 00:00:00+00:00")
     end_time = datetime.fromisoformat("2026-11-01 03:00:00+00:00")
     # WHEN
-    records = station_status_hourly_dao.get_hourly_stats(
-        "wrong_id", start_time, end_time
-    )
+    records = station_status_hourly_dao.get_hourly_stats("wrong_id", start_time, end_time)
     # THEN
     assert records == []
 
@@ -345,9 +316,7 @@ def test_get_hourly_stats_wrong_time(station_status_hourly_dao, sample_hourly_st
     start_time = datetime.fromisoformat("2026-12-01 00:00:00+00:00")
     end_time = datetime.fromisoformat("2026-12-01 03:00:00+00:00")
     # WHEN
-    records = station_status_hourly_dao.get_hourly_stats(
-        station_id, start_time, end_time
-    )
+    records = station_status_hourly_dao.get_hourly_stats(station_id, start_time, end_time)
     # THEN
     assert records == []
 
@@ -361,9 +330,7 @@ def test_aggregate_daily_stats_ok(station_status_hourly_dao, sample_hourly_stats
     start_date = date(2026, 10, 31)
     end_date = date(2026, 11, 1)
     # WHEN
-    daily_stats = station_status_hourly_dao.aggregate_daily_stats(
-        station_id, start_date, end_date
-    )
+    daily_stats = station_status_hourly_dao.aggregate_daily_stats(station_id, start_date, end_date)
     # THEN
     assert len(daily_stats) == 2
     # Jour 1: 2026-10-31 (1 bucket à 23:00)
@@ -399,31 +366,23 @@ def test_aggregate_daily_stats_wrong_id(station_status_hourly_dao, sample_hourly
     # GIVEN
     station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
     # WHEN
-    daily_stats = station_status_hourly_dao.aggregate_daily_stats(
-        "wrong_id", date(2026, 10, 31), date(2026, 11, 1)
-    )
+    daily_stats = station_status_hourly_dao.aggregate_daily_stats("wrong_id", date(2026, 10, 31), date(2026, 11, 1))
     # THEN
     assert daily_stats == []
 
 
-def test_aggregate_daily_stats_wrong_time(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_aggregate_daily_stats_wrong_time(station_status_hourly_dao, sample_hourly_stats):
     """Retourne une liste vide car aucune donnée n'existe sur la période demandée"""
     # GIVEN
     station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
     # WHEN
-    daily_stats = station_status_hourly_dao.aggregate_daily_stats(
-        "245557155", date(2026, 12, 1), date(2026, 12, 2)
-    )
+    daily_stats = station_status_hourly_dao.aggregate_daily_stats("245557155", date(2026, 12, 1), date(2026, 12, 2))
     # THEN
     assert daily_stats == []
 
 
 # Tests de aggregate_daily_stats_for_stations()
-def test_aggregate_daily_stats_for_stations_ok(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_aggregate_daily_stats_for_stations_ok(station_status_hourly_dao, sample_hourly_stats):
     """Agrégation journalière réussie en une requête pour plusieurs stations"""
     # GIVEN
     station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
@@ -431,9 +390,7 @@ def test_aggregate_daily_stats_for_stations_ok(
     start_date = date(2026, 10, 31)
     end_date = date(2026, 11, 1)
     # WHEN
-    results = station_status_hourly_dao.aggregate_daily_stats_for_stations(
-        station_ids, start_date, end_date
-    )
+    results = station_status_hourly_dao.aggregate_daily_stats_for_stations(station_ids, start_date, end_date)
     # THEN
     assert len(results) == 2
     assert "unknown_id" not in results
@@ -451,16 +408,12 @@ def test_aggregate_daily_stats_for_stations_ok(
 def test_aggregate_daily_stats_for_stations_empty_input(station_status_hourly_dao):
     """Retourne {} si la liste d'identifiants est vide"""
     # WHEN
-    results = station_status_hourly_dao.aggregate_daily_stats_for_stations(
-        [], date(2026, 10, 31), date(2026, 11, 1)
-    )
+    results = station_status_hourly_dao.aggregate_daily_stats_for_stations([], date(2026, 10, 31), date(2026, 11, 1))
     # THEN
     assert results == {}
 
 
-def test_aggregate_daily_stats_for_stations_wrong_time(
-    station_status_hourly_dao, sample_hourly_stats
-):
+def test_aggregate_daily_stats_for_stations_wrong_time(station_status_hourly_dao, sample_hourly_stats):
     """Retourne {} si aucune donnée n'existe sur la période demandée"""
     # GIVEN
     station_status_hourly_dao.bulk_upsert_hourly_stats(sample_hourly_stats)
@@ -470,3 +423,27 @@ def test_aggregate_daily_stats_for_stations_wrong_time(
     )
     # THEN
     assert results == {}
+
+
+def test_station_status_hourly_dao_db_exceptions():
+    """Vérifie le comportement de repli lors d'exceptions de base de données"""
+    mock_db = MagicMock()
+    mock_db.get_connection.side_effect = Exception("Erreur DB Hourly")
+    dao = StationStatusHourlyDAO(mock_db)
+
+    assert dao.get_latest_hourly_status("101") is None
+    assert dao.get_latest_hourly_statuses(["101"]) == {}
+    assert dao.get_hourly_stats("101", datetime.now(), datetime.now()) == []
+    assert dao.aggregate_daily_stats("101", date(2026, 1, 1), date(2026, 1, 2)) == []
+    assert dao.aggregate_daily_stats_for_stations(["101"], date(2026, 1, 1), date(2026, 1, 2)) == {}
+
+
+def test_bulk_upsert_hourly_stats_empty_or_all_none(station_status_hourly_dao):
+    """Vérifie le retour 0 quand records est vide ou ne contient que des None"""
+    assert station_status_hourly_dao.bulk_upsert_hourly_stats([]) == 0
+    assert station_status_hourly_dao.bulk_upsert_hourly_stats([None, None]) == 0
+
+
+def test_aggregate_daily_stats_empty_station_id(station_status_hourly_dao):
+    """Vérifie le retour [] si le station_id est vide"""
+    assert station_status_hourly_dao.aggregate_daily_stats("", date(2026, 1, 1), date(2026, 1, 2)) == []
