@@ -110,6 +110,11 @@ else:
                     st.info(f"Résultat unique pour la recherche : « {nom_recherche} »")
                     st.rerun()
 
+if saisie_id.strip():
+    st.info(f"Résultat unique pour la recherche : « {saisie_id} »")
+if resultats and len(resultats) == 1:
+    st.info(f"Résultat unique pour la recherche : « {nom_recherche} »")
+
 ENDPOINT_INFO = f"/station/{station_id}"
 ENDPOINT_STATUS = f"/station/{station_id}/status"
 ENDPOINT_HOURLY = f"/station/{station_id}/history"
