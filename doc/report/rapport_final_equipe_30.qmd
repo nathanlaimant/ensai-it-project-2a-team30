@@ -93,6 +93,57 @@ ANTONIN
 
 ## **Diagramme de packages**
 
+Le diagramme de packages modélise l'organisation du code source de l'application VeloScope et les différents liens entre les modules et packages). Pour que l’application reste simple à faire évoluer et facile à maintenir, nous avons choisi de structurer son code en différentes couches. Le projet s’articule ainsi autour de deux grands ensembles complémentaires : le Frontend, la partie visible par l’utilisateur, et le Backend, qui prend en charge les calculs, la logique du programme et la sauvegarde des données. 
+Rôle des composants 
+Le package business_object
+Ce package regroupe toutes les classes métiers de l'application et comporte huit modules :
+•	Le module station_information qui contient la classe StationInformation représentant les informations statiques d'une station (identifiant, nom, coordonnées géographiques, capacité).
+•	Le module station_status qui contient la classe StationStatus représentant l'état courant d'une station (nombre de vélos disponibles, nombre de docks libres, état opérationnel).
+•	Le module station_status_hourly qui contient la classe StationStatusHourly représentant les statistiques agrégées par heure d'une station.
+•	Le module station_state qui contient l'énumération StationState définissant les états possibles d'une station.
+•	Le module system_information qui contient la classe SystemInformation représentant les métadonnées générales du système de vélos (nom du réseau, …).
+•	Le module user qui contient la classe User représentant un utilisateur de l'application, avec ses attributs d'authentification et de rôle.
+•	Le module user_favorite_station qui contient la classe UserFavoriteStation représentant l'association entre un utilisateur et une station favorite.
+•	Le module user_role qui contient l'énumération UserRole définissant les rôles possibles des utilisateurs (USER, ADMIN).
+Le package dao
+Ce package regroupe les classes DAO (Data Access Object) qui font le lien entre les classes métiers et la base de données PostgreSQL. Il comporte six modules :
+•	Le module station_dao qui contient la classe StationDAO ayant le contrôle de la table station_information, et permettant notamment la recherche de stations par identifiant, par proximité géographique et par nom.
+•	Le module station_status_dao qui contient la classe StationStatusDAO ayant le contrôle de la table station_status, et permettant de récupérer le statut courant ou l'historique d'une station.
+•	Le module station_status_hourly_dao qui contient la classe StationStatusHourlyDAO ayant le contrôle de la table station_status_hourly, et permettant de récupérer les statistiques horaires et journalières agrégées.
+•	Le module favorite_station_dao qui contient la classe FavoriteStationDAO ayant le contrôle de la table user_favorite_station, et permettant d'ajouter, supprimer, lister et compter les stations favorites des utilisateurs.
+•	Le module system_information_dao qui contient la classe SystemInformationDAO ayant le contrôle de la table system_information, utilisée pour stocker les métadonnées du réseau de vélos.
+•	Le module user_dao qui contient la classe UserDAO ayant le contrôle de la table user, et permettant la création, la recherche, la mise à jour et la suppression de comptes utilisateurs.
+Ce package importe le package business_object afin de manipuler les instances des classes métiers, ainsi que le package utils afin d'obtenir la connexion à la base de données via la classe DbConnection.
+Le package service
+•	Le module station_service qui contient la classe StationService, qui gère les opérations sur les stations : récupération par identifiant, liste avec filtres, statut courant, historique et calcul de recommandations géolocalisées.
+•	Le module favorite_station_service qui contient la classe FavoriteStationService, qui gère la logique métier liée aux stations favorites des utilisateurs. 
+•	Le module user_service qui contient la classe UserService, qui gère l'inscription, l'authentification, la déconnexion et la mise à jour des utilisateurs. 
+Le package controller
+Ce package regroupe les routeurs FastAPI qui reçoivent les requêtes HTTP entrantes et les délèguent aux services appropriés. 
+•	Le module station_controller qui contient le routeur gérant les endpoints de consultation des stations (recherche, statut courant, historique, recommandations
+•	Le module auth_and_user_controller qui contient le routeur gérant les endpoints d'authentification (inscription, connexion, déconnexion) et de gestion du compte utilisateur (consultation, mise à jour). 
+•	Le module favorite_station_controller qui contient le routeur gérant les endpoints des stations favorites (ajout, suppression, liste, comptage
+•	Le module admin_controller qui contient le routeur réservé aux administrateurs, permettant la gestion des utilisateurs avec des droits élevés.
+ Le package utils
+Ce package regroupe les utilitaires techniques transversaux partagés par l'ensemble des autres packages du backend. Il comporte six modules, comme :
+•	Le module db_connection qui contient la classe DbConnection
+•	Le module security qui contient les fonctions de hachage des mots de passe et de génération de tokens d'accès utilisateurs.
+Le package pages (Frontend)
+Ce package regroupe les pages de l'interface utilisateur Streamlit, chaque module correspondant à une page de l'application. Il comporte dix modules :
+•	Le module home qui affiche la page d'accueil de l'application.
+•	Le module connexion qui gère le formulaire de connexion et stocke le token d'accès.
+•	Le module inscription qui gère le formulaire d'inscription d'un nouvel utilisateur.
+•	Le module admin qui affiche l'interface de gestion des utilisateurs, accessible uniquement aux administrateurs.
+•	Le module station_search qui permet la recherche d'une station par nom ou par critères.
+•	Le module list_stations qui affiche la liste paginée des stations disponibles.
+•	Le module station_info qui affiche les détails d'une station sélectionnée (statut courant, historique, recommandations).
+•	Le module favorite_stations qui affiche et gère la liste des stations favorites de l'utilisateur connecté.
+•	Le module velo_a_proximite qui affiche les stations proches d'une position géographique donnée.
+•	Le module user_info qui affiche et permet la mise à jour des informations du compte utilisateur connecté.
+Ce package importe le package utils du frontend afin d'effectuer les appels HTTP vers l'API backend.
+
+
+
 ## **Diagramme de classes**
 
 Afin de concilier exhaustivité technique et lisibilité, la modélisation orientée objet de VeloScope est découpée en 3 diagrammes complémentaires : les **objets métier** (modèle de domaine pur), l'**architecture en couches du Web Service** (traitement des requêtes HTTP) et le **sous-système d'ingestion et d'agrégation** (collecte GBFS et calcul des indicateurs horaires en arrière-plan).
@@ -204,6 +255,14 @@ Lorsqu’un utilisateur est connecté, il peut tout d’abord se déconnecter en
 
 ## **Recherche et consultation de stations**
 
+Les utilisateurs, connectés ou non, peuvent rechercher des informations sur une station en accédant à cette fonctionnalité depuis le menu latéral. Sur la page « Liste des stations », ils peuvent consulter l’ensemble des stations disponibles sur l’application, triées par identifiant. La liste permet de visualiser le nom, l’adresse, la capacité et le statut (empty, functional) de chaque station, ainsi qu’un bouton « Info » renvoyant vers sa fiche détaillée. Une fonction de filtrage a également été implémentée pour effectuer une recherche par nom.
+
+Les informations détaillées d’une station sont accessible depuis le menu latéral via l’icône « Informations station », en effectuant une recherche par identifiant ou par nom. Sur cette page, l’utilisateur peut consulter : la disponibilité en temps réel, le score de fiabilité, les caractéristiques de la station ainsi qu'une synthèse synthèse statistique de la station sur une période d’observation (dans la dernière heure, dans les dernières 24 heures, derniers 7 jours et derniers 30 jours. La synthèse contient la moyenne de vélos disponible sur la période, le taux de temps station vide sur la période précédemment, la durée moyenne des pénuries, le pourcentage de temps station saturé, la durée moyenne de saturation ainsi que le score de fiabilité et le taux de remplissage présenté précédemment. 
+Une visualisation graphique de cette synthèse est possible. L’utilisateur peut également consulter le tableau complet des relevés sur une période donné.
+
+De plus les utilisateurs connectés ont accès à la recherche de station à proximité. Sur la page « trouver un vélo à proximité », ils peuvent utiliser la recherche soit à partir de sa position actuelle, récupérée directement via la géolocalisation de son navigateur, soit par la saisit d’une adresse. L’utilisateurs peut ajuster sa recherche en modifiant le rayon de recherche, filtré les stations selon leurs capacités opérationnelles, leurs scores de fiabilité et le type de vélo disponible.  Si l’adresse est valide, l’utilisateur peut consulter une carte avec les stations correspondant aux différents critères indiqués en rouge ainsi qu’un tableau répertoriant la distance, la capacités, le statu, le type de vélo et le score de fiabilité pour chaque station trouvée.
+ 
+
 $\implies$ Diagramme à faire
 
 ## **Gestion des stations favorites**
@@ -284,6 +343,27 @@ En complément de la collecte, la tâche `job_station_aggregation` déclenche `S
 Enfin, les écritures en base sont conçues pour être performantes et idempotentes : `StationStatusDAO.bulk_insert_status` insère par lots de 1 000 lignes (`execute_values`) avec `ON CONFLICT (station_id, last_reported) DO NOTHING` pour ignorer tout doublon, tandis que `SystemInformationDAO.upsert_system_info`, `StationDAO.upsert_station_info` et `StationStatusHourlyDAO.bulk_upsert_hourly_stats` emploient `ON CONFLICT ... DO UPDATE` afin de mettre à jour le référentiel (système et stations) ou de rejouer une agrégation horaire sans effet de bord.
 
 # **Structure du code**
+Le projet est structuré en deux partis principal correspondant aux deux composantes de l'application : le répertoire backend/ et le répertoire frontend/. Cette séparation permet indépendance entre les deux parties. Chaque répertoire dispose de son propre fichier de configuration, et de son propre README. Le projet contient également un répertoire data/ qui regroupe les scripts SQL d'initialisation et de la base de données, ainsi que leurs équivalents dédiés aux tests, et un répertoire doc/ contenant la documentation du projet.
+
+Structure du backend
+Le code source du backend est situé dans le répertoire backend/src/ et se décompose en sept packages Python, et un fichier main.py.
+L'application a une architecture par couche :
+-	La couche controller reçoit les requêtes HTTP et les délègue à la couche service 
+-	La couche service applique la logique métier et fait appel à la couche dao 
+-	La couche dao accède à la base de données PostgreSQL et manipule les objets de la couche business_object 
+-	La couche business_object définit les entités du domaine métier.
+
+Les packages schema, dependencies et utils jouent un rôle transversal : schema fournit les modèles de validation des requêtes et réponses HTTP via Pydantic ; dependencies centralise l'injection de dépendances FastAPI afin d'instancier et de distribuer les objets DAO et service ; utils regroupe les utilitaires techniques partagés (connexion à la base de données, sécurité, journalisation, paramètres de configuration).
+Le sous-package service/schedule/ gère les traitements automatiques planifiés, décomposés en deux sous-packages : data_ingestion/ qui implémente les stratégies d'ingestion des flux de données GBFS provenant de l'API externe, et data_aggregation/ qui calcule et persiste les statistiques horaires à partir des données brutes.
+
+Structure du frontend
+Le code source du frontend est situé dans le répertoire frontend/src/ et se décompose en deux packages et un fichier app.py.
+
+Le package pages/ contient un module par page de l'interface (accueil, connexion, inscription, recherche de stations, liste des stations, fiche d'une station, stations favorites, vélos à proximité, informations du compte utilisateur, administration). Chaque module est indépendant et communique avec le backend via le client HTTP fourni par le package utils/.
+Le package utils/ regroupe les utilitaires partagés par les pages
+
+
+
 
 ```text
 ensai-it-project-2a-team30/
@@ -310,6 +390,13 @@ ensai-it-project-2a-team30/
 │   └── pop_db_test.sql       # Test dataset
 └── README.md                 # User guide (this document)
 ```
+
+# **Tests**
+
+Les tests du backend sont situés dans le répertoire backend/tests/ et se répartissent en deux sous-répertoires selon la couche testée :
+•	tests/test_dao/ qui contient les tests d'intégration des classes DAO. Ces tests s'exécutent avec une connexion réelle à une base de données PostgreSQL de test, initialisée par scripts SQL. Ils vérifient que les requêtes SQL produisent les résultats attendus pour chaque opération.
+•	tests/test_service/ qui contient les tests des classes de service. Selon les cas, ces tests utilisent soit des mocks pour isoler la logique métier de la couche DAO, soit une connexion réelle à la base de données.
+
 
 # **Point intéressant à détaillé sur l'appli**
 
