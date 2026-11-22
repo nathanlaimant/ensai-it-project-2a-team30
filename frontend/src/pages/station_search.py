@@ -46,6 +46,7 @@ if research:
                     use_container_width=True,
                 ):
                     # Enregistrement de la station sélectionnée dans le state et dans l'URL
+                    st.session_state["in_search"] = research.strip()
                     st.session_state["selected_station_id"] = station_id
                     st.query_params["station_id"] = station_id
 

@@ -76,6 +76,7 @@ for station in stations:
         if st.button("ℹ️ Infos", key=f"btn_station_{s_id}", use_container_width=True):
             # On met à jour à la fois le state et les query_params pour la page info
             st.session_state["selected_station_id"] = s_id
+            st.session_state["in_search"] = s_name
             st.query_params["station_id"] = s_id
             st.switch_page("pages/station_info.py")
 

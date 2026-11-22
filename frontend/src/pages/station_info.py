@@ -112,10 +112,8 @@ else:
                     st.rerun()
 
 
-if "in_search" in st.session_state:
-    st.info(f"Résultat unique pour la recherche : « {st.session_state["in_search"]} »")
-elif "selected_station_id" in st.session_state:
-    st.info(f"Résultat unique pour la recherche : « {st.session_state["selected_station_id"]} »")
+if st.session_state.get("in_search"):
+    st.info(f"Résultat pour la recherche : « {st.session_state['in_search']} »")
 
 ENDPOINT_INFO = f"/station/{station_id}"
 ENDPOINT_STATUS = f"/station/{station_id}/status"
