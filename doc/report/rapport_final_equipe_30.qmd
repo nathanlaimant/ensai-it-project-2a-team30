@@ -154,7 +154,7 @@ Enfin, la coexistence des tables `station_status` et `station_status_hourly` con
 
 L'API REST de VeloScope est développée avec **FastAPI** et exécutée sur **Uvicorn**, avec génération automatique des documentations OpenAPI (`/docs` et `/redoc`). Les entrées et sorties sont validées par **Pydantic** (journalisation globale des erreurs HTTP `422`), et la persistance repose sur **PostgreSQL** (`psycopg2` via le pool `DbConnection`). L'authentification utilise des jetons **HTTP Bearer** (préfixe `vls30_`), des mots de passe hachés en **SHA-256** et un cache mémoire *thread-safe* (`InMemTokenCache`) purgé à la déconnexion, désactivation ou suppression de compte. L'ensemble est complété par une journalisation HTTP (`LogMiddleware`), du linting/typage statique et une suite de tests isolée sur un schéma PostgreSQL dédié.
 
-Le tableau ci-dessous synthétise les familles d'endpoints exposées (l'inventaire détaillé des 21 routes figure [en Annexe](#annexe-endpoints)) :
+Le tableau ci-dessous synthétise les familles d'endpoints exposées (l'inventaire détaillé des 21 routes figure en [Annexe](#annexe-endpoints)) :
 
 | Contrôleur | Préfixe / Routes principales | Accès | Rôle fonctionnel |
 | :--- | :--- | :--- | :--- |
@@ -218,7 +218,7 @@ Pour ajouter une station à la liste des favoris, il faut accéder au menu des i
 
 Il est possible de suivre la même démarche pour supprimer une station de la liste des favoris, le bouton d’ajout étant un bouton de suppression si la station appartient à la liste. Toutefois, le bas de la page permet de choisir l’une des stations de la liste et d’immédiatement la supprimer. Ainsi, la station disparaît de la liste. 
 
-## **Score de fiabilité**
+## **Score de fiabilité** {#sec-score-fiabilite}
 
 Le score de fiabilité (compris entre `0` et `100`) évalue la capacité d'une station à assurer durablement la mise à disposition et la restitution de vélos. Calculé chaque heure par `StationAggregator` sur la tranche UTC écoulée $[\text{start\_time}, \text{end\_time})$ (soit $T_{\text{total}} = 3600\text{ s}$), il est persisté dans `station_status_hourly.reliability_score`.
 
@@ -250,7 +250,7 @@ $$
 \text{score} = \max\Big(0,\; 100 - \big(w_1 \cdot P_{\text{empty}} + w_2 \cdot P_{\text{full}} + w_3 \cdot \min(100,\; D_{\text{empty}} + D_{\text{full}})\big)\Big)
 $$
 
-avec $w_1 = 0{,}55$, $w_2 = 0{,}35$ et $w_3 = 0{,}10$ (arrondi à 2 décimales). La justification détaillée de ces pondérations (asymétrie pénurie/saturation, effet de persistance) ainsi que l'agrégation sur les fenêtres longues (7 et 30 jours) sont présentées [en Annexe](#annexe-fiabilite).
+avec $w_1 = 0{,}55$, $w_2 = 0{,}35$ et $w_3 = 0{,}10$ (arrondi à 2 décimales). La justification détaillée de ces pondérations (asymétrie pénurie/saturation, effet de persistance) ainsi que l'agrégation sur les fenêtres longues (7 et 30 jours) sont présentées en [Annexe](#annexe-fiabilite).
 
 ## **« Je veux un vélo à proximité » :** Recommendation de vélo à proximité d'un lieu donné
 
@@ -275,11 +275,13 @@ Le maintien à jour de la base est piloté en arrière-plan par `JobScheduler`, 
 
 : Planification des tâches de fond sous `APScheduler` {tbl-colwidths="[22,18,12,26,22]"}
 
-### Pipeline d'ingestion et persistance idempotente
+### Pipeline d'ingestion, agrégation horaire et persistance idempotente
 
 L'ingestion applique les patrons Méthode Template et Stratégie autour de `BaseIngestionStrategy[T]` : sa méthode `execute()` enchaîne `fetch_feed()`, `parse_payload()` et `persist()` dans un bloc `try/except` journalisé afin qu'une erreur réseau transitoire n'interrompe jamais le planificateur. Les URLs des trois flux GBFS étant externalisées dans `Settings` (`.env`), VeloScope peut basculer vers un autre réseau conforme à GBFS sans modifier le code. Lors du traitement des statuts, `StationStatusStrategy` absorbe les variations entre opérateurs (`snake_case`/`camelCase`, classification des véhicules en `{"mechanical": int, "electric": int}` par normalisation Unicode et expressions régulières), calcule `operational_capacity` et détermine `StationState` (`EMPTY` si la station est non installée, non louable, de capacité nulle ou sans vélo ; `FULL` si aucune borne n'est libre ou le retour impossible ; `FUNCTIONAL` sinon).
 
-Enfin, les écritures en base sont conçues pour être performantes et idempotentes : `bulk_insert_status` insère par lots de 1 000 lignes (`execute_values`) avec `ON CONFLICT (station_id, last_reported) DO NOTHING` pour ignorer tout doublon, tandis que les autres DAO emploient `ON CONFLICT ... DO UPDATE` afin de mettre à jour le référentiel ou rejouer une agrégation horaire sans effet de bord.
+En complément de la collecte, la tâche `job_station_aggregation` déclenche `StationAggregator.aggregate_hourly_stats` chaque heure à la minute `:05` — un décalage garantissant que le relevé de `:00` est bien persisté avant consolidation. Le module extrait en une requête l'ensemble des statuts bruts de l'heure UTC écoulée $[H-1\text{h}00, H\text{h}00)$ via `StationStatusDAO.get_all_station_history`, calcule pour chaque station les moyennes de disponibilité, les durées/épisodes critiques et le score de fiabilité (détaillé en section [Score de fiabilité](#sec-score-fiabilite)), puis enregistre les objets `StationStatusHourly` en lot via `StationStatusHourlyDAO.bulk_upsert_hourly_stats`.
+
+Enfin, les écritures en base sont conçues pour être performantes et idempotentes : `StationStatusDAO.bulk_insert_status` insère par lots de 1 000 lignes (`execute_values`) avec `ON CONFLICT (station_id, last_reported) DO NOTHING` pour ignorer tout doublon, tandis que `SystemInformationDAO.upsert_system_info`, `StationDAO.upsert_station_info` et `StationStatusHourlyDAO.bulk_upsert_hourly_stats` emploient `ON CONFLICT ... DO UPDATE` afin de mettre à jour le référentiel (système et stations) ou de rejouer une agrégation horaire sans effet de bord.
 
 # **Structure du code**
 
