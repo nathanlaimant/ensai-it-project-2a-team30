@@ -416,16 +416,6 @@ ANTONIN
 
 ## **Bilan de groupe** {.unnumbered}
 
-## **Bilan personnel** 
-
-Note perso (Martin DUBOS)
-
-Tout d’abord, j’ai abordé ce projet informatique à reculons dans la mesure où, l’année précédente, j’avais eu l’impression d’être dans le flou durant la première partie, sans vraiment savoir sur quoi travailler. Mais très vite, mon intérêt pour le sujet proposé m’a fait changer d’avis. J’ai trouvé les sujets originaux, bien pensés et bien introduits, ce qui a simplifié la phase d’analyse.
-Ce projet m’a permis de mieux comprendre la structure et le fonctionnement de ce type d’application. Le fait d’avoir les vendredis dédiés à l’informatique en début d’année, avec les compléments le matin et le projet l’après-midi, nous a permis d’être beaucoup plus efficaces.
-N’étant pas le plus expérimenté du groupe, j’ai contribué à la programmation en implémentant les fonctionnalités et les tests de niveau facile à intermédiaire. J’ai trouvé notre groupe de travail complémentaire. Les conseils et les explications des autres membres de l’équipe m’ont permis de comprendre rapidement les parties du code qu’ils avaient développées. Par ailleurs, j’ai trouvé le fichier de suivi des tâches hebdomadaires partagé sur le dépôt GitHub indispensable, car il incite chaque membre à maintenir un rythme régulier, notamment durant les périodes sans créneaux en classe. Cette organisation a évité que les jours précédant les deadlines ne soient trop surchargés.
-Enfin, l’une des principales difficultés rencontrées au démarrage a été de travailler avec des personnes dont je ne connaissais pas encore les points forts, ce qui a rendu la répartition initiale des tâches un peu délicate.
-
-
 ### Difficultés rencontrées {.unnumbered}
 
 Les difficultés que nous avons pu rencontrer n’ont jamais été très importantes. Nous avons tout de même fait face à de petits contretemps tout au long du projet. 
@@ -449,6 +439,23 @@ Concernant notre gestion de l'application, les conflits git ont été très rare
 Enfin, nous sommes satisfaits de la façon dont nous sommes "rentrés" dans le sujet au début du projet. Nous avons tous su comprendre rapidement les enjeux de celui-ci et les différents besoins auxquels répond l'application. 
 
 $\implies$ Points à améliorer 
+
+## **Bilan personnel** {.unnumbered}
+
+### Note perso (Martin DUBOS) {.unnumbered}
+
+Tout d’abord, j’ai abordé ce projet informatique à reculons dans la mesure où, l’année précédente, j’avais eu l’impression d’être dans le flou durant la première partie, sans vraiment savoir sur quoi travailler. Mais très vite, mon intérêt pour le sujet proposé m’a fait changer d’avis. J’ai trouvé les sujets originaux, bien pensés et bien introduits, ce qui a simplifié la phase d’analyse.
+Ce projet m’a permis de mieux comprendre la structure et le fonctionnement de ce type d’application. Le fait d’avoir les vendredis dédiés à l’informatique en début d’année, avec les compléments le matin et le projet l’après-midi, nous a permis d’être beaucoup plus efficaces.
+N’étant pas le plus expérimenté du groupe, j’ai contribué à la programmation en implémentant les fonctionnalités et les tests de niveau facile à intermédiaire. J’ai trouvé notre groupe de travail complémentaire. Les conseils et les explications des autres membres de l’équipe m’ont permis de comprendre rapidement les parties du code qu’ils avaient développées. Par ailleurs, j’ai trouvé le fichier de suivi des tâches hebdomadaires partagé sur le dépôt GitHub indispensable, car il incite chaque membre à maintenir un rythme régulier, notamment durant les périodes sans créneaux en classe. Cette organisation a évité que les jours précédant les deadlines ne soient trop surchargés.
+Enfin, l’une des principales difficultés rencontrées au démarrage a été de travailler avec des personnes dont je ne connaissais pas encore les points forts, ce qui a rendu la répartition initiale des tâches un peu délicate.
+
+### Note perso (Minh Quang KIEU) {.unnumbered}
+
+Ce projet informatique a été une très bonne expérience pour moi, à la fois sur le plan technique et pour le travail en groupe. Au cours du projet, j'ai contribué à la modélisation initiale (diagrammes de classes et schéma de base de données), au développement du sous-système de collecte et d'agrégation (APScheduler, ingestion GBFS, calcul du score de fiabilité), ainsi qu'à l'amélioration de l'API et des tests sur le backend.
+
+Comme j'avais beaucoup travaillé sur les premiers diagrammes et le modèle de base de données, les critiques lors du rendu intermédiaire sur la complexité et la lisibilité m'ont fait réfléchir. Avec l'aide du groupe, j'ai compris ce qu'il fallait simplifier (suppression de tables annexes, fusion de services proches, découpage en trois diagrammes plus clairs) et ce qu'il fallait mieux expliquer. Cela m'a montré l'importance de viser une conception plus sobre dès le départ et de toujours relier chaque choix technique à un besoin concret.
+
+Enfin, j'ai aussi eu une difficulté personnelle avec le français : parfois, je ne comprenais pas tout de suite ce que les autres disaient, ou j'avais du mal à expliquer mes idées clairement. Grâce à l'écoute, à la patience et à la bienveillance du groupe, nous avons réussi à dépasser cette barrière ensemble. Cette expérience m'a permis de progresser en français et de mieux communiquer en équipe.
 
 ## Calcul de la proximité des stations {.unnumbered}
 
