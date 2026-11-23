@@ -416,6 +416,16 @@ ANTONIN
 
 ## **Bilan de groupe** {.unnumbered}
 
+## **Bilan personnel** 
+
+Note perso (Martin DUBOS)
+
+Tout d’abord, j’ai abordé ce projet informatique à reculons dans la mesure où, l’année précédente, j’avais eu l’impression d’être dans le flou durant la première partie, sans vraiment savoir sur quoi travailler. Mais très vite, mon intérêt pour le sujet proposé m’a fait changer d’avis. J’ai trouvé les sujets originaux, bien pensés et bien introduits, ce qui a simplifié la phase d’analyse.
+Ce projet m’a permis de mieux comprendre la structure et le fonctionnement de ce type d’application. Le fait d’avoir les vendredis dédiés à l’informatique en début d’année, avec les compléments le matin et le projet l’après-midi, nous a permis d’être beaucoup plus efficaces.
+N’étant pas le plus expérimenté du groupe, j’ai contribué à la programmation en implémentant les fonctionnalités et les tests de niveau facile à intermédiaire. J’ai trouvé notre groupe de travail complémentaire. Les conseils et les explications des autres membres de l’équipe m’ont permis de comprendre rapidement les parties du code qu’ils avaient développées. Par ailleurs, j’ai trouvé le fichier de suivi des tâches hebdomadaires partagé sur le dépôt GitHub indispensable, car il incite chaque membre à maintenir un rythme régulier, notamment durant les périodes sans créneaux en classe. Cette organisation a évité que les jours précédant les deadlines ne soient trop surchargés.
+Enfin, l’une des principales difficultés rencontrées au démarrage a été de travailler avec des personnes dont je ne connaissais pas encore les points forts, ce qui a rendu la répartition initiale des tâches un peu délicate.
+
+
 ### Difficultés rencontrées {.unnumbered}
 
 Les difficultés que nous avons pu rencontrer n’ont jamais été très importantes. Nous avons tout de même fait face à de petits contretemps tout au long du projet. 
