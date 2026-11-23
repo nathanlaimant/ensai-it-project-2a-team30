@@ -385,9 +385,9 @@ ensai-it-project-2a-team30/
 │   └── README.md             # Frontend guide
 ├── data/                     # Database creation & seed scripts
 │   ├── init_db.sql           # Schema definition (veloscope)
-│   ├── pop_db.sql            # Initial test dataset
 │   ├── init_db_test.sql      # Isolated test schema (veloscope_test)
-│   └── pop_db_test.sql       # Test dataset
+│   ├── star_rennes/          # Jeu de données LE vélo STAR (Rennes : 57 stations)
+│   └── velhop_strasbourg/    # Jeu de données Vélhop (Strasbourg : 40 stations)
 └── README.md                 # User guide (this document)
 ```
 
@@ -453,7 +453,7 @@ Enfin, l’une des principales difficultés rencontrées au démarrage a été d
 
 Ce projet informatique a été une très bonne expérience pour moi, à la fois sur le plan technique et pour le travail en groupe. Au cours du projet, j'ai contribué à la modélisation initiale (diagrammes de classes et schéma de base de données), au développement du sous-système de collecte et d'agrégation (APScheduler, ingestion GBFS, calcul du score de fiabilité), ainsi qu'à l'amélioration de l'API et des tests sur le backend.
 
-Comme j'avais beaucoup travaillé sur les premiers diagrammes et le modèle de base de données, les critiques lors du rendu intermédiaire sur la complexité et la lisibilité m'ont fait réfléchir. Avec l'aide du groupe, j'ai compris ce qu'il fallait simplifier (suppression de tables annexes, fusion de services proches, découpage en trois diagrammes plus clairs) et ce qu'il fallait mieux expliquer. Cela m'a montré l'importance de viser une conception plus sobre dès le départ et de toujours relier chaque choix technique à un besoin concret.
+Comme j'avais beaucoup travaillé sur les premiers diagrammes et le modèle de base de données, les critiques lors du rendu intermédiaire sur la complexité et la lisibilité m'ont fait réfléchir. Avec l'aide du groupe, j'ai compris ce qu'il fallait simplifier (suppression de tables annexes, fusion de services proches, découpage en trois diagrammes plus clairs) et ce qu'il fallait mieux expliquer. Cela m'a montré l'importance de viser une conception plus sobre dès le départ et de toujours relier chaque choix technique à un besoin concret. Dans cette même optique d'amélioration, on pourrait également ajouter des tâches planifiées pour supprimer automatiquement les données anciennes (par exemple au-delà de 24 heures pour `station_status` et de 30 jours pour `station_status_hourly`) afin d'économiser des ressources de stockage.
 
 Enfin, j'ai aussi eu une difficulté personnelle avec le français : parfois, je ne comprenais pas tout de suite ce que les autres disaient, ou j'avais du mal à expliquer mes idées clairement. Grâce à l'écoute, à la patience et à la bienveillance du groupe, nous avons réussi à dépasser cette barrière ensemble. Cette expérience m'a permis de progresser en français et de mieux communiquer en équipe.
 

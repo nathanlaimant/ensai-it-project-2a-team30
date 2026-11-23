@@ -56,9 +56,15 @@ ensai-it-project-2a-team30/
 │   └── README.md             # Frontend guide
 ├── data/                     # Database creation & seed scripts
 │   ├── init_db.sql           # Schema definition (veloscope)
-│   ├── pop_db.sql            # Initial test dataset
 │   ├── init_db_test.sql      # Isolated test schema (veloscope_test)
-│   └── pop_db_test.sql       # Test dataset
+│   ├── star_rennes/          # LE vélo STAR (Rennes) dataset
+│   │   ├── pop_db.sql
+│   │   ├── pop_db_station_status.sql
+│   │   └── pop_db_station_status_hourly.sql
+│   └── velhop_strasbourg/    # Vélhop (Strasbourg) dataset
+│       ├── pop_db.sql
+│       ├── pop_db_station_status.sql
+│       └── pop_db_station_status_hourly.sql
 └── README.md                 # User guide (this document)
 ```
 
@@ -81,7 +87,20 @@ Follow these steps to set up and run the entire application on your machine.
 Connect to your PostgreSQL database and execute the initialization scripts located in `data/`:
 
 1. **Create tables**: Execute [`data/init_db.sql`](data/init_db.sql) (creates the `veloscope` schema and all required tables).
-2. **Populate initial data**: Execute [`data/pop_db.sql`](data/pop_db.sql) (inserts initial system information and demo user accounts).
+2. **Populate initial data (choose one GBFS system)**:
+   Execute the scripts inside either [`data/star_rennes/`](data/star_rennes/) or [`data/velhop_strasbourg/`](data/velhop_strasbourg/) in the following order:
+   - `pop_db.sql`: inserts demo accounts (`admin` / `user0`, password `1`), `system_information`, and `station_information`.
+   - *(Optional)* `pop_db_station_status.sql`: inserts ~48 hours of raw 5-minute station status snapshots.
+   - *(Optional)* `pop_db_station_status_hourly.sql`: inserts 121 hours (~5 days) of pre-computed hourly aggregates and reliability scores.
+
+#### Available Datasets
+
+| Dataset | System ID | Stations | Raw Status Rows | Hourly Rows | Notes |
+|---|---|---|---|---|---|
+| **LE vélo STAR (Rennes)** ([`data/star_rennes/`](data/star_rennes/)) | `le_velo_star` | 57 | 32,889 | 6,897 | Includes `address` (`short_name` is `NULL`); `FUNCTIONAL`, `EMPTY`, and `FULL` states; mechanical bikes only (`electric = 0`) |
+| **Vélhop (Strasbourg)** ([`data/velhop_strasbourg/`](data/velhop_strasbourg/)) | `nextbike_ae` | 40 | 23,040 | 4,840 | Includes `short_name` (`address` is `NULL`); `FUNCTIONAL` and `EMPTY` states; mechanical bikes only (`electric = 0`) |
+
+> **Note**: Both datasets cover `2026-11-18 21:00` to `2026-11-23 22:39 UTC`. Make sure the GBFS feed URLs in `backend/.env` match your chosen city when running live ingestion.
 
 ---
 

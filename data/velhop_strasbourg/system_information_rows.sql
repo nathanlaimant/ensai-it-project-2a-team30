@@ -1,1 +1,0 @@
-INSERT INTO veloscope.system_information (system_id, language, name, url, start_date, phone_number, email, timezone) VALUES ('nextbike_ae', 'fr', 'Vélhop - Strasbourg', 'https://vls.velhop.strasbourg.eu/', null, '+33 367 70 70 70', 'contact@velhop.strasbourg.eu', 'Europe/Berlin');

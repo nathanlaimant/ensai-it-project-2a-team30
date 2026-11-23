@@ -66,11 +66,12 @@ Initialize the required schemas and tables using the SQL scripts located in the 
 
 1. **Production / Runtime Schema (`veloscope`)**:
    Execute `data/init_db.sql` on your PostgreSQL database (e.g., using CloudBeaver, DBeaver, or `psql`).
-   *(Optional)* Execute `data/pop_db.sql` to populate initial seed data.
+   *(Optional)* Populate seed data for one GBFS system from either `data/star_rennes/` (57 stations, 32,889 status rows, 6,897 hourly rows) or `data/velhop_strasbourg/` (40 stations, 23,040 status rows, 4,840 hourly rows):
+   - Execute `pop_db.sql` first (`user`, `system_information`, `station_information`).
+   - *(Optional)* Execute `pop_db_station_status.sql` and `pop_db_station_status_hourly.sql` for historical snapshots and hourly reliability metrics.
 
 2. **Test Schema (`veloscope_test`)**:
    Execute `data/init_db_test.sql` to create the isolated schema used by the test suite.
-   *(Optional)* Execute `data/pop_db_test.sql` for test seed data.
 
 ---
 
@@ -103,10 +104,15 @@ postgres_schema=veloscope
 # Server Port (defaults to 5000)
 uvicorn_port=5000
 
-# GBFS feed endpoints (e.g., Vélhop Strasbourg v2.3)
+# GBFS feed endpoints (Option 1: Vélhop Strasbourg v2.3)
 system_information_feed_url=https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_ae/fr/system_information.json
 station_information_feed_url=https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_ae/fr/station_information.json
 station_status_feed_url=https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_ae/fr/station_status.json
+
+# Option 2: LE vélo STAR (Rennes)
+# system_information_feed_url=https://eu.ftp.opendatasoft.com/star/gbfs/system_information.json
+# station_information_feed_url=https://eu.ftp.opendatasoft.com/star/gbfs/station_information.json
+# station_status_feed_url=https://eu.ftp.opendatasoft.com/star/gbfs/station_status.json
 ```
 
 ### 2. Test Environment (`.test_env`)
@@ -169,7 +175,7 @@ uv run src/main.py
 All tests read configuration from `.test_env` and run in complete isolation against the `veloscope_test` schema.
 
 > **Note on Test Environment Setup**:
-> Before running tests, ensure you have initialized the test schema by running `data/init_db_test.sql` (and optionally `data/pop_db_test.sql`) in PostgreSQL, and created `backend/.test_env` (e.g. `cp .test_env.example .test_env`).
+> Before running tests, ensure you have initialized the test schema by running `data/init_db_test.sql` in PostgreSQL, and created `backend/.test_env` (e.g. `cp .test_env.example .test_env`).
 
 ```bash
 # Run all tests
