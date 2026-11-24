@@ -146,7 +146,7 @@ Une fois l'utilisateur connecté, il a accès à tous les services qu'offre Velo
 
 Enfin, les comptes administrateurs disposent de droits particuliers. Ce type de compte est spécifiquement utile pour gestion des comptes existants (activation/désactivation, suppression). Actuellement, seuls les créateurs de l'application possèdent des comptes administrateur. 
 
-## **Diagramme de packages** (revoir)
+## **Diagramme de packages**
 
 Le diagramme de packages modélise l'organisation du code source de l'application VeloScope et les différents liens entre les modules et packages). Pour que l’application reste simple à faire évoluer et facile à maintenir, nous avons choisi de structurer son code en différentes couches. Le projet s’articule ainsi autour de deux grands ensembles complémentaires : le frontend, la partie visible par l’utilisateur, et le backend, qui prend en charge les calculs, la logique du programme et la sauvegarde des données. 
 
@@ -173,32 +173,38 @@ Le package `dao` regroupe les classes DAO (Data Access Object) qui font le lien 
 
 Ce package importe le package business_object afin de manipuler les instances des classes métiers, ainsi que le package utils afin d'obtenir la connexion à la base de données via la classe DbConnection.
 
-Le package service
-•	Le module station_service qui contient la classe StationService, qui gère les opérations sur les stations : récupération par identifiant, liste avec filtres, statut courant, historique et calcul de recommandations géolocalisées.
-•	Le module favorite_station_service qui contient la classe FavoriteStationService, qui gère la logique métier liée aux stations favorites des utilisateurs. 
-•	Le module user_service qui contient la classe UserService, qui gère l'inscription, l'authentification, la déconnexion et la mise à jour des utilisateurs. 
-Le package controller
-Ce package regroupe les routeurs FastAPI qui reçoivent les requêtes HTTP entrantes et les délèguent aux services appropriés. 
-•	Le module station_controller qui contient le routeur gérant les endpoints de consultation des stations (recherche, statut courant, historique, recommandations
-•	Le module auth_and_user_controller qui contient le routeur gérant les endpoints d'authentification (inscription, connexion, déconnexion) et de gestion du compte utilisateur (consultation, mise à jour). 
-•	Le module favorite_station_controller qui contient le routeur gérant les endpoints des stations favorites (ajout, suppression, liste, comptage
-•	Le module admin_controller qui contient le routeur réservé aux administrateurs, permettant la gestion des utilisateurs avec des droits élevés.
- Le package utils
-Ce package regroupe les utilitaires techniques transversaux partagés par l'ensemble des autres packages du backend. Il comporte six modules, comme :
-•	Le module db_connection qui contient la classe DbConnection
-•	Le module security qui contient les fonctions de hachage des mots de passe et de génération de tokens d'accès utilisateurs.
-Le package pages (Frontend)
-Ce package regroupe les pages de l'interface utilisateur Streamlit, chaque module correspondant à une page de l'application. Il comporte dix modules :
-•	Le module home qui affiche la page d'accueil de l'application.
-•	Le module connexion qui gère le formulaire de connexion et stocke le token d'accès.
-•	Le module inscription qui gère le formulaire d'inscription d'un nouvel utilisateur.
-•	Le module admin qui affiche l'interface de gestion des utilisateurs, accessible uniquement aux administrateurs.
-•	Le module station_search qui permet la recherche d'une station par nom ou par critères.
-•	Le module list_stations qui affiche la liste paginée des stations disponibles.
-•	Le module station_info qui affiche les détails d'une station sélectionnée (statut courant, historique, recommandations).
-•	Le module favorite_stations qui affiche et gère la liste des stations favorites de l'utilisateur connecté.
-•	Le module velo_a_proximite qui affiche les stations proches d'une position géographique donnée.
-•	Le module user_info qui affiche et permet la mise à jour des informations du compte utilisateur connecté.
+Le package `service` :
+
+-	Le module `station_service` qui contient la classe StationService, qui gère les opérations sur les stations : récupération par identifiant, liste avec filtres, statut courant, historique et calcul de recommandations géolocalisées.
+-	Le module `favorite_station_service` qui contient la classe FavoriteStationService, qui gère la logique métier liée aux stations favorites des utilisateurs. 
+-	Le module `user_service` qui contient la classe UserService, qui gère l'inscription, l'authentification, la déconnexion et la mise à jour des utilisateurs. 
+
+
+Le package `controller` regroupe les routeurs FastAPI qui reçoivent les requêtes HTTP entrantes et les délèguent aux services appropriés. 
+
+-	Le module `station_controller` qui contient le routeur gérant les endpoints de consultation des stations (recherche, statut courant, historique, recommandations)
+-	Le module `auth_and_user_controller` qui contient le routeur gérant les endpoints d'authentification (inscription, connexion, déconnexion) et de gestion du compte utilisateur (consultation, mise à jour). 
+-	Le module `favorite_station_controller` qui contient le routeur gérant les endpoints des stations favorites (ajout, suppression, liste, comptage)
+-	Le module `admin_controller` qui contient le routeur réservé aux administrateurs, permettant la gestion des utilisateurs avec des droits élevés.
+
+Le package `utils` regroupe les utilitaires techniques transversaux partagés par l'ensemble des autres packages du backend. Il comporte six modules, comme :
+
+-	Le module `db_connection` qui contient la classe DbConnection
+-	Le module `security` qui contient les fonctions de hachage des mots de passe et de génération de tokens d'accès utilisateurs.
+
+Le package pages dans le frontend regroupe les pages de l'interface utilisateur Streamlit, chaque module correspondant à une page de l'application. Il comporte dix modules :
+
+-	Le module `home` qui affiche la page d'accueil de l'application.
+-	Le module `connexion` qui gère le formulaire de connexion et stocke le token d'accès.
+-	Le module `inscription` qui gère le formulaire d'inscription d'un nouvel utilisateur.
+-	Le module `admin` qui affiche l'interface de gestion des utilisateurs, accessible uniquement aux administrateurs.
+-	Le module `station_search` qui permet la recherche d'une station par nom ou par critères.
+-	Le module `list_stations` qui affiche la liste paginée des stations disponibles.
+-	Le module `station_info` qui affiche les détails d'une station sélectionnée (statut courant, historique, recommandations).
+-	Le module `favorite_stations` qui affiche et gère la liste des stations favorites de l'utilisateur connecté.
+-	Le module `velo_a_proximite` qui affiche les stations proches d'une position géographique donnée.
+-	Le module `user_info` qui affiche et permet la mise à jour des informations du compte utilisateur connecté.
+
 Ce package importe le package utils du frontend afin d'effectuer les appels HTTP vers l'API backend.
 
 ## **Diagramme de classes**
