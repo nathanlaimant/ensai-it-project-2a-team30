@@ -373,7 +373,7 @@ Si aucune station n’est trouvée, un texte s’affiche l’indiquant. Dans le 
 
 ## **Administrateur :** gestion des comptes utilisateurs existants
 
-$\implies$ Diagramme à faire
+Réservé aux utilisateurs disposant des droits d'administrateur, cet espace permet de consulter l'ensemble des comptes créés sur l'application et de gérer leur état d'activation. Lorsqu'un administrateur accède à la page, la liste des utilisateurs s'affiche sous forme de tableau indiquant notamment leurs identifiants, informations de compte et statut actif ou inactif. À partir de cette vue, l'administrateur peut sélectionner un compte précis pour l'activer ou le désactiver en un clic, ce qui met immédiatement à jour l'état du compte et révoque le jeton d'accès en cours si le compte est désactivé, avec un rafraîchissement automatique de l'affichage après chaque action.
 
 ## **Maintien à jour de la base de données**
 
@@ -492,48 +492,9 @@ Pour finir, l'utilisateur peut changer ses informations de compte depuis la page
 
 # **Annexes** {.unnumbered}
 
-## **Bilan de groupe** {.unnumbered}
+## Diagramme de packages {.unnumbered}
 
-### Difficultés rencontrées {.unnumbered}
-
-Les difficultés que nous avons pu rencontrer n’ont jamais été très importantes. Nous avons tout de même fait face à de petits contretemps tout au long du projet. 
-
-La répartition du travail a parfois été inégale. Comme les tâches sont très dépendantes les unes des autres, il a parfois été difficile de ne pas donner plus de travail à un membre qu'à un autre. Par exemple, lorsque l'un de nous avait plus avancé sur la compréhension d'un problème ou d'une partie du sujet, il était facile de lui léguer le travail que cela engendrait par la suite. Ceci a pu provoquer des différences de charge de travail à certains moments du projet. 
-
-La compréhension du sujet n'a pas été constamment aisée non plus. Comme aucun de nous n'avions travaillé sur des données de norme GBFS auparavant, nous n'étions pas familiarisés avec le sujet dès le début. Il nous a parfois fallu prendre du temps pour comprendre les particularités de la structure de la base de données. Par exemple, au commencement du projet, nous avons dû cerner la différence entre la capacité virtuelle d'une station et sa capacité physique. Nous avons réfléchi davantage à la manière de prendre en compte cette différence dans notre application. 
-
-Enfin, tout au long du projet, nous avons naturellement fait face à des erreurs dans notre code (tests, liens frontend/backend, dépendances, etc). Ces problèmes ont été réglés rapidement la plupart du temps, et réfléchir à plusieurs sur leur résolution nous a permis de tous comprendre le code plus profondément. 
-
-### Points forts et points à améliorer pour de futurs projets {.unnumbered}
-
-Les points forts de notre équipe ont été multiples et nous ont permis d'avancer efficacement dans le projet. 
-
-La communication a été de mise : nous avons naturellement créé un groupe WhatsApp entre nous pour nous communiquer régulièrement nos avancées et les problèmes rencontrés. Cela nous permettait d'échanger à distance quand il le fallait, par exemple au moment des différentes échéances ou encore quand un retour par mail nous était fait par le tuteur. 
-
-Nous avons tenu à nous voir en présentiel assez souvent, avec une réunion par semaine durant la première phase du projet (en plus des cours avec le tuteur les vendredis). Cela a permis d'être sûrs que tout le monde était investi et motivé dans le projet, et de ne pas perdre cette motivation dans le temps. 
-
-Concernant notre gestion de l'application, les conflits git ont été très rares. Chacun de nous a veillé à toujours récupérer le travail des autres avant de faire ses modifications. De plus, notre répartition du travail a permis de ne jamais avoir deux membres qui travaillaient sur le même fichier en même temps. 
-
-Enfin, nous sommes satisfaits de la façon dont nous sommes "rentrés" dans le sujet au début du projet. Nous avons tous su comprendre rapidement les enjeux de celui-ci et les différents besoins auxquels répond l'application. 
-
-$\implies$ Points à améliorer 
-
-## **Bilan personnel** {.unnumbered}
-
-### Note perso (Martin DUBOS) {.unnumbered}
-
-Tout d’abord, j’ai abordé ce projet informatique à reculons dans la mesure où, l’année précédente, j’avais eu l’impression d’être dans le flou durant la première partie, sans vraiment savoir sur quoi travailler. Mais très vite, mon intérêt pour le sujet proposé m’a fait changer d’avis. J’ai trouvé les sujets originaux, bien pensés et bien introduits, ce qui a simplifié la phase d’analyse.
-Ce projet m’a permis de mieux comprendre la structure et le fonctionnement de ce type d’application. Le fait d’avoir les vendredis dédiés à l’informatique en début d’année, avec les compléments le matin et le projet l’après-midi, nous a permis d’être beaucoup plus efficaces.
-N’étant pas le plus expérimenté du groupe, j’ai contribué à la programmation en implémentant les fonctionnalités et les tests de niveau facile à intermédiaire. J’ai trouvé notre groupe de travail complémentaire. Les conseils et les explications des autres membres de l’équipe m’ont permis de comprendre rapidement les parties du code qu’ils avaient développées. Par ailleurs, j’ai trouvé le fichier de suivi des tâches hebdomadaires partagé sur le dépôt GitHub indispensable, car il incite chaque membre à maintenir un rythme régulier, notamment durant les périodes sans créneaux en classe. Cette organisation a évité que les jours précédant les deadlines ne soient trop surchargés.
-Enfin, l’une des principales difficultés rencontrées au démarrage a été de travailler avec des personnes dont je ne connaissais pas encore les points forts, ce qui a rendu la répartition initiale des tâches un peu délicate.
-
-### Note perso (Minh Quang KIEU) {.unnumbered}
-
-Ce projet informatique a été une très bonne expérience pour moi, à la fois sur le plan technique et pour le travail en groupe. Au cours du projet, j'ai contribué à la modélisation initiale, au développement du sous-système de collecte et d'agrégation, ainsi qu'à l'amélioration de l'API et des tests sur le backend.
-
-Comme j'avais beaucoup travaillé sur les premiers diagrammes, les critiques lors du rendu intermédiaire sur la complexité et la lisibilité m'ont fait réfléchir. Avec l'aide du groupe, j'ai compris ce qu'il fallait simplifier (suppression de tables annexes, fusion de services proches, découpage en trois diagrammes plus clairs) et ce qu'il fallait mieux expliquer. Cela m'a montré l'importance de viser une conception plus sobre dès le départ et de toujours relier chaque choix technique à un besoin concret. Dans cette même optique d'amélioration, on pourrait également ajouter des tâches planifiées pour supprimer automatiquement les données anciennes (par exemple au-delà de 24 heures pour `station_status` et de 30 jours pour `station_status_hourly`) afin d'économiser des ressources de stockage, ou encore ne renseigner que l'URL racine `gbfs.json` pour découvrir automatiquement les autres flux au lieu de configurer les trois URLs manuellement.
-
-Enfin, j'ai aussi eu une difficulté personnelle avec le français : parfois, je ne comprenais pas tout de suite ce que les autres disaient, ou j'avais du mal à expliquer mes idées clairement. Grâce à l'écoute, à la patience et à la bienveillance du groupe, nous avons réussi à dépasser cette barrière ensemble. Cette expérience m'a permis de progresser en français et de mieux communiquer en équipe.
+![Diagramme de packages](img/diag_packages.png){height=40%}
 
 ## Calcul de la proximité des stations {#haversine .unnumbered}
 
@@ -590,4 +551,76 @@ Cette formule est implémentée deux fois dans l’application :
 - **Prise en compte de la persistance ($w_3 = 0{,}10$)** : le terme $\min(100, D_{\text{empty}} + D_{\text{full}})$ distingue des micro-ruptures rapidement corrigées d'une indisponibilité prolongée. Par exemple, pour 20 minutes passées à l'état vide sur une heure ($P_{\text{empty}} = 33{,}33$, $P_{\text{full}} = 0$), un épisode unique continu de 20 minutes ($D_{\text{empty}} = 20$) aboutit à un score de $79{,}67$, contre $81{,}17$ si ces 20 minutes se répartissent en 4 courts épisodes de 5 minutes ($D_{\text{empty}} = 5$). Le plafonnement à $100$ minutes évite qu'un épisode unique ne domine excessivement la pénalité proportionnelle.
 - **Agrégation sur les périodes longues** : pour les consultations d'historique sur 7 jours et 30 jours ainsi que pour l'indicateur `last_day_reliability` des recommandations, `StationStatusHourlyDAO.aggregate_daily_stats` et `aggregate_daily_stats_for_stations` calculent la moyenne journalière des scores horaires persistés.
 
-{{< pagebreak >}}
+## **Bilan de groupe** {.unnumbered}
+
+### Difficultés rencontrées {.unnumbered}
+
+Les difficultés que nous avons pu rencontrer n’ont jamais été très importantes. Nous avons tout de même fait face à de petits contretemps tout au long du projet. 
+
+La répartition du travail a parfois été inégale. Comme les tâches sont très dépendantes les unes des autres, il a parfois été difficile de ne pas donner plus de travail à un membre qu'à un autre. Par exemple, lorsque l'un de nous avait plus avancé sur la compréhension d'un problème ou d'une partie du sujet, il était facile de lui léguer le travail que cela engendrait par la suite. Ceci a pu provoquer des différences de charge de travail à certains moments du projet. 
+
+La compréhension du sujet n'a pas été constamment aisée non plus. Comme aucun de nous n'avions travaillé sur des données de norme GBFS auparavant, nous n'étions pas familiarisés avec le sujet dès le début. Il nous a parfois fallu prendre du temps pour comprendre les particularités de la structure de la base de données. Par exemple, au commencement du projet, nous avons dû cerner la différence entre la capacité virtuelle d'une station et sa capacité physique. Nous avons réfléchi davantage à la manière de prendre en compte cette différence dans notre application. 
+
+Enfin, tout au long du projet, nous avons naturellement fait face à des erreurs dans notre code (tests, liens frontend/backend, dépendances, etc). Ces problèmes ont été réglés rapidement la plupart du temps, et réfléchir à plusieurs sur leur résolution nous a permis de tous comprendre le code plus profondément.
+
+### Points forts et points à améliorer pour de futurs projets {.unnumbered}
+
+Les points forts de notre équipe ont été multiples et nous ont permis d'avancer efficacement dans le projet. 
+
+La communication a été de mise : nous avons naturellement créé un groupe WhatsApp entre nous pour nous communiquer régulièrement nos avancées et les problèmes rencontrés. Cela nous permettait d'échanger à distance quand il le fallait, par exemple au moment des différentes échéances ou encore quand un retour par mail nous était fait par le tuteur. Nous avons tenu à nous voir en présentiel assez souvent, avec une réunion par semaine durant la première phase du projet (en plus des cours avec le tuteur les vendredis). Cela a permis d'être sûrs que tout le monde était investi et motivé dans le projet, et de ne pas perdre cette motivation dans le temps. 
+
+Concernant notre gestion de l'application, les conflits git ont été très rares. Chacun de nous a veillé à toujours récupérer le travail des autres avant de faire ses modifications. De plus, notre répartition du travail a permis de ne jamais avoir deux membres qui travaillaient sur le même fichier en même temps. Enfin, nous sommes satisfaits de la façon dont nous sommes "rentrés" dans le sujet au début du projet. Nous avons tous su comprendre rapidement les enjeux de celui-ci et les différents besoins auxquels devait répondre l'application. 
+
+Nous nous accordons cependant sur le fait que certains points sont améliorables. Par exemple, nous avons choisi de ne développer que les fonctionnalités obligatoires du cahier des charges. Il aurait pu être intéressant de se pencher sur au moins l'une des fonctionnalités optionnelles pour donner un coté personnalisé à notre application.
+
+## **Bilan personnel** {.unnumbered}
+
+### Martin DUBOS {.unnumbered}
+
+Tout d’abord, j’ai abordé ce projet informatique à reculons dans la mesure où, l’année précédente, j’avais eu l’impression d’être dans le flou durant la première partie, sans vraiment savoir sur quoi travailler. Mais très vite, mon intérêt pour le sujet proposé m’a fait changer d’avis. J’ai trouvé les sujets originaux, bien pensés et bien introduits, ce qui a simplifié la phase d’analyse.
+
+Ce projet m’a permis de mieux comprendre la structure et le fonctionnement de ce type d’application. Le fait d’avoir les vendredis dédiés à l’informatique en début d’année, avec les compléments le matin et le projet l’après-midi, nous a permis d’être beaucoup plus efficaces.
+
+N’étant pas le plus expérimenté du groupe, j’ai contribué à la programmation en implémentant les fonctionnalités et les tests de niveau facile à intermédiaire. J’ai trouvé notre groupe de travail complémentaire. Les conseils et les explications des autres membres de l’équipe m’ont permis de comprendre rapidement les parties du code qu’ils avaient développées. Par ailleurs, j’ai trouvé le fichier de suivi des tâches hebdomadaires partagé sur le dépôt GitHub indispensable, car il incite chaque membre à maintenir un rythme régulier, notamment durant les périodes sans créneaux en classe. Cette organisation a évité que les jours précédant les deadlines ne soient trop surchargés.
+
+Enfin, l’une des principales difficultés rencontrées au démarrage a été de travailler avec des personnes dont je ne connaissais pas encore les points forts, ce qui a rendu la répartition initiale des tâches un peu délicate.
+
+### Minh Quang KIEU {.unnumbered}
+
+Ce projet informatique a été une très bonne expérience pour moi, à la fois sur le plan technique et pour le travail en groupe. Au cours du projet, j'ai contribué à la modélisation initiale, au développement du sous-système de collecte et d'agrégation, ainsi qu'à l'amélioration de l'API et des tests sur le backend.
+
+Comme j'avais beaucoup travaillé sur les premiers diagrammes, les critiques lors du rendu intermédiaire sur la complexité et la lisibilité m'ont fait réfléchir. Avec l'aide du groupe, j'ai compris ce qu'il fallait simplifier (suppression de tables annexes, fusion de services proches, découpage en trois diagrammes plus clairs) et ce qu'il fallait mieux expliquer. Cela m'a montré l'importance de viser une conception plus sobre dès le départ et de toujours relier chaque choix technique à un besoin concret. Dans cette même optique d'amélioration, on pourrait également ajouter des tâches planifiées pour supprimer automatiquement les données anciennes (par exemple au-delà de 24 heures pour `station_status` et de 30 jours pour `station_status_hourly`) afin d'économiser des ressources de stockage, ou encore ne renseigner que l'URL racine `gbfs.json` pour découvrir automatiquement les autres flux au lieu de configurer les trois URLs manuellement.
+
+Enfin, j'ai aussi eu une difficulté personnelle avec le français : parfois, je ne comprenais pas tout de suite ce que les autres disaient, ou j'avais du mal à expliquer mes idées clairement. Grâce à l'écoute, à la patience et à la bienveillance du groupe, nous avons réussi à dépasser cette barrière ensemble. Cette expérience m'a permis de progresser en français et de mieux communiquer en équipe.
+
+### Nathan LAIMANT {.unnumbered}
+
+J'avais beaucoup d'appréhension vis-à-vis de ce projet car le projet de traitement de données en première année était assez difficile. La programmation en Python étant très différente de celle en R, je n'avais pas très confiance en mes capacités. De plus, lorsque j'ai appris que nous ne choisissions pas les groupes de projet, j'avais assez peur d'être avec des personnes que je ne connaissais pas. Heureusement, ce n'étais pas le cas et nous avons pu assez facilement créer une bonne dynamique de groupe.
+
+J'ai tenté d'être assez polyvalent sur le projet, pour pouvoir apprendre et ne pas laisser mes coéquipiers seuls sans pouvoir les aider sur du code. La partie de modélisation était assez compliquée mais lorsque nous avons pu nous mettre d'accord sur l'organisation plus large du projet, j'ai senti que nous pouvions être très efficaces. Finalement, j'ai très rapidement pu m'habituer au code en Python, notamment grâce aux TP de Compléments informatique qui nous donnait des pistes pour pouvoir coder différentes fonctionnalités. Grâce à cela, j'ai pu rapidement avancer et ai pu aider les autres en cas de souci.
+
+Coder le backend fu assez simple mais chronophage, notamment l'écriture des tests. Lorsque j'ai dû faire mes recherches pour savoir comment implémenter la recherche de stations à proximité à partir des coordonnées GPS, cela fut long. Je dirais que le code du frontend était le plus intéressant car le but est de proposer une expérience utilisateur qui soit intéressante. J'ai bien aimer approfondir la documentation de Streamlit pour découvrir comment implémenter des fonctionnalités pour les rendre le plus unique et pratique possible.
+
+Au final, je suis assez content du projet, notamment car j'ai pu travailler avec des coéquipiers qui y mettaient du leur. Cela m'a appris à devoir respecter des dates limites que nous nous imposons au sein de l'équipe, ce qui change de celles qui sont imposées par l'administration ou les enseignants. Je suis content d'avoir gagner en expérience à ce sujet et espère pouvoir en retirer le maximum plus tard, que ce soit en poste ou dans des hobbies.
+
+### Victor NEMBRINI {.unnumbered}
+
+Pour être tout à fait honnête, je ne pensais pas avoir ma place au sein du projet à cause de mon niveau en informatique. Cependant, j’ai pu participer à de nombreuses tâches très diverses : j’ai commencé par le diagramme de Gantt, puis, dans le code, j’ai créé les tables SQL dans les schémas, chose que je n’avais jamais faite avant, et j’ai donc beaucoup appris. 
+
+Ensuite, j’ai participé grandement au code de la classe UserDAO, là aussi j’ai grandement appris car ce concept me paraissait encore un peu flou avant cette application concrète.
+
+Finalement, j’ai terminé sur le frontend et cela m’a permis de me familiariser avec Streamlit, qui est un outil que j’ai apprécié du fait de sa facilité d’utilisation. J’ai notamment codé les pages inscription, connexion, admin et list_stations. Sur la fin, j’ai également revisité le backend, surtout pour corriger les liens entre backend et frontend qui n’étaient pas clairs parfois. 
+
+J’ai très bien vécu le projet que ça soit l’ambiance générale du groupe ou même le travail à fournir, j’ai beaucoup appris par exemple lorsque j’ai dû créé une route delete_user dans le backend car elle n’était pas présente et qu’on avait pourtant ajouté cette fonctionnalité dans le frontend. 
+
+Néanmoins, bien que le projet se soit bien passé dans l’ensemble, je pense que j’aurais pu participer davantage et que je me suis trop focalisé sur le fait que j’allais causer plus de soucis qu’autres choses étant donné mon niveau, ce qui est bête car c’était justement une opportunité d’apprendre.  
+
+### Antonin PRADEL {.unnumbered}
+
+Le bilan de ce projet est pour moi positif en tout point. Du début à la fin, j’ai été pleinement investi et satisfait des avancés du groupe. J’ai ressenti les bénéfices de ce projet à la fois au niveau individuel mais aussi collectivement avec mon groupe. 
+
+Individuellement : je considère avoir appris beaucoup de choses durant ces semaines de projet. C’est la première fois que je travaille sur un projet de groupe de cette ampleur et cela m’a permis d’encore mieux maîtriser les outils avec lesquels je serai amené à travailler plus tard (VSCode, Onyxia, ...). Mon niveau en code a évidemment évolué aussi : faire partie prenante du développement de l’application a encore plus concrétisé les concepts que nous avions vu en cours (fonctionnement d’une API, gestion en couches, ...). Au début du projet, je me suis occupé d'une grande partie de la documentation des classes. Cela m'a permis d'avoir une vision d'ensemble de notre application et de comprendre rapidement vers quoi on se dirigeait. 
+
+Je pense qu’il aurait pu être intéressant de se pencher davantage sur une ou deux fonctionnalités optionnelles proposées (comme dit plus haut dans le bilan collectif). Je suis déjà très satisfait de notre application mais une touche d’originalité aurait sûrement rendu le travail plus personnalisé, moins « classique ». Je reste conscient que cela aurait dû être envisagé dès le commencement du projet et qu’il est difficile d’avoir de larges ambitions quand on démarre un projet avec autant de contenu. 
+
+Enfin, je tiens à remercier l’ensemble des collègues du groupe ainsi que notre tuteur, M.RIVIERE, pour ses conseils précieux et son suivi régulier. 
