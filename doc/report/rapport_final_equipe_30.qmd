@@ -464,23 +464,57 @@ Les tests du backend sont situés dans le répertoire backend/tests/ et se répa
 
 # **Guide d'utilisation**
 
+![Page d'accueil de l'application](img/pages/home.png)
+
 La page d’acceuil a pour but de présenter brièvement l'application puis de proposer à l'utilisateur de naviguer via le menu latéral et de se connecter afin d'accéder aux fonctionnalités utilisateur.
+
+![Page de connexion de l'application](img/pages/connexion.png)
 
 La page de connexion permet à l'utilisateur de se connecter simplement, s'il possède déjà un compte et donc d'accéder aux fonctionnalités utilisateurs. 
 
+![Page d'inscription de l'application](img/pages/inscription.png)
+
 La page Inscription permet à un tout nouvel utilisateur (qui ne possède pas encore de compte) de s'en créer un. Après s'être inscris, il lui suffira de se connecter en utilisant seulement son identifiant et son mot de passe. Il pourra ensuite accéder à davantage de fonctionnalités de l'application. Une fois connecté, on peut se déconnecter si on le souhaite via la page d’accueil.
+
+![Page de gestion des comptes utilisateur de l'application](img/pages/admin.png)
 
 C'est ici que les administrateurs (les membres du groupe) peuvent gérer les comptes des différents utilisateurs, avec un système permettant de filtrer la recherche par différents moyens (pseudos, mail, etc...). Un fois trouvé, l'utilisateur peut voir son compte activé/désactivé ou supprimé. 
 
+![Page de recherche de stations de l'application](img/pages/recherche.png)
+
 Une page est dédiée à la recherche de stations. On peut rechercher une station par son adresse ou son nom directement. En rentrant simplement une suite de caractère sans taper le nom d’une station en entier, la page affiche toutes les stations contenant cette suite de caractère dans leur nom. Il est possible de choisir le nombre de stations à afficher par pages. Ici, 2 stations ont été trouvées par exemple. Cliquer sur une station envoie vers la page d’informations de celle-ci. 
 
-Une page permet également d’accéder à la liste de toutes les stations disponibles dans l’application. Cliquer sur le lien bleu associé envoie vers la page d’informations de la station. 
+![Page de la liste des stations de l'application](img/pages/liste.png)
+
+Une page permet également d’accéder à la liste de toutes les stations disponibles dans l’application. Cliquer sur le lien bleu associé envoie vers la page d’informations de la station.
+
+![](img/pages/info1.png)
+
+![](img/pages/info2.png)
+
+![](img/pages/info3.png)
+
+![](img/pages/info4.png)
+
+![](img/pages/info5.png)
+
+![](img/pages/info6.png)
+
+![Ensemble de la page des informations d'une station dans l'application](img/pages/info7.png)
 
 Une fois une station recherchée, on peut retrouver ses informations sur la page “Informations station”. Ces informations peuvent être utiles à l'utilisateur : elles transcrivent de plusieurs manières différentes l’évolution de la fiabilité de la station (chiffres, graphes, tableaux, ...). Cette page constitue l’intérêt principal de l’application car elle contient toutes les informations pour éclairer le choix de l’utilisateur dans sa recherche de station.
 
+![](img/pages/proxi1.png)
+
+![Page de la fonctionnalité « Trouver un vélo à proximité » de l'application](img/pages/proxi2.png)
+
 La page “Trouver un vélo à proximité” permet à l'utilisateur de trouver des stations à partir d'une adresse et d’un rayon de recherche. Cette fonctionnalité n’est accessible que si l’utilisateur est connecté et permet d’accéder à une carte des stations. Il peut soit renseigner une adresse soit directement visualiser les stations autour de lui (l’application accède à sa position et lui affiche les stations dans le rayon de recherche).
 
+![Page de gestion des stations favorites de l'application](img/pages/fav.png)
+
 L’utilisateur peut également choisir de mettre certaines stations en favoris et la liste des stations favorites est accessible via une page dédiée. Cela permet de ne pas toujours rechercher une même station que l’on sait fiable. On peut également supprimer des stations favorites depuis cette pages.
+
+![Page de gestion des informations utilisateur sur l'application](img/pages/params.png)
 
 Pour finir, l'utilisateur peut changer ses informations de compte depuis la page “Mon profil”. Il peut changer son nom d’utilisateur, son email et/ou son mot de passe.
 
@@ -492,9 +526,26 @@ Pour finir, l'utilisateur peut changer ses informations de compte depuis la page
 
 # **Annexes** {.unnumbered}
 
-## Diagramme de packages {.unnumbered}
+## **Diagramme de packages** {.unnumbered}
 
 ![Diagramme de packages](img/diag_packages.png){height=40%}
+
+## **Spécificités techniques PostgreSQL** {.unnumbered}
+
+Plusieurs fonctionnalités propres à PostgreSQL ont été exploitées pour répondre aux besoins de l'application : 
+
+- **Isolation par schéma** (`CREATE SCHEMA IF NOT EXISTS veloscope`) : cela regroupe tous les objets de l'application dans un espace de noms dédié, évitant les collisions de noms (notamment avec la table "user"). 
+- **Clés auto-incrémentées standards** (`GENERATED BY DEFAULT AS IDENTITY`) : elles sont utilisées pour station_status_id (`BIGINT`) et user_id (`INTEGER`) et garantissent une génération fiable d'identifiants uniques. 
+- **Gestion fine des fuseaux horaires** (`TIMESTAMPTZ`) : les horodatages (`last_reported`, `bucket_hour`, `created_at`, `updated_at`) sont stockés avec fuseau horaire (`TIMESTAMPTZ`), ce qui évite les ambiguïtés temporelles lors des calculs d'historique. 
+- **Indexation ciblée** (`CREATE INDEX` / `CREATE UNIQUE INDEX`) : `idx_station_status_station_reported` (unique sur `station_id` et `last_reported`) empêche les doublons de relevés pour une même station au même instant et accélère la récupération chronologique des statuts. 
+
+## **Choix de logique et de modélisation** {.unnumbered}
+
+Le modèle est inspiré du standard GBFS (*General Bikeshare Feed Specification*) : la séparation entre `station_information` (coordonnées GPS, adresse, ...) et `station_status` (vélos/places disponibles, vélos/places hors service, ...) reflète la distinction entre les caractéristiques propres aux stations et l'état des stations en temps réel. 
+
+Pré-agrégation horaire (`station_status_hourly`) : plutôt que de recalculer à la volée des moyennes et des durées de saturation sur de grands volumes de relevés bruts, ces tables dédiées stockent les métriques par créneau horaire. Cela améliore les performances des tableaux de bord et graphiques temporels. 
+
+Intégrité référentielle en cascade (`ON DELETE CASCADE` / `ON UPDATE CASCADE`) : les relations vers `station_information` et "user" propagent automatiquement les suppressions et mises à jour de clés. Cela évite de casser les liens entre les tables (par exemple lorsqu'une station ou un compte utilisateur est supprimé). 
 
 ## Calcul de la proximité des stations {#haversine .unnumbered}
 
