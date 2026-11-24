@@ -37,9 +37,9 @@ format:
 
 # **Contexte** {.unnumbered}
 
-$\implies$ À reformuler
+Les vélos en libre-service sont partout, visibles en temps réel sur une carte... et pourtant cette carte ne répond à aucune des vraies questions qu'on se pose. À quelle heure vais-je vraiment trouver un vélo ? Quelles stations sont systématiquement pleines à l'heure de pointe ? Quels trajets sont les plus fiables ? Une station se vide-t-elle chaque matin pour se remplir chaque soir ? Ce sont ces questions qui ont donné naissance à VeloScope. 
 
-Les vélos en libre-service sont disponibles en temps réel dans de nombreuses villes. Pourtant, une simple carte des stations ne permet pas vraiment de répondre à des questions utiles : À quelle heure vais-je réellement trouver un vélo ? Quelles stations sont souvent pleines ? Quels trajets sont les plus fiables ? Est-ce qu’une station est régulièrement vide le matin mais pleine le soir ? Le projet VeloScope consiste à développer une API permettant de collecter, historiser et analyser les données de vélos en libre-service d’une ville. L’application récupère périodiquement les informations d’une API de vélos en libre-service compatible avec le standard GBFS : stations, nombre de vélos disponibles, nombre de places libres, vélos électriques, etc. Contrairement à une simple application de consultation, VeloScope construit son propre historique afin de permettre des analyses temporelles et de produire des indicateurs de fiabilité des stations. 
+VeloScope est une API qui collecte, historise et analyse les données de vélos en libre-service d'une ville. Concrètement, l'application interroge périodiquement un flux de données compatible avec le standard GBFS — stations, vélos disponibles, places libres, vélos électriques, et bien d'autres informations. Mais là où une application de consultation classique se contente de données instantanées, VeloScope construit sa propre mémoire : un historique qui permet enfin des analyses temporelles et des indicateurs de fiabilité des stations, pour transformer ces données brutes en informations réellement utiles. 
 
 {{< pagebreak >}}
 
@@ -47,15 +47,58 @@ Les vélos en libre-service sont disponibles en temps réel dans de nombreuses v
 
 ## **Cahier des charges**
 
-Le projet VeloScope consiste à développer une API permettant de collecter, historiser et analyser les données de vélos en libre-service d’une ville. L’application est utile à toute personne cherchant des informations sur des stations de vélos dans une ville. L’intérêt principal de l’application réside dans son analyse de la fiabilité des stations. Elle construit un score de fiabilité pour chaque station. Elle permet par ailleurs de visualiser ces informations pour chaque station afin d’éclairer le choix de l’utilisateur. Des fonctionnalités plus avancées sont disponibles pour les utilisateurs ayant créé un compte. 
+Le projet VeloScope consiste à développer une API permettant de collecter, historiser et analyser les données de vélos en libre-service d’une ville. L’application est utile à toute personne cherchant des informations sur des stations de vélos dans une ville. L’intérêt principal de l’application réside dans son analyse de la fiabilité des stations. Elle construit un score de fiabilité pour chaque station basé sur leurs données intertemporelles. Elle permet par ailleurs de visualiser ces informations afin d’éclairer le choix de l’utilisateur. Des fonctionnalités plus avancées sont disponibles pour les utilisateurs possédant un compte sur Veloscope. 
 
-$\implies$ mettre cahier des charges github
+Rappel du cahier des charges : 
+
+- **F1 : Gestion des utilisateurs**. Un utilisateur peut : 
+  + Créer un compte ; 
+  + Se connecter ; 
+  + Consulter les données et statistiques ; 
+  + Gérer ses stations favorites ;
+  + Un compte ADMIN peut gérer les utilisateurs. 
+- **F2 : Collecte des données.** L’application doit interroger régulièrement l’API GBFS choisie et récupérer les informations des stations. Pour chaque relevé, on stockera notamment : 
+  + Station ; 
+  + Date et heure ; 
+  + Nombre de vélos disponibles ; 
+  + Nombre de places disponibles ; 
+  + Nombre de vélos électriques ; 
+  + État de la station : les données récupérées doivent être historisées en base PostgreSQL. L’application ne doit pas simplement remplacer les valeurs précédentes : elle doit permettre de reconstruire l’état du réseau à différents instants. 
+- **F3 : Consultation d’une station.** L’utilisateur peut rechercher une station et consulter : 
+  + Son état actuel ; 
+  + Son nombre de vélos disponibles ; 
+  + Sa capacité ; 
+  + Son taux de remplissage ; 
+  + L’évolution de sa disponibilité sur une période donnée. L’utilisateur doit notamment pouvoir choisir une période : 
+    - Dernières 24 heures ; 
+    - 7 derniers jours ; 
+    - 30 derniers jours. 
+- **F4 : Score de fiabilité des stations.** C’est la fonctionnalité métier principale. Pour chaque station, l’application calcule un score de fiabilité. Par exemple, une station est considérée comme : 
+  + Vide lorsqu’il n’y a plus de vélo disponible ; 
+  + Saturée lorsqu’il ne reste plus de place ; 
+  + Fonctionnelle dans les autres cas. 
+  + À partir de l’historique, l’application calcule notamment : 
+    - Pourcentage du temps passé vide ; 
+    - Pourcentage du temps passé saturé ; 
+    - Durée moyenne des épisodes de saturation ; 
+    - Durée moyenne des épisodes de pénurie ; 
+    - Évolution du score au cours du temps. Le score global est défini par les étudiants à partir d’une formule documentée. 
+- **F5 : Recommandation de station.** Lorsqu’un utilisateur demande : « Je veux prendre un vélo à proximité » l’API doit être capable de lui proposer plusieurs stations pertinentes. La recommandation doit prendre en compte plusieurs critères, par exemple : 
+  + Distance ; 
+  + Nombre de vélos actuellement disponibles ; 
+  + Fiabilité historique de la station ; 
+  + Disponibilité de vélos électriques ; 
+  + Tendance récente de la station. Deux stations à distance équivalente ne doivent donc pas nécessairement être classées de la même manière. La formule de classement devra être justifiée et testée. 
 
 ## **Organisation du travail**
 
 ### Organisation temporelle
 
-$\implies$ Diagramme de Gantt 
+:::{#fig-gantt}
+![](img/diag_gantt.png) 
+
+Diagramme de Gantt
+:::
 
 Au début du projet, il était important pour nous de connaître l’ensemble des dates importantes pour savoir à quelle vitesse nous devions avancer dans notre projet. A partir de là, nous avons pu créer une liste asez générale des tâches à réaliser en nous imposant entre nous des dates à respecter. 
 
@@ -69,8 +112,6 @@ Le dernier rendu sur lequel nous nous sommes concentrés est le rapport final. P
 
 ### Répartition du travail
 
-$\implies$ Pas de types de tâches assignées par défaut, tout le monde a touché à tout. 
-
 La répartition du travail a davantage été présente au début de notre projet. En effet, nous avions divers diagrammes à réaliser, et nous nous les sommes répartis entre nous pour gagner du temps. Ainsi, les diagrammes nécessaires à l’avancée du projet : diagramme de Gantt, diagramme de cas d’utilisation, diagrammes d’activité et diagrammes de classes ont été réalisés dans les trois premières semaines (certains étant plus long à réaliser que d’autres). A partir de là, notre objectif était de préparer la structure de notre code (signature et documentation des fonction en grande partie) : deux d’entre nous y avons été consacré.  
 
 Au départ, nous avions eu l’intention de pratiquer le “Test Driven Development”, c’est-à-dire que nous voulions d’abord coder les tests avant de coder l’intérieur de ces fonctions testées. Néanmoins, comme cela se révélait assez chronophage si une seule personne s’y consacrait (car cela impliquait de devoir comprendre toutes les fonctions testées et leur implémentation sans code encore écrit), nous avons finalement décidé de n’écrire uniquement les tests des fonctions que chacun de nous implémentait. 
@@ -81,39 +122,57 @@ Dans le cas du frontend, nous n’avions pas d’organisation particulière. Cer
 
 ## **Outils de développement**
 
+L’application a été développée sous Python et la base de données est gérée via des services PostgreSQL. La majorité des membres du groupe a utilisé VSCode en local pour coder. Nous avons veillé à documenter l'ensemble de notre code, frontend et backend. La partie 4 du rapport traite plus en détail de ceci. Nous avons naturellement utilisé le linter `ruff` pour vérifier la cohérence de style sur tous les fichiers. Concernant les tests, ils ont été effectués pour chaque méthode en nécessitant. Nous avons utilisé le module `pytest` pour vérifier que l'ensemble des tests fonctionnait. Enfin, le projet est stocké sur un repository Github partagé entre tous les membres du groupe. 
+
+L'intelligence artificielle a parfois été utilisée sur la partie frontend du projet, à des fins d'efficacité. Quand cela était nécessaire, nous préférions résoudre un problème superflu avec l'IA, en veillant à en avoir compris les causes et les conséquences. 
+
 {{< pagebreak >}}
 
 # **Modélisation UML**
 
 ## **Diagramme de cas d'utilisation**
 
-$\implies$ Diagramme + explications dossier d’analyse 
+:::{#fig-diag_util}
+![](img/diag_cas_util.png){height=30%}
 
-ANTONIN 
+Diagramme de cas d'utilisation
+:::
 
-## **Diagramme de packages**
+Le diagramme de cas d’utilisation permet de visualiser les options qui s’offrent aux différents types d’utilisateurs lorsqu'ils manipulent l’application. Les trois types d'utilisateur sont ici séparés pour distinguer leurs options spécifiques. 
 
-Le diagramme de packages modélise l'organisation du code source de l'application VeloScope et les différents liens entre les modules et packages). Pour que l’application reste simple à faire évoluer et facile à maintenir, nous avons choisi de structurer son code en différentes couches. Le projet s’articule ainsi autour de deux grands ensembles complémentaires : le Frontend, la partie visible par l’utilisateur, et le Backend, qui prend en charge les calculs, la logique du programme et la sauvegarde des données. 
+Un utilisateur non connecté ne peut que rechercher des stations et accéder à la liste des stations pour avoir des informations sur celles-ci. La page "informations sur la station" est directement accessible mais renvoie aux pages de recherche si aucune station n'a été recherchée au préalable. Comme l'utilisateur n’a pas créé de compte, il ne peut pas enregistrer de stations en favori. Il n'a pas non plus accès à la fonctionnalité de recherche de stations à proximité. Il peut accéder à un compte soit en en créant un via la page "inscription" soit en se connectant à un compte déjà existant via la page "connexion". 
+
+Une fois l'utilisateur connecté, il a accès à tous les services qu'offre Veloscope. Il peut ajouter et supprimer des stations de ses favoris ainsi qu'en rechercher via la page "Vélo à proximité". Il peut également modifier les informations de son compte. 
+
+Enfin, les comptes administrateurs disposent de droits particuliers. Ce type de compte est spécifiquement utile pour gestion des comptes existants (activation/désactivation, suppression). Actuellement, seuls les créateurs de l'application possèdent des comptes administrateur. 
+
+## **Diagramme de packages** (revoir)
+
+Le diagramme de packages modélise l'organisation du code source de l'application VeloScope et les différents liens entre les modules et packages). Pour que l’application reste simple à faire évoluer et facile à maintenir, nous avons choisi de structurer son code en différentes couches. Le projet s’articule ainsi autour de deux grands ensembles complémentaires : le frontend, la partie visible par l’utilisateur, et le backend, qui prend en charge les calculs, la logique du programme et la sauvegarde des données. 
+
 Rôle des composants 
-Le package business_object
-Ce package regroupe toutes les classes métiers de l'application et comporte huit modules :
-•	Le module station_information qui contient la classe StationInformation représentant les informations statiques d'une station (identifiant, nom, coordonnées géographiques, capacité).
-•	Le module station_status qui contient la classe StationStatus représentant l'état courant d'une station (nombre de vélos disponibles, nombre de docks libres, état opérationnel).
-•	Le module station_status_hourly qui contient la classe StationStatusHourly représentant les statistiques agrégées par heure d'une station.
-•	Le module station_state qui contient l'énumération StationState définissant les états possibles d'une station.
-•	Le module system_information qui contient la classe SystemInformation représentant les métadonnées générales du système de vélos (nom du réseau, …).
-•	Le module user qui contient la classe User représentant un utilisateur de l'application, avec ses attributs d'authentification et de rôle.
-•	Le module user_favorite_station qui contient la classe UserFavoriteStation représentant l'association entre un utilisateur et une station favorite.
-•	Le module user_role qui contient l'énumération UserRole définissant les rôles possibles des utilisateurs (USER, ADMIN).
-Le package dao
-Ce package regroupe les classes DAO (Data Access Object) qui font le lien entre les classes métiers et la base de données PostgreSQL. Il comporte six modules :
-•	Le module station_dao qui contient la classe StationDAO ayant le contrôle de la table station_information, et permettant notamment la recherche de stations par identifiant, par proximité géographique et par nom.
-•	Le module station_status_dao qui contient la classe StationStatusDAO ayant le contrôle de la table station_status, et permettant de récupérer le statut courant ou l'historique d'une station.
-•	Le module station_status_hourly_dao qui contient la classe StationStatusHourlyDAO ayant le contrôle de la table station_status_hourly, et permettant de récupérer les statistiques horaires et journalières agrégées.
-•	Le module favorite_station_dao qui contient la classe FavoriteStationDAO ayant le contrôle de la table user_favorite_station, et permettant d'ajouter, supprimer, lister et compter les stations favorites des utilisateurs.
-•	Le module system_information_dao qui contient la classe SystemInformationDAO ayant le contrôle de la table system_information, utilisée pour stocker les métadonnées du réseau de vélos.
-•	Le module user_dao qui contient la classe UserDAO ayant le contrôle de la table user, et permettant la création, la recherche, la mise à jour et la suppression de comptes utilisateurs.
+Le package `business_object` regroupe toutes les classes métiers de l'application et comporte huit modules :
+
+-	Le module `station_information` qui contient la classe StationInformation représentant les informations statiques d'une station (identifiant, nom, coordonnées géographiques, capacité).
+-	Le module `station_status` qui contient la classe StationStatus représentant l'état courant d'une station (nombre de vélos disponibles, nombre de docks libres, état opérationnel).
+-	Le module `station_status_hourly` qui contient la classe StationStatusHourly représentant les statistiques agrégées par heure d'une station.
+-	Le module `station_state` qui contient l'énumération StationState définissant les états possibles d'une station.
+-	Le module `system_information` qui contient la classe SystemInformation représentant les métadonnées générales du système de vélos (nom du réseau, …).
+-	Le module `user` qui contient la classe User représentant un utilisateur de l'application, avec ses attributs d'authentification et de rôle.
+-	Le module `user_favorite_station` qui contient la classe UserFavoriteStation représentant l'association entre un utilisateur et une station favorite.
+-	Le module `user_role` qui contient l'énumération UserRole définissant les rôles possibles des utilisateurs (USER, ADMIN).
+
+Le package `dao` regroupe les classes DAO (Data Access Object) qui font le lien entre les classes métiers et la base de données PostgreSQL. Il comporte six modules :
+
+-	Le module `station_dao` qui contient la classe StationDAO ayant le contrôle de la table station_information, et permettant notamment la recherche de stations par identifiant, par proximité géographique et par nom.
+-	Le module `station_status_dao` qui contient la classe StationStatusDAO ayant le contrôle de la table station_status, et permettant de récupérer le statut courant ou l'historique d'une station.
+-	Le module `station_status_hourly_dao` qui contient la classe StationStatusHourlyDAO ayant le contrôle de la table station_status_hourly, et permettant de récupérer les statistiques horaires et journalières agrégées.
+-	Le module `favorite_station_dao` qui contient la classe FavoriteStationDAO ayant le contrôle de la table user_favorite_station, et permettant d'ajouter, supprimer, lister et compter les stations favorites des utilisateurs.
+-	Le module `system_information_dao` qui contient la classe SystemInformationDAO ayant le contrôle de la table system_information, utilisée pour stocker les métadonnées du réseau de vélos.
+-	Le module `user_dao` qui contient la classe UserDAO ayant le contrôle de la table user, et permettant la création, la recherche, la mise à jour et la suppression de comptes utilisateurs.
+
 Ce package importe le package business_object afin de manipuler les instances des classes métiers, ainsi que le package utils afin d'obtenir la connexion à la base de données via la classe DbConnection.
+
 Le package service
 •	Le module station_service qui contient la classe StationService, qui gère les opérations sur les stations : récupération par identifiant, liste avec filtres, statut courant, historique et calcul de recommandations géolocalisées.
 •	Le module favorite_station_service qui contient la classe FavoriteStationService, qui gère la logique métier liée aux stations favorites des utilisateurs. 
@@ -141,8 +200,6 @@ Ce package regroupe les pages de l'interface utilisateur Streamlit, chaque modul
 •	Le module velo_a_proximite qui affiche les stations proches d'une position géographique donnée.
 •	Le module user_info qui affiche et permet la mise à jour des informations du compte utilisateur connecté.
 Ce package importe le package utils du frontend afin d'effectuer les appels HTTP vers l'API backend.
-
-
 
 ## **Diagramme de classes**
 
@@ -239,35 +296,28 @@ Des fonctionnalités plus avancées sont disponibles pour les utilisateurs conne
 
 Les administrateurs ont la possibilité de gérer les comptes existants, notamment les supprimer si besoin. 
 
-$\implies$ Pour chaque fonctionnalité, un diagramme d’activité + un peu d’explications. 
-
 ## **Authentification et gestion des informations utilisateur**
-
-$\implies$ Diagramme à faire (création de compte, connexion, ...) : voir s'il est réellement à faire
 
 L’authentification est l’une des premières fonctionnalités auxquelles un utilisateur a accès (c’est la raison pour laquelle, dans le frontend, ce sont les deux premières pages accessibles après la page d’accueil). Cela concerne trois actions différentes : l’inscription (la création d’un compte), la connexion à un compte et la gestion des informations après connexion. 
 
-Lorsqu’un utilisateur n’a pas encore de compte, il peut en créer un : pour cela, il a besoin d’entrer un nom d’utilisateur, un email et un mot de passe. Le nom d’utilisateur ne peut pas correspondre à celui d’un utilisateur déjà existant (un message d’erreur s’affiche dans ce cas). Lorsque ces informations sont rentrées, l’utilisateur est automatiquement connecté à ce compte et peut utiliser les fonctionnalités propres à un utilisateur connecté, voire à celles d’un administrateur en fonction. 
+Lorsqu’un utilisateur n’a pas encore de compte, il peut en créer un : pour cela, il a besoin d’entrer un nom d’utilisateur, un email et un mot de passe. Le nom d’utilisateur ne peut pas correspondre à celui d’un utilisateur déjà existant (un message d’erreur s’affiche dans ce cas). Lorsque ces informations sont rentrées, l’utilisateur doit ensuite aller sur la page de connexion pour se connecter à son nouveau compte et peut utiliser les fonctionnalités propres à un utilisateur connecté, voire à celles d’un administrateur en fonction. 
 
 Lorsque l’utilisateur possède déjà un compte et qu’il n’y est pas encore connecté, celui-ci peut le faire sur la page de connexion. Sur cette page, il faut entrer son nom d’utilisateur et son mot de passe pour pouvoir se connecter. Si l’une des deux informations est fausse, un message d’erreur s’affiche et un bouton pour accéder à la page d’inscription apparaît. Si les informations sont bonnes, l’utilisateur est connecté à son compte. 
 
-Lorsqu’un utilisateur est connecté, il peut tout d’abord se déconnecter en allant sur la page d’accueil. Il peut aussi changer ses informations (nom d’utilisateur, email et mot de passe) dans la page « Mon profil ». En effet, sur cette page, l’utilisateur peut consulter ses informations et les modifier. Pour changer ces informations, il suffit juste d’entrer de nouvelles informations (différentes des originales) dans les zones de texte indiquées et correspondant à l’information à modifier. Lorsque du texte est entré, il suffit de recliquer sur la page dans la barre latérale pour voir la nouvelle information ainsi modifiée. 
+Lorsqu’un utilisateur est connecté, il peut tout d’abord se déconnecter en allant sur la page d’accueil. Il peut aussi changer ses informations (nom d’utilisateur, email et mot de passe) dans la page « Mon profil ». En effet, sur cette page, l’utilisateur peut consulter ses informations et les modifier. Pour changer ces informations, il suffit juste d’entrer de nouvelles informations (différentes des originales) dans les zones de texte indiquées et correspondant à l’information à modifier. Lorsque du texte est entré, il suffit de recliquer sur la page dans la barre latérale pour voir la nouvelle information ainsi modifiée.  
 
 ## **Recherche et consultation de stations**
 
-Les utilisateurs, connectés ou non, peuvent rechercher des informations sur une station en accédant à cette fonctionnalité depuis le menu latéral. Sur la page « Liste des stations », ils peuvent consulter l’ensemble des stations disponibles sur l’application, triées par identifiant. La liste permet de visualiser le nom, l’adresse, la capacité et le statut (empty, functional) de chaque station, ainsi qu’un bouton « Info » renvoyant vers sa fiche détaillée. Une fonction de filtrage a également été implémentée pour effectuer une recherche par nom.
+Les utilisateurs, connectés ou non, peuvent rechercher des informations sur une station en accédant à cette fonctionnalité depuis le menu latéral. Sur la page « Liste des stations », ils peuvent consulter l’ensemble des stations disponibles sur l’application, triées par identifiant. La liste permet de visualiser le nom, l’adresse, la capacité et le statut (empty, functional, full) de chaque station, ainsi qu’un bouton « Info » renvoyant vers sa fiche détaillée. Une fonction de filtrage a également été implémentée pour effectuer une recherche par nom.
 
 Les informations détaillées d’une station sont accessible depuis le menu latéral via l’icône « Informations station », en effectuant une recherche par identifiant ou par nom. Sur cette page, l’utilisateur peut consulter : la disponibilité en temps réel, le score de fiabilité, les caractéristiques de la station ainsi qu'une synthèse synthèse statistique de la station sur une période d’observation (dans la dernière heure, dans les dernières 24 heures, derniers 7 jours et derniers 30 jours. La synthèse contient la moyenne de vélos disponible sur la période, le taux de temps station vide sur la période précédemment, la durée moyenne des pénuries, le pourcentage de temps station saturé, la durée moyenne de saturation ainsi que le score de fiabilité et le taux de remplissage présenté précédemment. 
 Une visualisation graphique de cette synthèse est possible. L’utilisateur peut également consulter le tableau complet des relevés sur une période donné.
 
 De plus les utilisateurs connectés ont accès à la recherche de station à proximité. Sur la page « trouver un vélo à proximité », ils peuvent utiliser la recherche soit à partir de sa position actuelle, récupérée directement via la géolocalisation de son navigateur, soit par la saisit d’une adresse. L’utilisateurs peut ajuster sa recherche en modifiant le rayon de recherche, filtré les stations selon leurs capacités opérationnelles, leurs scores de fiabilité et le type de vélo disponible.  Si l’adresse est valide, l’utilisateur peut consulter une carte avec les stations correspondant aux différents critères indiqués en rouge ainsi qu’un tableau répertoriant la distance, la capacités, le statu, le type de vélo et le score de fiabilité pour chaque station trouvée.
- 
-
-$\implies$ Diagramme à faire
 
 ## **Gestion des stations favorites**
 
-![](img/diag_gestion_fav.png)
+![Diagramme d'activité sur la gestion des stations favorites](img/diag_gestion_fav.png){height=30%}
 
 Avoir liste de stations favorites est une fonctionnalité clé de toute application de transports en commun, dans notre cas, de stations de vélos urbains. Ainsi, nous avons dû assez rapidement réfléchir à son implémentation au sein de notre application VeloScope. Grâce à cette fonctionnalité, un utilisateur peut plus rapidement accéder à certaines stations en particulier. 
 
@@ -313,7 +363,13 @@ avec $w_1 = 0{,}55$, $w_2 = 0{,}35$ et $w_3 = 0{,}10$ (arrondi à 2 décimales).
 
 ## **« Je veux un vélo à proximité » :** Recommendation de vélo à proximité d'un lieu donné
 
-![](img/diag_f5.png)
+![Diagramme d'activité sur la fonctionnalité de recommendation de vélo](img/diag_f5.png){height=30%}
+
+La cinquième fonctionnalité de notre application indiquée dans le cahier des charges nous demandait d’implémenter la possibilité à un utilisateur de trouver des stations à proximité d’une position donnée en fonction de critères précis (comme le score de fiabilité). Nous avons fait le choix de ne laisser cette fonctionnalité accessible uniquement aux utilisateurs connectés, pour leur donner un avantage à avoir créé un compte sur l’application. 
+
+Lorsque l’utilisateur connecté arrive sur la page, deux choix s’offrent à lui : choisir sa position actuelle (celle de sa machine) ou choisir un lieu ou une adresse qu’il doit entrer dans la barre de texte consacrée. Dans les deux cas, le système reconnaît les coordonnées GPS (latitude et longitude) qui sont liées au lieu donné. À partir de cela, le code peut ainsi réaliser des calculs pour trouver l’ensemble des stations qui se trouvent à proximité à partir d’un calcul qui utilise la formule de Haversine (cf. [calcul de la formule de Haversine](#haversine) en annexe).  
+
+Si aucune station n’est trouvée, un texte s’affiche l’indiquant. Dans le cas inverse, une carte apparaît affichant la position géographique des stations déterminées par le code qui correspondent aux critères donnés. Une liste de stations s’affiche aussi en-dessous de la carte, permettant aux utilisateurs de connaître notamment le nom, l’adresse de la station, et d’accéder à ses informations dans la page associée. 
 
 ## **Administrateur :** gestion des comptes utilisateurs existants
 
@@ -343,27 +399,35 @@ En complément de la collecte, la tâche `job_station_aggregation` déclenche `S
 Enfin, les écritures en base sont conçues pour être performantes et idempotentes : `StationStatusDAO.bulk_insert_status` insère par lots de 1 000 lignes (`execute_values`) avec `ON CONFLICT (station_id, last_reported) DO NOTHING` pour ignorer tout doublon, tandis que `SystemInformationDAO.upsert_system_info`, `StationDAO.upsert_station_info` et `StationStatusHourlyDAO.bulk_upsert_hourly_stats` emploient `ON CONFLICT ... DO UPDATE` afin de mettre à jour le référentiel (système et stations) ou de rejouer une agrégation horaire sans effet de bord.
 
 # **Structure du code**
-Le projet est structuré en deux partis principal correspondant aux deux composantes de l'application : le répertoire backend/ et le répertoire frontend/. Cette séparation permet indépendance entre les deux parties. Chaque répertoire dispose de son propre fichier de configuration, et de son propre README. Le projet contient également un répertoire data/ qui regroupe les scripts SQL d'initialisation et de la base de données, ainsi que leurs équivalents dédiés aux tests, et un répertoire doc/ contenant la documentation du projet.
 
-Structure du backend
-Le code source du backend est situé dans le répertoire backend/src/ et se décompose en sept packages Python, et un fichier main.py.
-L'application a une architecture par couche :
--	La couche controller reçoit les requêtes HTTP et les délègue à la couche service 
--	La couche service applique la logique métier et fait appel à la couche dao 
--	La couche dao accède à la base de données PostgreSQL et manipule les objets de la couche business_object 
--	La couche business_object définit les entités du domaine métier.
+## **Architecture du code**
 
-Les packages schema, dependencies et utils jouent un rôle transversal : schema fournit les modèles de validation des requêtes et réponses HTTP via Pydantic ; dependencies centralise l'injection de dépendances FastAPI afin d'instancier et de distribuer les objets DAO et service ; utils regroupe les utilitaires techniques partagés (connexion à la base de données, sécurité, journalisation, paramètres de configuration).
-Le sous-package service/schedule/ gère les traitements automatiques planifiés, décomposés en deux sous-packages : data_ingestion/ qui implémente les stratégies d'ingestion des flux de données GBFS provenant de l'API externe, et data_aggregation/ qui calcule et persiste les statistiques horaires à partir des données brutes.
+Le projet est structuré en deux partis principal correspondant aux deux composantes de l'application : le répertoire `backend/` et le répertoire `frontend/`. Cette séparation permet indépendance entre les deux parties. Chaque répertoire dispose de son propre fichier de configuration, et de son propre `README`. Le projet contient également un répertoire `data/` qui regroupe les scripts SQL d'initialisation et de la base de données, ainsi que leurs équivalents dédiés aux tests, et un répertoire `doc/` contenant la documentation du projet, les notes de suivi hebdomadaire et le rapport.
 
-Structure du frontend
-Le code source du frontend est situé dans le répertoire frontend/src/ et se décompose en deux packages et un fichier app.py.
+**Structure du backend :**
 
-Le package pages/ contient un module par page de l'interface (accueil, connexion, inscription, recherche de stations, liste des stations, fiche d'une station, stations favorites, vélos à proximité, informations du compte utilisateur, administration). Chaque module est indépendant et communique avec le backend via le client HTTP fourni par le package utils/.
-Le package utils/ regroupe les utilitaires partagés par les pages
+Le code source du backend est situé dans le répertoire `backend/src/` et se décompose en sept packages Python, et un fichier `main.py`. L'application a une architecture par couche :
 
+-	La couche `controller` reçoit les requêtes HTTP et les délègue à la couche service 
+-	La couche `service` applique la logique métier et fait appel à la couche dao 
+-	La couche `dao` accède à la base de données PostgreSQL et manipule les objets de la couche business_object 
+-	La couche `business_object` définit les entités du domaine métier.
 
+Les packages `schema`, `dependencies` et `utils` jouent un rôle transversal : 
 
+- `schema` fournit les modèles de validation des requêtes et réponses HTTP via Pydantic ;
+- `dependencies` centralise l'injection de dépendances FastAPI afin d'instancier et de distribuer les objets DAO et service ;
+- `utils` regroupe les utilitaires techniques partagés (connexion à la base de données, sécurité, journalisation, paramètres de configuration).
+
+Le sous-package `service/schedule/` gère les traitements automatiques planifiés, décomposés en deux sous-packages : `data_ingestion/` qui implémente les stratégies d'ingestion des flux de données GBFS provenant de l'API externe, et `data_aggregation/` qui calcule et persiste les statistiques horaires à partir des données brutes.
+
+**Structure du frontend :**
+
+Le code source du frontend est situé dans le répertoire `frontend/src/` et se décompose en deux packages et un fichier `app.py`.
+
+Le package `pages/` contient un module par page de l'interface (accueil, connexion, inscription, recherche de stations, liste des stations, fiche d'une station, stations favorites, vélos à proximité, informations du compte utilisateur, administration). Chaque module est indépendant et communique avec le backend via le client HTTP fourni par le package `utils/`.
+
+Le package `utils/` regroupe les utilitaires partagés par les pages.
 
 ```text
 ensai-it-project-2a-team30/
@@ -391,20 +455,34 @@ ensai-it-project-2a-team30/
 └── README.md                 # User guide (this document)
 ```
 
-# **Tests**
+## **Tests**
 
 Les tests du backend sont situés dans le répertoire backend/tests/ et se répartissent en deux sous-répertoires selon la couche testée :
-•	tests/test_dao/ qui contient les tests d'intégration des classes DAO. Ces tests s'exécutent avec une connexion réelle à une base de données PostgreSQL de test, initialisée par scripts SQL. Ils vérifient que les requêtes SQL produisent les résultats attendus pour chaque opération.
-•	tests/test_service/ qui contient les tests des classes de service. Selon les cas, ces tests utilisent soit des mocks pour isoler la logique métier de la couche DAO, soit une connexion réelle à la base de données.
 
-
-# **Point intéressant à détaillé sur l'appli**
+- `tests/test_dao/` qui contient les tests d'intégration des classes DAO. Ces tests s'exécutent avec une connexion réelle à une base de données PostgreSQL de test, initialisée par scripts SQL. Ils vérifient que les requêtes SQL produisent les résultats attendus pour chaque opération.
+-	`tests/test_service/` qui contient les tests des classes de service. Selon les cas, ces tests utilisent soit des mocks pour isoler la logique métier de la couche DAO, soit une connexion réelle à la base de données.
 
 # **Guide d'utilisation**
 
-$\implies$ Mise en contexte d’un utilisateur qui navigue dans l’application. Screenshots + explications des étapes pour chaque menu. L’idée de RF_groupe_19 avec les couleurs est vraiment pas mal. 
+La page d’acceuil a pour but de présenter brièvement l'application puis de proposer à l'utilisateur de naviguer via le menu latéral et de se connecter afin d'accéder aux fonctionnalités utilisateur.
 
-ANTONIN
+La page de connexion permet à l'utilisateur de se connecter simplement, s'il possède déjà un compte et donc d'accéder aux fonctionnalités utilisateurs. 
+
+La page Inscription permet à un tout nouvel utilisateur (qui ne possède pas encore de compte) de s'en créer un. Après s'être inscris, il lui suffira de se connecter en utilisant seulement son identifiant et son mot de passe. Il pourra ensuite accéder à davantage de fonctionnalités de l'application. Une fois connecté, on peut se déconnecter si on le souhaite via la page d’accueil.
+
+C'est ici que les administrateurs (les membres du groupe) peuvent gérer les comptes des différents utilisateurs, avec un système permettant de filtrer la recherche par différents moyens (pseudos, mail, etc...). Un fois trouvé, l'utilisateur peut voir son compte activé/désactivé ou supprimé. 
+
+Une page est dédiée à la recherche de stations. On peut rechercher une station par son adresse ou son nom directement. En rentrant simplement une suite de caractère sans taper le nom d’une station en entier, la page affiche toutes les stations contenant cette suite de caractère dans leur nom. Il est possible de choisir le nombre de stations à afficher par pages. Ici, 2 stations ont été trouvées par exemple. Cliquer sur une station envoie vers la page d’informations de celle-ci. 
+
+Une page permet également d’accéder à la liste de toutes les stations disponibles dans l’application. Cliquer sur le lien bleu associé envoie vers la page d’informations de la station. 
+
+Une fois une station recherchée, on peut retrouver ses informations sur la page “Informations station”. Ces informations peuvent être utiles à l'utilisateur : elles transcrivent de plusieurs manières différentes l’évolution de la fiabilité de la station (chiffres, graphes, tableaux, ...). Cette page constitue l’intérêt principal de l’application car elle contient toutes les informations pour éclairer le choix de l’utilisateur dans sa recherche de station.
+
+La page “Trouver un vélo à proximité” permet à l'utilisateur de trouver des stations à partir d'une adresse et d’un rayon de recherche. Cette fonctionnalité n’est accessible que si l’utilisateur est connecté et permet d’accéder à une carte des stations. Il peut soit renseigner une adresse soit directement visualiser les stations autour de lui (l’application accède à sa position et lui affiche les stations dans le rayon de recherche).
+
+L’utilisateur peut également choisir de mettre certaines stations en favoris et la liste des stations favorites est accessible via une page dédiée. Cela permet de ne pas toujours rechercher une même station que l’on sait fiable. On peut également supprimer des stations favorites depuis cette pages.
+
+Pour finir, l'utilisateur peut changer ses informations de compte depuis la page “Mon profil”. Il peut changer son nom d’utilisateur, son email et/ou son mot de passe.
 
 {{< pagebreak >}}
 
@@ -457,7 +535,7 @@ Comme j'avais beaucoup travaillé sur les premiers diagrammes, les critiques lor
 
 Enfin, j'ai aussi eu une difficulté personnelle avec le français : parfois, je ne comprenais pas tout de suite ce que les autres disaient, ou j'avais du mal à expliquer mes idées clairement. Grâce à l'écoute, à la patience et à la bienveillance du groupe, nous avons réussi à dépasser cette barrière ensemble. Cette expérience m'a permis de progresser en français et de mieux communiquer en équipe.
 
-## Calcul de la proximité des stations {.unnumbered}
+## Calcul de la proximité des stations {#haversine .unnumbered}
 
 Dans l’API externe, chaque station a des coordonnées géographiques qui lui sont associées. Avec cela, nous avons accès à la latitude et à la longitude de chaque station. C’est notre cinquième fonctionnalité, « Je veux un vélo à proximité », qui en fait usage (des fonctionnalités optionnelles aussi mais nous ne les avons pas implémenté). Pour pouvoir faire des calculs de distance à partir d’un rayon donné, il nous a fallu utiliser une formule pour utiliser des coordonnées et ainsi obtenir une distance. C’est pour cela que nous avons fait le choix de la **formule de Haversine**. À partir de deux points dont nous avons les coordonnées géographiques en radians, nous pouvons calculer la distance qui les sépare en kilomètres. La latitude et la longitude étant donnés en degrés, il a aussi fallu convertir ces deux mesures en radians en les multipliant par $\frac{\pi}{180}$.
 
