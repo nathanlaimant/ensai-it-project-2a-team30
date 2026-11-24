@@ -452,7 +452,7 @@ ensai-it-project-2a-team30/
 │   ├── init_db_test.sql      # Isolated test schema (veloscope_test)
 │   ├── star_rennes/          # Jeu de données LE vélo STAR (Rennes : 57 stations)
 │   └── velhop_strasbourg/    # Jeu de données Vélhop (Strasbourg : 40 stations)
-└── README.md                 # User guide (this document)
+└── README.md                 # User guide
 ```
 
 ## **Tests**
