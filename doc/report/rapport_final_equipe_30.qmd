@@ -503,9 +503,9 @@ Une page permet également d’accéder à la liste de toutes les stations dispo
 
 ![](img/pages/info5.png)
 
-![](img/pages/info6.png)
+![](img/pages/info7.png)
 
-![Ensemble de la page des informations d'une station dans l'application](img/pages/info7.png)
+![Ensemble de la page des informations d'une station dans l'application](img/pages/info6.png)
 
 Une fois une station recherchée, on peut retrouver ses informations sur la page “Informations station”. Ces informations peuvent être utiles à l'utilisateur : elles transcrivent de plusieurs manières différentes l’évolution de la fiabilité de la station (chiffres, graphes, tableaux, ...). Cette page constitue l’intérêt principal de l’application car elle contient toutes les informations pour éclairer le choix de l’utilisateur dans sa recherche de station.
 
