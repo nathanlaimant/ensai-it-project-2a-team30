@@ -1356,7 +1356,7 @@
         <mxCell id="NRqZYKOY3Ax6-e4QLPHy-104" parent="NRqZYKOY3Ax6-e4QLPHy-102" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=18;" value="+get_connection()" vertex="1">
           <mxGeometry height="41" width="254" y="48.57142857142857" as="geometry" />
         </mxCell>
-        <mxCell id="NRqZYKOY3Ax6-e4QLPHy-105" parent="NRqZYKOY3Ax6-e4QLPHy-102" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=18;" value="+execute()" vertex="1">
+        <mxCell id="NRqZYKOY3Ax6-e4QLPHy-105" parent="NRqZYKOY3Ax6-e4QLPHy-102" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=18;" value="+close()" vertex="1">
           <mxGeometry height="41" width="254" y="89.57142857142857" as="geometry" />
         </mxCell>
         <mxCell id="NRqZYKOY3Ax6-e4QLPHy-106" edge="1" parent="1" source="NRqZYKOY3Ax6-e4QLPHy-1" style="startArrow=none;endArrow=open;endSize=12;rounded=0;edgeStyle=elbowEdgeStyle;elbow=vertical;fontSize=18;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="NRqZYKOY3Ax6-e4QLPHy-31" value="">
@@ -1550,7 +1550,7 @@
           <mxGeometry height="37" width="260" y="155.8" as="geometry" />
         </mxCell>
         <mxCell id="YGI7I_8ciLKdeA_Ij_A3-39" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fontSize=20;" value="StationAggregator" vertex="1">
-          <mxGeometry height="264" width="420" x="1300" y="690" as="geometry" />
+          <mxGeometry height="296" width="420" x="1300" y="675" as="geometry" />
         </mxCell>
         <mxCell id="YGI7I_8ciLKdeA_Ij_A3-40" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="-StationStatusDAO station_status_dao" vertex="1">
           <mxGeometry height="32" width="420" y="32" as="geometry" />
@@ -1564,17 +1564,20 @@
         <mxCell id="YGI7I_8ciLKdeA_Ij_A3-43" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="+aggregate_hourly_stats()" vertex="1">
           <mxGeometry height="32" width="420" y="104" as="geometry" />
         </mxCell>
-        <mxCell id="YGI7I_8ciLKdeA_Ij_A3-44" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="#_resolve_time_bucket()" vertex="1">
+        <mxCell id="YGI7I_8ciLKdeA_Ij_A3-44" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="-resolve_time_bucket()" vertex="1">
           <mxGeometry height="32" width="420" y="136" as="geometry" />
         </mxCell>
-        <mxCell id="YGI7I_8ciLKdeA_Ij_A3-45" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="#_aggregate_station_stats()" vertex="1">
+        <mxCell id="YGI7I_8ciLKdeA_Ij_A3-45" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="-aggregate_station_stats()" vertex="1">
           <mxGeometry height="32" width="420" y="168" as="geometry" />
         </mxCell>
-        <mxCell id="YGI7I_8ciLKdeA_Ij_A3-46" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="#_calculate_state_durations()" vertex="1">
+        <mxCell id="YGI7I_8ciLKdeA_Ij_A3-45b" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="-compute_basic_averages()" vertex="1">
           <mxGeometry height="32" width="420" y="200" as="geometry" />
         </mxCell>
-        <mxCell id="YGI7I_8ciLKdeA_Ij_A3-47" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="#_compute_reliability_score()" vertex="1">
+        <mxCell id="YGI7I_8ciLKdeA_Ij_A3-46" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="-compute_durations_and_events()" vertex="1">
           <mxGeometry height="32" width="420" y="232" as="geometry" />
+        </mxCell>
+        <mxCell id="YGI7I_8ciLKdeA_Ij_A3-47" parent="YGI7I_8ciLKdeA_Ij_A3-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=20;" value="-compute_reliability_score()" vertex="1">
+          <mxGeometry height="32" width="420" y="264" as="geometry" />
         </mxCell>
         <mxCell id="YGI7I_8ciLKdeA_Ij_A3-48" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=47.2;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fontSize=20;" value="SystemInformationDAO" vertex="1">
           <mxGeometry height="102.2" width="260" x="408.5" y="1003.8" as="geometry" />

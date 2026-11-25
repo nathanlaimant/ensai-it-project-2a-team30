@@ -256,7 +256,7 @@ classDiagram
 
     class DbConnection {
         +get_connection()
-        +execute(query, params)
+        +close() None
     }
 
     %% ==========================================
@@ -348,10 +348,11 @@ classDiagram
         -StationStatusDAO station_status_dao
         -StationStatusHourlyDAO station_hourly_dao
         +aggregate_hourly_stats(start_time: datetime, end_time: datetime) int
-        -_resolve_time_bucket(start_time, end_time) tuple
-        -_aggregate_station_stats(station_id, statuses, start_time, end_time) StationStatusHourly
-        -_calculate_state_durations(statuses, start_time, end_time) tuple
-        -_compute_reliability_score(...) float
+        -resolve_time_bucket(start_time, end_time) tuple
+        -aggregate_station_stats(station_id, statuses, start_time, end_time) StationStatusHourly
+        -compute_basic_averages(statuses) tuple
+        -compute_durations_and_events(statuses, start_time, end_time) tuple
+        -compute_reliability_score(...) float
     }
 
     %% ==========================================
