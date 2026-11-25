@@ -144,13 +144,12 @@ Un utilisateur non connecté ne peut que rechercher des stations et accéder à 
 
 Une fois l'utilisateur connecté, il a accès à tous les services qu'offre Veloscope. Il peut ajouter et supprimer des stations de ses favoris ainsi qu'en rechercher via la page "Vélo à proximité". Il peut également modifier les informations de son compte. 
 
-Enfin, les comptes administrateurs disposent de droits particuliers. Ce type de compte est spécifiquement utile pour gestion des comptes existants (activation/désactivation, suppression). Actuellement, seuls les créateurs de l'application possèdent des comptes administrateur. 
+Enfin, les comptes administrateurs disposent de droits particuliers. Ce type de compte est spécifiquement utile pour gestion des comptes existants (activation/désactivation, suppression). Actuellement, seuls les créateurs de l'application possèdent des comptes administrateur. La seule possibilité pour créer un nouveau compte administrateur est de le créer depuis le backend, en précisant le rôle "ADMIN".
 
 ## **Diagramme de packages**
 
 Le diagramme de packages modélise l'organisation du code source de l'application VeloScope et les différents liens entre les modules et packages). Pour que l’application reste simple à faire évoluer et facile à maintenir, nous avons choisi de structurer son code en différentes couches. Le projet s’articule ainsi autour de deux grands ensembles complémentaires : le frontend, la partie visible par l’utilisateur, et le backend, qui prend en charge les calculs, la logique du programme et la sauvegarde des données. 
 
-Rôle des composants 
 Le package `business_object` regroupe toutes les classes métiers de l'application et comporte huit modules :
 
 -	Le module `station_information` qui contient la classe StationInformation représentant les informations statiques d'une station (identifiant, nom, coordonnées géographiques, capacité).
@@ -192,7 +191,7 @@ Le package `utils` regroupe les utilitaires techniques transversaux partagés pa
 -	Le module `db_connection` qui contient la classe DbConnection
 -	Le module `security` qui contient les fonctions de hachage des mots de passe et de génération de tokens d'accès utilisateurs.
 
-Le package pages dans le frontend regroupe les pages de l'interface utilisateur Streamlit, chaque module correspondant à une page de l'application. Il comporte dix modules :
+Le package `pages` dans le frontend regroupe les pages de l'interface utilisateur Streamlit, chaque module correspondant à une page de l'application. Il comporte dix modules :
 
 -	Le module `home` qui affiche la page d'accueil de l'application.
 -	Le module `connexion` qui gère le formulaire de connexion et stocke le token d'accès.
@@ -205,7 +204,7 @@ Le package pages dans le frontend regroupe les pages de l'interface utilisateur 
 -	Le module `velo_a_proximite` qui affiche les stations proches d'une position géographique donnée.
 -	Le module `user_info` qui affiche et permet la mise à jour des informations du compte utilisateur connecté.
 
-Ce package importe le package utils du frontend afin d'effectuer les appels HTTP vers l'API backend.
+Ce package importe le package `utils` du frontend afin d'effectuer les appels HTTP vers l'API backend.
 
 ## **Diagramme de classes**
 
@@ -514,7 +513,7 @@ Une fois une station recherchée, on peut retrouver ses informations sur la page
 
 ![Page de la fonctionnalité « Trouver un vélo à proximité » de l'application](img/pages/proxi2.png)
 
-La page “Trouver un vélo à proximité” permet à l'utilisateur de trouver des stations à partir d'une adresse et d’un rayon de recherche. Cette fonctionnalité n’est accessible que si l’utilisateur est connecté et permet d’accéder à une carte des stations. Il peut soit renseigner une adresse soit directement visualiser les stations autour de lui (l’application accède à sa position et lui affiche les stations dans le rayon de recherche).
+La page « Trouver un vélo à proximité » permet à l'utilisateur de trouver des stations à partir d'une adresse et d’un rayon de recherche. Cette fonctionnalité n’est accessible que si l’utilisateur est connecté et permet d’accéder à une carte des stations. Il peut soit renseigner une adresse soit directement visualiser les stations autour de lui (l’application accède à sa position et lui affiche les stations dans le rayon de recherche).
 
 ![Page de gestion des stations favorites de l'application](img/pages/fav.png)
 
@@ -527,6 +526,14 @@ Pour finir, l'utilisateur peut changer ses informations de compte depuis la page
 {{< pagebreak >}}
 
 # **Conclusion** {.unnumbered}
+
+Pour conclure, notre application contient l'ensemble des fonctionnalités obligatoires présentes dans le cahier des charges. Elle ne contient cependant pas de fonctionnalités optionnelles car nous avons préféré nous concentrer un maximum sur les fonctionnalités primordiales. 
+
+Au cours des différentes phases de conception, nous avons toujours veillé à tester notre code. L'ensemble des classes a été testé pour nous assurer que l'application fonctionne correctement. Cela nous permettait d'avoir toujours confiance en notre travail pour passer à l'étape suivante. Le codage du frontend nous a également pris une partie non négligeable de notre temps de développement. Nous avons essayé d'optimiser au maximum l'ergonomie de l'application, de façon à ce que la navigation soit agréable pour l'utilisateur. 
+
+Ce projet reste une expérience enrichissante pour l'ensemble du groupe. Chacun a pu mettre à profit ses compétences pour que le projet avance au mieux. Nous n'avons pas jugé nécessaire de nous répartir des « rôles » précis tout au long du projet. Chacun a pu travailler intuitivement sur les parties qui l'attiraient le plus. Enfin, nous tenons à remercier M. RIVIÈRE pour le suivi régulier porté à notre groupe. 
+
+Nous espérons que l'application saura vous satisfaire autant qu'elle nous satisfait, et bonne navigation sur Veloscope !
 
 {{< pagebreak >}}
 
@@ -618,7 +625,9 @@ La répartition du travail a parfois été inégale. Comme les tâches sont trè
 
 La compréhension du sujet n'a pas été constamment aisée non plus. Comme aucun de nous n'avions travaillé sur des données de norme GBFS auparavant, nous n'étions pas familiarisés avec le sujet dès le début. Il nous a parfois fallu prendre du temps pour comprendre les particularités de la structure de la base de données. Par exemple, au commencement du projet, nous avons dû cerner la différence entre la capacité virtuelle d'une station et sa capacité physique. Nous avons réfléchi davantage à la manière de prendre en compte cette différence dans notre application. 
 
-Enfin, tout au long du projet, nous avons naturellement fait face à des erreurs dans notre code (tests, liens frontend/backend, dépendances, etc). Ces problèmes ont été réglés rapidement la plupart du temps, et réfléchir à plusieurs sur leur résolution nous a permis de tous comprendre le code plus profondément.
+Enfin, tout au long du projet, nous avons naturellement fait face à des erreurs dans notre code (tests, liens frontend/backend, dépendances, etc). Ces problèmes ont été réglés rapidement la plupart du temps, et réfléchir à plusieurs sur leur résolution nous a permis de tous comprendre le code plus profondément. 
+
+Pour élaborer sur ces difficultés rencontrées, nous avons eu des soucis avec les liens entre le frontend et le backend. Par exemple, lorsque nous avions mis à disposition la possibilité de changer de pseudo, le lien n'était pas clairement écrit dans le backend donc le pseudo restait intact dans la base de données. De plus, un problème similaire s'est imposé lorsque nous avons voulu mettre en place la fonctionnalité "supprimer un compte" depuis la page admin. En effet, le bouton était disponible sur le frontend mais le lien depuis le controller n'était pas établi alors que la fonction était pourtant présente dans la classe DAO associée.
 
 ### Points forts et points à améliorer pour de futurs projets {.unnumbered}
 
@@ -632,7 +641,7 @@ Nous nous accordons cependant sur le fait que certains points sont améliorables
 
 ## **Bilan personnel** {.unnumbered}
 
-### Martin DUBOS {.unnumbered}
+### Martin DUBOS {.unnumbered .unlisted}
 
 Tout d’abord, j’ai abordé ce projet informatique à reculons dans la mesure où, l’année précédente, j’avais eu l’impression d’être dans le flou durant la première partie, sans vraiment savoir sur quoi travailler. Mais très vite, mon intérêt pour le sujet proposé m’a fait changer d’avis. J’ai trouvé les sujets originaux, bien pensés et bien introduits, ce qui a simplifié la phase d’analyse.
 
@@ -642,7 +651,7 @@ N’étant pas le plus expérimenté du groupe, j’ai contribué à la programm
 
 Enfin, l’une des principales difficultés rencontrées au démarrage a été de travailler avec des personnes dont je ne connaissais pas encore les points forts, ce qui a rendu la répartition initiale des tâches un peu délicate.
 
-### Minh Quang KIEU {.unnumbered}
+### Minh Quang KIEU {.unnumbered .unlisted}
 
 Ce projet informatique a été une très bonne expérience pour moi, à la fois sur le plan technique et pour le travail en groupe. Au cours du projet, j'ai contribué à la modélisation initiale, au développement du sous-système de collecte et d'agrégation, ainsi qu'à l'amélioration de l'API et des tests sur le backend.
 
@@ -650,7 +659,7 @@ Comme j'avais beaucoup travaillé sur les premiers diagrammes, les critiques lor
 
 Enfin, j'ai aussi eu une difficulté personnelle avec le français : parfois, je ne comprenais pas tout de suite ce que les autres disaient, ou j'avais du mal à expliquer mes idées clairement. Grâce à l'écoute, à la patience et à la bienveillance du groupe, nous avons réussi à dépasser cette barrière ensemble. Cette expérience m'a permis de progresser en français et de mieux communiquer en équipe.
 
-### Nathan LAIMANT {.unnumbered}
+### Nathan LAIMANT {.unnumbered .unlisted}
 
 J'avais beaucoup d'appréhension vis-à-vis de ce projet car le projet de traitement de données en première année était assez difficile. La programmation en Python étant très différente de celle en R, je n'avais pas très confiance en mes capacités. De plus, lorsque j'ai appris que nous ne choisissions pas les groupes de projet, j'avais assez peur d'être avec des personnes que je ne connaissais pas. Heureusement, ce n'étais pas le cas et nous avons pu assez facilement créer une bonne dynamique de groupe.
 
@@ -660,7 +669,7 @@ Coder le backend fu assez simple mais chronophage, notamment l'écriture des tes
 
 Au final, je suis assez content du projet, notamment car j'ai pu travailler avec des coéquipiers qui y mettaient du leur. Cela m'a appris à devoir respecter des dates limites que nous nous imposons au sein de l'équipe, ce qui change de celles qui sont imposées par l'administration ou les enseignants. Je suis content d'avoir gagner en expérience à ce sujet et espère pouvoir en retirer le maximum plus tard, que ce soit en poste ou dans des hobbies.
 
-### Victor NEMBRINI {.unnumbered}
+### Victor NEMBRINI {.unnumbered .unlisted}
 
 Pour être tout à fait honnête, je ne pensais pas avoir ma place au sein du projet à cause de mon niveau en informatique. Cependant, j’ai pu participer à de nombreuses tâches très diverses : j’ai commencé par le diagramme de Gantt, puis, dans le code, j’ai créé les tables SQL dans les schémas, chose que je n’avais jamais faite avant, et j’ai donc beaucoup appris. 
 
@@ -672,7 +681,7 @@ J’ai très bien vécu le projet que ça soit l’ambiance générale du groupe
 
 Néanmoins, bien que le projet se soit bien passé dans l’ensemble, je pense que j’aurais pu participer davantage et que je me suis trop focalisé sur le fait que j’allais causer plus de soucis qu’autres choses étant donné mon niveau, ce qui est bête car c’était justement une opportunité d’apprendre.  
 
-### Antonin PRADEL {.unnumbered}
+### Antonin PRADEL {.unnumbered .unlisted}
 
 Le bilan de ce projet est pour moi positif en tout point. Du début à la fin, j’ai été pleinement investi et satisfait des avancés du groupe. J’ai ressenti les bénéfices de ce projet à la fois au niveau individuel mais aussi collectivement avec mon groupe. 
 
